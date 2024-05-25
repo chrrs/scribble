@@ -1,0 +1,28 @@
+{
+    "schemaVersion": 1,
+    "id": "scribble",
+    "version": "${modVersion}",
+    "name": "Scribble",
+    "description": "Scribe and scribble.",
+    "authors": ["chrrrs"],
+    "contact": {
+        "homepage": "https://modrinth.com/mod/scribble",
+        "sources": "https://github.com/chrrs/scribble",
+        "issues": "https://github.com/chrrs/scribble/issues"
+    },
+    "license": "MIT",
+    "icon": "assets/scribble/icon.png",
+    "accessWidener": "scribble.accesswidener",
+    "mixins": [{
+        "config": "scribble.mixins.json",
+        "environment": "client"
+    }],
+    "environment": "*",
+    "entrypoints": {
+        "client": ["me.chrr.scribble.Scribble"]
+    },
+    "depends": {
+        "fabricloader": ">=${loaderVersion}",
+        "minecraft": "${minecraftVersion}"
+    }
+}

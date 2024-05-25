@@ -1,0 +1,21 @@
+accessWidener v2 named
+
+accessible class net/minecraft/client/gui/screen/ingame/BookEditScreen$PageContent
+accessible class net/minecraft/client/gui/screen/ingame/BookEditScreen$Position
+accessible class net/minecraft/client/gui/screen/ingame/BookEditScreen$Line
+
+accessible field net/minecraft/client/gui/screen/ingame/BookEditScreen$PageContent lines [Lnet/minecraft/client/gui/screen/ingame/BookEditScreen$Line;
+accessible field net/minecraft/client/gui/screen/ingame/BookEditScreen$PageContent lineStarts [I
+
+accessible method net/minecraft/client/gui/screen/ingame/BookEditScreen$Position <init> (II)V
+
+accessible field net/minecraft/client/gui/screen/ingame/BookEditScreen$Line content Ljava/lang/String;
+accessible field net/minecraft/client/gui/screen/ingame/BookEditScreen$Line style Lnet/minecraft/text/Style;
+
+accessible class net/minecraft/client/font/TextHandler$WidthLimitingVisitor
+
+accessible field net/minecraft/client/util/SelectionManager selectionStart I
+accessible field net/minecraft/client/util/SelectionManager selectionEnd I
+accessible field net/minecraft/client/util/SelectionManager clipboardGetter Ljava/util/function/Supplier;
+accessible field net/minecraft/client/util/SelectionManager clipboardSetter Ljava/util/function/Consumer;
+accessible method net/minecraft/client/util/SelectionManager getSelectedText (Ljava/lang/String;)Ljava/lang/String;
