@@ -1,17 +1,14 @@
 package me.chrr.scribble.book;
 
-import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Style;
+import net.minecraft.text.TextContent;
 import net.minecraft.util.Formatting;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
-public class RichText {
+public class RichText implements StringVisitable, TextContent {
     private final List<Segment> segments;
 
     public RichText(List<Segment> segments) {
@@ -36,14 +33,6 @@ public class RichText {
         return segments.stream()
                 .map(segment -> segment.text.length())
                 .reduce(0, Integer::sum);
-    }
-
-    public int getTrimmedLength(TextHandler textHandler, int maxWidth) {
-        // FIXME: This is inefficient I think..
-        return textHandler
-                .trimToWidth(getAsStringVisitable(), maxWidth, Style.EMPTY)
-                .getString()
-                .length();
     }
 
     // Return a small portion of the rich text, from start to end (exclusive).
@@ -178,12 +167,36 @@ public class RichText {
         return out.toString();
     }
 
-    public StringVisitable getAsStringVisitable() {
-        return StringVisitable.concat(segments.stream().map(segment ->
-                StringVisitable.styled(segment.text, Style.EMPTY
-                        .withFormatting(segment.formats.toArray(new Formatting[0]))
-                        .withColor(segment.color))
-        ).collect(Collectors.toList()));
+    @Override
+    public <T> Optional<T> visit(Visitor<T> visitor) {
+        for (Segment segment : segments) {
+            Optional<T> out = visitor.accept(segment.text);
+            if (out.isPresent()) {
+                return out;
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    public <T> Optional<T> visit(StyledVisitor<T> styledVisitor, Style baseStyle) {
+        for (Segment segment : segments) {
+            Style style = baseStyle
+                    .withFormatting(segment.formats.toArray(new Formatting[0]))
+                    .withColor(segment.color);
+            Optional<T> out = styledVisitor.accept(style, segment.text);
+            if (out.isPresent()) {
+                return out;
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    public String getString() {
+        return this.getPlainText();
     }
 
     public record Segment(String text, Formatting color, Set<Formatting> formats) {

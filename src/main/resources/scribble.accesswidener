@@ -9,10 +9,8 @@ accessible field net/minecraft/client/gui/screen/ingame/BookEditScreen$PageConte
 
 accessible method net/minecraft/client/gui/screen/ingame/BookEditScreen$Position <init> (II)V
 
-accessible field net/minecraft/client/gui/screen/ingame/BookEditScreen$Line content Ljava/lang/String;
-accessible field net/minecraft/client/gui/screen/ingame/BookEditScreen$Line style Lnet/minecraft/text/Style;
-
-accessible class net/minecraft/client/font/TextHandler$WidthLimitingVisitor
+accessible field net/minecraft/client/gui/screen/ingame/BookEditScreen$Line text Lnet/minecraft/text/Text;
+mutable field net/minecraft/client/gui/screen/ingame/BookEditScreen$Line text Lnet/minecraft/text/Text;
 
 accessible field net/minecraft/client/util/SelectionManager selectionStart I
 accessible field net/minecraft/client/util/SelectionManager selectionEnd I

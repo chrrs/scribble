@@ -3,6 +3,7 @@ package me.chrr.scribble.book;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
 import net.minecraft.client.util.math.Rect2i;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 
 public class RichPageContent extends BookEditScreen.PageContent {
@@ -28,17 +29,24 @@ public class RichPageContent extends BookEditScreen.PageContent {
             return this.text.getLength();
         } else {
             Line line = (Line) this.lines[i];
-            return this.lineStarts[i] + line.text.getTrimmedLength(renderer.getTextHandler(), position.x);
+            return this.lineStarts[i] + renderer.getTextHandler()
+                    .trimToWidth(line.richText, position.x, Style.EMPTY)
+                    .getString().length();
         }
     }
 
     public static class Line extends BookEditScreen.Line {
-        private final RichText text;
+        private final RichText richText;
 
-        public Line(RichText text, int x, int y) {
-            // FIXME: Should we do something with `style`?
-            super(Style.EMPTY, text.getAsFormattedString(), x, y);
-            this.text = text;
+        public Line(RichText richText, int x, int y) {
+            super(Style.EMPTY, "", x, y);
+
+            this.richText = richText;
+            this.text = MutableText.of(richText);
+        }
+
+        public RichText getRichText() {
+            return richText;
         }
     }
 }

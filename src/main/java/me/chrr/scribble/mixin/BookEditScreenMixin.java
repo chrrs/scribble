@@ -84,9 +84,9 @@ public abstract class BookEditScreenMixin extends Screen {
     private Rect2i getSelectionRectangle(RichText text, TextHandler handler, int selectionStart, int selectionEnd, int lineY, int lineStart) {
         RichText toSelectionStart = text.subText(lineStart, selectionStart);
         RichText toSelectionEnd = text.subText(lineStart, selectionEnd);
-        BookEditScreen.Position position = new BookEditScreen.Position((int) handler.getWidth(toSelectionStart.getAsStringVisitable()), lineY);
-        BookEditScreen.Position position2 = new BookEditScreen.Position((int) handler.getWidth(toSelectionEnd.getAsStringVisitable()), lineY + 9);
-        return this.getRectFromCorners(position, position2);
+        BookEditScreen.Position topLeft = new BookEditScreen.Position((int) handler.getWidth(toSelectionStart), lineY);
+        BookEditScreen.Position bottomRight = new BookEditScreen.Position((int) handler.getWidth(toSelectionEnd), lineY + 9);
+        return this.getRectFromCorners(topLeft, bottomRight);
     }
 
     // RichText replacement for BookEditScreen#getCurrentPageContent
@@ -115,7 +115,7 @@ public abstract class BookEditScreenMixin extends Screen {
                 this::getClipboard,
                 this::setClipboard,
                 text -> text.getAsFormattedString().length() < 1024
-                        && this.textRenderer.getWrappedLinesHeight(text.getAsStringVisitable(), 114) <= 128
+                        && this.textRenderer.getWrappedLinesHeight(text, 114) <= 128
         );
     }
 
@@ -140,7 +140,6 @@ public abstract class BookEditScreenMixin extends Screen {
 
         IntList lineStarts = new IntArrayList();
         List<RichPageContent.Line> lines = new ArrayList<>();
-        List<RichText> lineTexts = new ArrayList<>();
 
         MutableBoolean endsWithManualNewline = new MutableBoolean();
         TextHandler textHandler = this.textRenderer.getTextHandler();
@@ -152,8 +151,6 @@ public abstract class BookEditScreenMixin extends Screen {
             int i = lineNumber.getAndIncrement();
 
             RichText line = text.subText(start, end);
-            lineTexts.add(line);
-
             String string = line.getAsFormattedString();
             endsWithManualNewline.setValue(string.endsWith("\n"));
 
@@ -173,7 +170,7 @@ public abstract class BookEditScreenMixin extends Screen {
             cursorPosition = new BookEditScreen.Position(0, lines.size() * 9);
         } else {
             int i = getLineFromOffset(lineStartsArray, selectionStart);
-            int width = this.textRenderer.getWidth(text.subText(lineStartsArray[i], selectionStart).getAsStringVisitable());
+            int width = this.textRenderer.getWidth(text.subText(lineStartsArray[i], selectionStart));
             cursorPosition = new BookEditScreen.Position(width, i * 9);
         }
 
@@ -198,8 +195,7 @@ public abstract class BookEditScreenMixin extends Screen {
 
                 for (int i = startLine + 1; i < endLine; i++) {
                     int y = i * 9;
-                    RichText line = lineTexts.get(i);
-                    int s = (int) textHandler.getWidth(line.getAsStringVisitable());
+                    int s = (int) textHandler.getWidth(lines.get(i).getRichText());
                     selectionRectangles.add(this.getRectFromCorners(new BookEditScreen.Position(0, y), new BookEditScreen.Position(s, y + 9)));
                 }
 
