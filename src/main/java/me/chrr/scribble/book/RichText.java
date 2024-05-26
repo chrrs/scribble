@@ -2,13 +2,12 @@ package me.chrr.scribble.book;
 
 import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Style;
-import net.minecraft.text.TextContent;
 import net.minecraft.util.Formatting;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class RichText implements StringVisitable, TextContent {
+public class RichText implements StringVisitable {
     private final List<Segment> segments;
 
     public RichText(List<Segment> segments) {

@@ -4,7 +4,11 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
 import net.minecraft.client.util.math.Rect2i;
 import net.minecraft.text.MutableText;
+import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Style;
+import net.minecraft.text.TextContent;
+
+import java.util.Optional;
 
 public class RichPageContent extends BookEditScreen.PageContent {
     public static final BookEditScreen.PageContent EMPTY = new RichPageContent(
@@ -30,23 +34,38 @@ public class RichPageContent extends BookEditScreen.PageContent {
         } else {
             Line line = (Line) this.lines[i];
             return this.lineStarts[i] + renderer.getTextHandler()
-                    .trimToWidth(line.richText, position.x, Style.EMPTY)
+                    .trimToWidth(line.stringVisitable, position.x, Style.EMPTY)
                     .getString().length();
         }
     }
 
     public static class Line extends BookEditScreen.Line {
-        private final RichText richText;
+        private final StringVisitable stringVisitable;
 
-        public Line(RichText richText, int x, int y) {
+        public Line(StringVisitable stringVisitable, int x, int y) {
             super(Style.EMPTY, "", x, y);
 
-            this.richText = richText;
-            this.text = MutableText.of(richText);
+            this.stringVisitable = stringVisitable;
+            this.text = MutableText.of(toTextContent(stringVisitable));
         }
 
-        public RichText getRichText() {
-            return richText;
+        public StringVisitable getStringVisitable() {
+            return stringVisitable;
+        }
+
+        // FIXME: Does this really not exist already?
+        private static TextContent toTextContent(StringVisitable stringVisitable) {
+            return new TextContent() {
+                @Override
+                public <T> Optional<T> visit(StringVisitable.StyledVisitor<T> visitor, Style style) {
+                    return stringVisitable.visit(visitor, style);
+                }
+
+                @Override
+                public <T> Optional<T> visit(StringVisitable.Visitor<T> visitor) {
+                    return stringVisitable.visit(visitor);
+                }
+            };
         }
     }
 }

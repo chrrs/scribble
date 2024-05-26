@@ -32,9 +32,6 @@ import java.util.Set;
 @Mixin(BookEditScreen.class)
 public abstract class BookEditScreenMixin extends Screen {
     //region @Shadow declarations
-    @Shadow
-    protected abstract BookEditScreen.Position absolutePositionToScreenPosition(BookEditScreen.Position position);
-
     @Mutable
     @Shadow
     @Final
@@ -42,6 +39,12 @@ public abstract class BookEditScreenMixin extends Screen {
 
     @Shadow
     private int currentPage;
+
+    @Shadow
+    private boolean dirty;
+
+    @Shadow
+    protected abstract BookEditScreen.Position absolutePositionToScreenPosition(BookEditScreen.Position position);
 
     @Shadow
     static int getLineFromOffset(int[] lineStarts, int position) {
@@ -56,9 +59,6 @@ public abstract class BookEditScreenMixin extends Screen {
 
     @Shadow
     protected abstract void setClipboard(String clipboard);
-
-    @Shadow
-    private boolean dirty;
 
     @Shadow
     protected abstract void invalidatePageContent();
@@ -141,24 +141,39 @@ public abstract class BookEditScreenMixin extends Screen {
         IntList lineStarts = new IntArrayList();
         List<RichPageContent.Line> lines = new ArrayList<>();
 
-        MutableBoolean endsWithManualNewline = new MutableBoolean();
+        MutableBoolean endsWithNewline = new MutableBoolean();
         TextHandler textHandler = this.textRenderer.getTextHandler();
 
-        // We split the text into lines. On the way, we record the line start positions,
-        // the lines themselves, and if the book ends with a manual newline.
         MutableInt lineNumber = new MutableInt();
-        textHandler.wrapLines(plainText, 114, Style.EMPTY, true, (style, start, end) -> {
-            int i = lineNumber.getAndIncrement();
+        MutableInt charNumber = new MutableInt();
+        textHandler.wrapLines(text, 114, Style.EMPTY, (stringVisitable, continued) -> {
+            String string = stringVisitable.getString();
+            int length = string.length();
 
-            RichText line = text.subText(start, end);
-            String string = line.getAsFormattedString();
-            endsWithManualNewline.setValue(string.endsWith("\n"));
+            int i = lineNumber.getAndIncrement();
+            int start = charNumber.getValue();
+
+            // We need to count the last char, because the visitor cuts it off.
+            // This is basically replacing the `retainTrailingWordSplit` parameter.
+            boolean newline = false;
+            if (plainText.length() > start + length) {
+                char lastChar = plainText.charAt(start + length);
+                if (lastChar == '\n') {
+                    newline = true;
+                    length++;
+                } else if (lastChar == ' ') {
+                    length++;
+                }
+            }
+
+            endsWithNewline.setValue(newline);
+            charNumber.add(length);
 
             int y = i * 9;
             BookEditScreen.Position position = this.absolutePositionToScreenPosition(new BookEditScreen.Position(0, y));
             lineStarts.add(start);
 
-            lines.add(new RichPageContent.Line(line, position.x, position.y));
+            lines.add(new RichPageContent.Line(stringVisitable, position.x, position.y));
         });
 
         int[] lineStartsArray = lineStarts.toIntArray();
@@ -166,7 +181,7 @@ public abstract class BookEditScreenMixin extends Screen {
 
         // We try to find the cursor position.
         BookEditScreen.Position cursorPosition;
-        if (atEnd && endsWithManualNewline.isTrue()) {
+        if (atEnd && endsWithNewline.isTrue()) {
             cursorPosition = new BookEditScreen.Position(0, lines.size() * 9);
         } else {
             int i = getLineFromOffset(lineStartsArray, selectionStart);
@@ -195,7 +210,7 @@ public abstract class BookEditScreenMixin extends Screen {
 
                 for (int i = startLine + 1; i < endLine; i++) {
                     int y = i * 9;
-                    int s = (int) textHandler.getWidth(lines.get(i).getRichText());
+                    int s = (int) textHandler.getWidth(lines.get(i).getStringVisitable());
                     selectionRectangles.add(this.getRectFromCorners(new BookEditScreen.Position(0, y), new BookEditScreen.Position(s, y + 9)));
                 }
 
