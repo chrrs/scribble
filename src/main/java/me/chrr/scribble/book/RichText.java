@@ -23,7 +23,7 @@ public class RichText implements StringVisitable {
 
         StringBuilder text = new StringBuilder();
         Formatting color = Formatting.RESET;
-        Set<Formatting> formats = new HashSet<>();
+        Set<Formatting> modifiers = new HashSet<>();
 
         for (int i = 0; i < string.length(); ) {
             int codePoint = string.codePointAt(i);
@@ -40,15 +40,15 @@ public class RichText implements StringVisitable {
                 Formatting formatting = Formatting.byCode(code);
                 if (formatting != null) {
                     if (!text.isEmpty()) {
-                        segments.add(new Segment(text.toString(), color, new HashSet<>(formats)));
+                        segments.add(new Segment(text.toString(), color, new HashSet<>(modifiers)));
                         text = new StringBuilder();
                     }
 
                     if (formatting.isModifier()) {
-                        formats.add(formatting);
+                        modifiers.add(formatting);
                     } else {
                         color = formatting;
-                        formats.clear();
+                        modifiers.clear();
                     }
                 }
             } else {
@@ -57,7 +57,7 @@ public class RichText implements StringVisitable {
         }
 
         if (!text.isEmpty()) {
-            segments.add(new Segment(text.toString(), color, formats));
+            segments.add(new Segment(text.toString(), color, modifiers));
         }
 
         return new RichText(segments);
@@ -100,7 +100,7 @@ public class RichText implements StringVisitable {
             int localStart = Math.max(0, start - current);
             int localEnd = Math.min(length, end - current);
 
-            subSegments.add(new Segment(segment.text.substring(localStart, localEnd), segment.color, segment.formats));
+            subSegments.add(new Segment(segment.text.substring(localStart, localEnd), segment.color, segment.modifiers));
             current += length;
         }
 
@@ -133,17 +133,17 @@ public class RichText implements StringVisitable {
 
             // There's some text before our region
             if (localStart > 0) {
-                newSegments.add(new Segment(segment.text.substring(0, localStart), segment.color, segment.formats));
+                newSegments.add(new Segment(segment.text.substring(0, localStart), segment.color, segment.modifiers));
             }
 
             if (!replacement.isEmpty() && !replacementAppended) {
-                newSegments.add(new Segment(replacement, segment.color, segment.formats));
+                newSegments.add(new Segment(replacement, segment.color, segment.modifiers));
                 replacementAppended = true;
             }
 
             // There's some text after our region
             if (localEnd < length) {
-                newSegments.add(new Segment(segment.text.substring(localEnd), segment.color, segment.formats));
+                newSegments.add(new Segment(segment.text.substring(localEnd), segment.color, segment.modifiers));
             }
 
             current += length;
@@ -167,7 +167,7 @@ public class RichText implements StringVisitable {
 
             int localIndex = index - current;
             String newText = segment.text.substring(0, localIndex) + text + segment.text.substring(localIndex);
-            newSegments.set(i, new Segment(newText, segment.color, segment.formats));
+            newSegments.set(i, new Segment(newText, segment.color, segment.modifiers));
             break;
         }
 
@@ -179,7 +179,7 @@ public class RichText implements StringVisitable {
         StringBuilder out = new StringBuilder();
 
         Formatting currentColor = Formatting.RESET;
-        Set<Formatting> currentFormats = new HashSet<>();
+        Set<Formatting> currentModifiers = new HashSet<>();
 
         for (Segment segment : segments) {
             if (segment.text.isEmpty()) {
@@ -187,29 +187,28 @@ public class RichText implements StringVisitable {
             }
 
             boolean colorChanged = !segment.color.equals(currentColor);
-            Set<Formatting> segmentFormats = new HashSet<>(segment.formats);
 
-            Set<Formatting> formatsToRemove = new HashSet<>(currentFormats);
-            formatsToRemove.removeAll(segmentFormats);
-            boolean shouldReapply = colorChanged || !formatsToRemove.isEmpty();
+            Set<Formatting> modifiersToRemove = new HashSet<>(currentModifiers);
+            modifiersToRemove.removeAll(segment.modifiers);
+            boolean shouldReapply = colorChanged || !modifiersToRemove.isEmpty();
 
-            Set<Formatting> formatsToAdd = new HashSet<>(segmentFormats);
+            Set<Formatting> modifiersToAdd = new HashSet<>(segment.modifiers);
             if (!shouldReapply) {
-                formatsToAdd.removeAll(currentFormats);
+                modifiersToAdd.removeAll(currentModifiers);
             }
 
             if (colorChanged || shouldReapply) {
                 out.append(segment.color);
             }
 
-            for (Formatting format : formatsToAdd) {
+            for (Formatting format : modifiersToAdd) {
                 out.append(format);
             }
 
             out.append(segment.text);
 
             currentColor = segment.color;
-            currentFormats = segmentFormats;
+            currentModifiers = segment.modifiers;
         }
 
         return out.toString();
@@ -231,7 +230,7 @@ public class RichText implements StringVisitable {
     public <T> Optional<T> visit(StyledVisitor<T> styledVisitor, Style baseStyle) {
         for (Segment segment : segments) {
             Style style = baseStyle
-                    .withFormatting(segment.formats.toArray(new Formatting[0]))
+                    .withFormatting(segment.modifiers.toArray(new Formatting[0]))
                     .withColor(segment.color);
             Optional<T> out = styledVisitor.accept(style, segment.text);
             if (out.isPresent()) {
@@ -247,6 +246,6 @@ public class RichText implements StringVisitable {
         return this.getPlainText();
     }
 
-    public record Segment(String text, Formatting color, Set<Formatting> formats) {
+    public record Segment(String text, Formatting color, Set<Formatting> modifiers) {
     }
 }
