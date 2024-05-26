@@ -13,12 +13,15 @@ public class RichSelectionManager extends SelectionManager {
     private final Consumer<RichText> textSetter;
     private final Predicate<RichText> textFilter;
 
-    public RichSelectionManager(Supplier<RichText> textGetter, Consumer<RichText> textSetter, Supplier<String> clipboardGetter, Consumer<String> clipboardSetter, Predicate<RichText> textFilter) {
-        super(() -> textGetter.get().getPlainText(), s -> {
-        }, clipboardGetter, clipboardSetter, s -> true);
+    public RichSelectionManager(Supplier<RichText> textGetter, Consumer<RichText> textSetter, Consumer<String> stringSetter, Supplier<String> clipboardGetter, Consumer<String> clipboardSetter, Predicate<RichText> textFilter) {
+        super(() -> textGetter.get().getPlainText(), stringSetter, clipboardGetter, clipboardSetter, s -> true);
         this.textGetter = textGetter;
-        this.textSetter = textSetter;
         this.textFilter = textFilter;
+
+        this.textSetter = (text) -> {
+            textSetter.accept(text);
+            stringSetter.accept(text.getAsFormattedString());
+        };
     }
 
     @Override

@@ -18,6 +18,51 @@ public class RichText implements StringVisitable {
         return new RichText(List.of(new Segment("", Formatting.RESET, Set.of())));
     }
 
+    public static RichText fromFormattedString(String string) {
+        List<Segment> segments = new ArrayList<>();
+
+        StringBuilder text = new StringBuilder();
+        Formatting color = Formatting.RESET;
+        Set<Formatting> formats = new HashSet<>();
+
+        for (int i = 0; i < string.length(); ) {
+            int codePoint = string.codePointAt(i);
+            i += Character.charCount(codePoint);
+
+            if (codePoint == (int) '§') {
+                if (i >= string.length()) {
+                    break;
+                }
+
+                char code = string.charAt(i);
+                i++;
+
+                Formatting formatting = Formatting.byCode(code);
+                if (formatting != null) {
+                    if (!text.isEmpty()) {
+                        segments.add(new Segment(text.toString(), color, new HashSet<>(formats)));
+                        text = new StringBuilder();
+                    }
+
+                    if (formatting.isModifier()) {
+                        formats.add(formatting);
+                    } else {
+                        color = formatting;
+                        formats.clear();
+                    }
+                }
+            } else {
+                text.appendCodePoint(codePoint);
+            }
+        }
+
+        if (!text.isEmpty()) {
+            segments.add(new Segment(text.toString(), color, formats));
+        }
+
+        return new RichText(segments);
+    }
+
     public String getPlainText() {
         return segments.stream()
                 .map(segment -> segment.text)
@@ -25,7 +70,7 @@ public class RichText implements StringVisitable {
     }
 
     public boolean isEmpty() {
-        return segments.isEmpty();
+        return getPlainText().isEmpty();
     }
 
     public int getLength() {
@@ -137,6 +182,10 @@ public class RichText implements StringVisitable {
         Set<Formatting> currentFormats = new HashSet<>();
 
         for (Segment segment : segments) {
+            if (segment.text.isEmpty()) {
+                continue;
+            }
+
             boolean colorChanged = !segment.color.equals(currentColor);
             Set<Formatting> segmentFormats = new HashSet<>(segment.formats);
 

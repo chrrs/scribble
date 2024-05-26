@@ -3,19 +3,21 @@ package me.chrr.scribble.mixin;
 import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.RichPageContent;
 import me.chrr.scribble.book.RichSelectionManager;
 import me.chrr.scribble.book.RichText;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
+import net.minecraft.client.gui.screen.ingame.BookScreen;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.client.util.math.Rect2i;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -23,11 +25,10 @@ import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.ListIterator;
 
 @Mixin(BookEditScreen.class)
 public abstract class BookEditScreenMixin extends Screen {
@@ -42,6 +43,10 @@ public abstract class BookEditScreenMixin extends Screen {
 
     @Shadow
     private boolean dirty;
+
+    @Shadow
+    @Final
+    private List<String> pages;
 
     @Shadow
     protected abstract BookEditScreen.Position absolutePositionToScreenPosition(BookEditScreen.Position position);
@@ -65,14 +70,7 @@ public abstract class BookEditScreenMixin extends Screen {
     //endregion
 
     @Unique
-    private final List<RichText> richPages = new ArrayList<>(List.of(
-            new RichText(List.of(
-                    new RichText.Segment("Helloooo es", Formatting.RED, Set.of(Formatting.BOLD)),
-                    new RichText.Segment(" world and\nthings that", Formatting.RED, Set.of(Formatting.BOLD, Formatting.ITALIC)),
-                    new RichText.Segment("!!!", Formatting.RED, Set.of(Formatting.ITALIC)),
-                    new RichText.Segment(" and others that make this text very very very long!!", Formatting.BLUE, Set.of(Formatting.ITALIC))
-            ))
-    ));
+    private final List<RichText> richPages = new ArrayList<>();
 
     // Dummy constructor to match super
     protected BookEditScreenMixin(Text title) {
@@ -109,30 +107,67 @@ public abstract class BookEditScreenMixin extends Screen {
 
     @Inject(method = "<init>", at = @At(value = "TAIL"))
     public void init(PlayerEntity player, ItemStack itemStack, Hand hand, CallbackInfo ci) {
+        // Replace the selection manager with our own
         currentPageSelectionManager = new RichSelectionManager(
                 this::getCurrentPageText,
                 this::setPageText,
+                (string) -> this.pages.set(this.currentPage, string),
                 this::getClipboard,
                 this::setClipboard,
                 text -> text.getAsFormattedString().length() < 1024
                         && this.textRenderer.getWrappedLinesHeight(text, 114) <= 128
         );
+
+        // Load the text from NBT
+        NbtCompound nbt = itemStack.getNbt();
+        if (nbt != null) {
+            BookScreen.filterPages(nbt, (string) -> richPages.add(RichText.fromFormattedString(string)));
+        }
     }
 
-    // We replace the full createPageContent method with our own.
-    // The contents of this methods are copied basically 1 to 1 from the original
-    // method, with changes to RichText where necessary.
-    // FIXME: I feel like we should use less RichText#subText for performance reasons.
-    @Inject(method = "createPageContent", at = @At(value = "HEAD"), cancellable = true)
-    private void createPageContent(CallbackInfoReturnable<BookEditScreen.PageContent> cir) {
-        cir.cancel();
+    /**
+     * @reason We can't be too sure that the `pages` variable is accurate on checking if it's
+     * empty, so we check with `richPages` instead.
+     * @author chrrrs
+     */
+    @Overwrite
+    private void removeEmptyPages() {
+        ListIterator<RichText> listIterator = this.richPages.listIterator(this.richPages.size());
+        while (listIterator.hasPrevious() && listIterator.previous().isEmpty()) {
+            listIterator.remove();
+        }
+    }
 
+    @Inject(method = "appendNewPage", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z"))
+    private void appendNewPage(CallbackInfo ci) {
+        richPages.add(RichText.empty());
+    }
+
+    /**
+     * @reason This method should not be called, as it is replaced by {@link #setPageText}.
+     * @author chrrrs
+     */
+    @Overwrite
+    private void setPageContent(String newContent) {
+        Scribble.LOGGER.warn("setPageContent() was called, but ignored.");
+    }
+
+    /**
+     * The contents of this method are basically a 1 to 1 translation of
+     * {@link BookEditScreen#createPageContent}, but edited to work with rich text.
+     *
+     * @reason To help with rich page editing, we replace this function to always
+     * return a {@link RichPageContent} instance. There's too many changes
+     * here to just mixin, so we overwrite it instead.
+     * @author chrrrs
+     */
+    @Overwrite
+    private BookEditScreen.PageContent createPageContent() {
         RichText text = getCurrentPageText();
         String plainText = text.getPlainText();
 
         if (text.isEmpty()) {
-            cir.setReturnValue(RichPageContent.EMPTY);
-            return;
+            return RichPageContent.EMPTY;
         }
 
         int selectionStart = this.currentPageSelectionManager.getSelectionStart();
@@ -218,6 +253,6 @@ public abstract class BookEditScreenMixin extends Screen {
             }
         }
 
-        cir.setReturnValue(new RichPageContent(text, cursorPosition, atEnd, lineStartsArray, lines.toArray(new BookEditScreen.Line[0]), selectionRectangles.toArray(new Rect2i[0])));
+        return new RichPageContent(text, cursorPosition, atEnd, lineStartsArray, lines.toArray(new BookEditScreen.Line[0]), selectionRectangles.toArray(new Rect2i[0]));
     }
 }
