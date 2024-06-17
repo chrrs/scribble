@@ -1,10 +1,11 @@
 plugins {
-    id("fabric-loom") version "1.5-SNAPSHOT"
+    id("fabric-loom") version "1.6-SNAPSHOT"
 }
 
 val minecraftVersion: String by project
 val yarnMappings: String by project
 val loaderVersion: String by project
+val apiVersion: String by project
 
 val modVersion: String by project
 val mavenGroup: String by project
@@ -33,6 +34,8 @@ dependencies {
     minecraft("com.mojang:minecraft:$minecraftVersion")
     mappings("net.fabricmc:yarn:$yarnMappings:v2")
     modImplementation("net.fabricmc:fabric-loader:$loaderVersion")
+
+    modImplementation("net.fabricmc.fabric-api:fabric-api:$apiVersion")
 }
 
 tasks {

@@ -3,6 +3,7 @@ package me.chrr.scribble.book;
 import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Style;
 import net.minecraft.util.Formatting;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -169,6 +170,60 @@ public class RichText implements StringVisitable {
             String newText = segment.text.substring(0, localIndex) + text + segment.text.substring(localIndex);
             newSegments.set(i, new Segment(newText, segment.color, segment.modifiers));
             break;
+        }
+
+        return new RichText(newSegments);
+    }
+
+    public RichText applyFormatting(
+            int start, int end,
+            @Nullable Formatting newColor,
+            Set<Formatting> addModifiers,
+            Set<Formatting> removeModifiers
+    ) {
+        int current = 0;
+        List<Segment> newSegments = new ArrayList<>();
+        for (Segment segment : segments) {
+            int length = segment.text.length();
+
+            // We're before the segment we're modifying in
+            if (current + length <= start) {
+                newSegments.add(segment);
+                current += length;
+                continue;
+            }
+
+            // We're after the segment we're modifying in
+            if (current >= end) {
+                newSegments.add(segment);
+                continue;
+            }
+
+            int localStart = Math.max(0, start - current);
+            int localEnd = Math.min(length, end - current);
+
+            // There's some text before our region
+            if (localStart > 0) {
+                newSegments.add(new Segment(segment.text.substring(0, localStart), segment.color, segment.modifiers));
+            }
+
+            // The text we're modifying
+            String modifiedText = segment.text.substring(localStart, localEnd);
+
+            // Let's calculate the final color and modifiers.
+            Formatting color = Optional.ofNullable(newColor).orElse(segment.color);
+            Set<Formatting> modifiers = new HashSet<>(segment.modifiers);
+            modifiers.addAll(addModifiers);
+            modifiers.removeAll(removeModifiers);
+
+            newSegments.add(new Segment(modifiedText, color, modifiers));
+
+            // There's some text after our region
+            if (localEnd < length) {
+                newSegments.add(new Segment(segment.text.substring(localEnd), segment.color, segment.modifiers));
+            }
+
+            current += length;
         }
 
         return new RichText(newSegments);
