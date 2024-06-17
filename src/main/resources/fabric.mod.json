@@ -22,8 +22,8 @@
         "client": ["me.chrr.scribble.Scribble"]
     },
     "depends": {
+        "minecraft": "${minecraftVersion}",
         "fabricloader": ">=0.14",
-        "fabric": "*",
-        "minecraft": "${minecraftVersion}"
+        "fabric-resource-loader-v0": "*"
     }
 }

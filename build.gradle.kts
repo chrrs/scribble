@@ -31,11 +31,14 @@ repositories {
 dependencies {
     // To change the versions, see the gradle.properties file
 
+    fun fabricApiModule(name: String) =
+        modImplementation(fabricApi.module(name, apiVersion))
+
     minecraft("com.mojang:minecraft:$minecraftVersion")
     mappings("net.fabricmc:yarn:$yarnMappings:v2")
     modImplementation("net.fabricmc:fabric-loader:$loaderVersion")
 
-    modImplementation("net.fabricmc.fabric-api:fabric-api:$apiVersion")
+    include(fabricApiModule("fabric-resource-loader-v0")!!)
 }
 
 tasks {
