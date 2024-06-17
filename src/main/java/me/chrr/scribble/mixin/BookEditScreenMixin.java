@@ -28,6 +28,7 @@ import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -215,6 +216,13 @@ public abstract class BookEditScreenMixin extends Screen {
         underlineButton.toggled = modifiers.contains(Formatting.UNDERLINE);
         strikethroughButton.toggled = modifiers.contains(Formatting.STRIKETHROUGH);
         obfuscatedButton.toggled = modifiers.contains(Formatting.OBFUSCATED);
+    }
+
+    // When asking for the current page content, we return the plain text.
+    // This method is only actively used when double-clicking to select a word.
+    @Redirect(method = "getCurrentPageContent", at = @At(value = "INVOKE", target = "Ljava/util/List;get(I)Ljava/lang/Object;"))
+    public Object getCurrentPageContent(List<String> pages, int page) {
+        return this.richPages.get(page).getPlainText();
     }
 
     // We cancel any drags outside the width of the book interface.
