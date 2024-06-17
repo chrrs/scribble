@@ -125,7 +125,6 @@ public abstract class BookEditScreenMixin extends Screen {
     /**
      * RichText replacement for BookEditScreen#setPageContent.
      */
-    //
     @Unique
     private void setPageText(RichText newText) {
         if (this.currentPage >= 0 && this.currentPage < this.richPages.size()) {
