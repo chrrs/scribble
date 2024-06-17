@@ -49,4 +49,9 @@ public class ModifierButtonWidget extends ClickableWidget {
         this.toggled = !this.toggled;
         onToggle.accept(this.toggled);
     }
+
+    public void toggle() {
+        this.toggled = !this.toggled;
+        onToggle.accept(this.toggled);
+    }
 }

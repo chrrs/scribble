@@ -24,6 +24,7 @@ import net.minecraft.util.Hand;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -251,6 +252,29 @@ public abstract class BookEditScreenMixin extends Screen {
     @Overwrite
     private void setPageContent(String newContent) {
         Scribble.LOGGER.warn("setPageContent() was called, but ignored.");
+    }
+
+    @Inject(method = "keyPressedEditMode", at = @At(value = "HEAD"), cancellable = true)
+    private void keyPressedEditMode(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
+        // We inject some hotkeys for toggling formatting options.
+        if (hasControlDown() && !hasShiftDown() && !hasAltDown()) {
+            if (keyCode == GLFW.GLFW_KEY_B) {
+                this.boldButton.toggle();
+            } else if (keyCode == GLFW.GLFW_KEY_I) {
+                this.italicButton.toggle();
+            } else if (keyCode == GLFW.GLFW_KEY_U) {
+                this.underlineButton.toggle();
+            } else if (keyCode == GLFW.GLFW_KEY_MINUS) {
+                this.strikethroughButton.toggle();
+            } else if (keyCode == GLFW.GLFW_KEY_K) {
+                this.obfuscatedButton.toggle();
+            } else {
+                return;
+            }
+
+            cir.setReturnValue(true);
+            cir.cancel();
+        }
     }
 
     /**
