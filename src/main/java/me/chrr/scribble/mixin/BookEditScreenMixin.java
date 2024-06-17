@@ -23,6 +23,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -32,6 +33,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
 
 @Mixin(BookEditScreen.class)
 public abstract class BookEditScreenMixin extends Screen {
@@ -145,6 +147,7 @@ public abstract class BookEditScreenMixin extends Screen {
         int y = 16;
 
         // Modifier buttons
+        // They're all toggled off by default, this is fixed in #initScreen.
         boldButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.bold"),
                 (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.BOLD, toggled),
@@ -174,13 +177,7 @@ public abstract class BookEditScreenMixin extends Screen {
                 this::getCurrentPageText,
                 this::setPageText,
                 (string) -> this.pages.set(this.currentPage, string),
-                (color, modifiers) -> {
-                    boldButton.toggled = modifiers.contains(Formatting.BOLD);
-                    italicButton.toggled = modifiers.contains(Formatting.ITALIC);
-                    underlineButton.toggled = modifiers.contains(Formatting.UNDERLINE);
-                    strikethroughButton.toggled = modifiers.contains(Formatting.STRIKETHROUGH);
-                    obfuscatedButton.toggled = modifiers.contains(Formatting.OBFUSCATED);
-                },
+                this::updateState,
                 this::getClipboard,
                 this::setClipboard,
                 text -> text.getAsFormattedString().length() < 1024
@@ -197,6 +194,9 @@ public abstract class BookEditScreenMixin extends Screen {
     @Inject(method = "init", at = @At(value = "HEAD"))
     private void initScreen(CallbackInfo ci) {
         initButtons();
+
+        // We need to update the states of all the buttons again.
+        this.getRichSelectionManager().updateSelectionFormatting();
     }
 
     @Inject(method = "updateButtons", at = @At(value = "HEAD"))
@@ -206,6 +206,15 @@ public abstract class BookEditScreenMixin extends Screen {
         this.underlineButton.visible = !this.signing;
         this.strikethroughButton.visible = !this.signing;
         this.obfuscatedButton.visible = !this.signing;
+    }
+
+    @Unique
+    private void updateState(@Nullable Formatting color, Set<Formatting> modifiers) {
+        boldButton.toggled = modifiers.contains(Formatting.BOLD);
+        italicButton.toggled = modifiers.contains(Formatting.ITALIC);
+        underlineButton.toggled = modifiers.contains(Formatting.UNDERLINE);
+        strikethroughButton.toggled = modifiers.contains(Formatting.STRIKETHROUGH);
+        obfuscatedButton.toggled = modifiers.contains(Formatting.OBFUSCATED);
     }
 
     // We cancel any drags outside the width of the book interface.

@@ -3,6 +3,7 @@ package me.chrr.scribble.book;
 import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Style;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -379,6 +380,65 @@ public class RichText implements StringVisitable {
     @Override
     public String getString() {
         return this.getPlainText();
+    }
+
+    /**
+     * Get the common color and modifiers in the specified text range.
+     * The color returned will be null if the range has multiple colors.
+     *
+     * @param start start of text range (inclusive).
+     * @param end   end of text range (exclusive).
+     * @return a pair with the common color and modifiers.
+     */
+    public Pair<@Nullable Formatting, Set<Formatting>> getCommonFormat(int start, int end) {
+        boolean first = true;
+        Set<Formatting> modifiers = null;
+        Formatting color = null;
+
+        int current = 0;
+        for (Segment segment : segments) {
+            int length = segment.text.length();
+
+            // If we have a zero-width selection, we want the formatting of
+            // the segment before it.
+            if (start == end && start <= current + length) {
+                return new Pair<>(segment.color, segment.modifiers);
+            }
+
+            // We're before the segment we're searching for
+            if (current + length <= start) {
+                current += length;
+                continue;
+            }
+
+            // We're after the segment, so we can stop
+            if (current >= end) {
+                break;
+            }
+
+            // For the first segment, we initialize the values. Otherwise,
+            // we just adapt them to the current segment.
+            if (first) {
+                modifiers = new HashSet<>(segment.modifiers);
+                color = segment.color;
+                first = false;
+            } else {
+                modifiers.retainAll(segment.modifiers);
+
+                // Set the color to null if it's different.
+                if (color != segment.color) {
+                    color = null;
+                }
+            }
+
+            current += length;
+        }
+
+        if (modifiers == null) {
+            modifiers = Set.of();
+        }
+
+        return new Pair<>(color, modifiers);
     }
 
     /**

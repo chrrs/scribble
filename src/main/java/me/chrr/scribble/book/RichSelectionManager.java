@@ -3,6 +3,7 @@ package me.chrr.scribble.book;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Pair;
 import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,8 +19,9 @@ public class RichSelectionManager extends SelectionManager {
     private final Predicate<RichText> textFilter;
     private final StateCallback stateCallback;
 
+    @Nullable
     private Formatting color = Formatting.RESET;
-    private final Set<Formatting> modifiers = new HashSet<>();
+    private Set<Formatting> modifiers = new HashSet<>();
 
     public RichSelectionManager(Supplier<RichText> textGetter, Consumer<RichText> textSetter, Consumer<String> stringSetter, StateCallback stateCallback, Supplier<String> clipboardGetter, Consumer<String> clipboardSetter, Predicate<RichText> textFilter) {
         super(() -> textGetter.get().getPlainText(), stringSetter, clipboardGetter, clipboardSetter, s -> true);
@@ -79,6 +81,7 @@ public class RichSelectionManager extends SelectionManager {
         }
 
         this.textSetter.accept(text);
+        updateSelectionFormatting();
     }
 
     @Override
@@ -125,6 +128,49 @@ public class RichSelectionManager extends SelectionManager {
             this.modifiers.addAll(addModifiers);
             this.modifiers.removeAll(removeModifiers);
         }
+    }
+
+    public void updateSelectionFormatting() {
+        if (this.textGetter == null) {
+            // We're too early, abort.
+            return;
+        }
+
+        int start = Math.min(this.selectionStart, this.selectionEnd);
+        int end = Math.max(this.selectionStart, this.selectionEnd);
+        Pair<Formatting, Set<Formatting>> format = this.textGetter.get().getCommonFormat(start, end);
+
+        this.color = format.getLeft();
+        this.modifiers = format.getRight();
+
+        this.stateCallback.update(this.color, this.modifiers);
+    }
+
+    @Override
+    public void setSelection(int start, int end) {
+        super.setSelection(start, end);
+        updateSelectionFormatting();
+    }
+
+    @Override
+    public void selectAll() {
+        super.selectAll();
+        updateSelectionFormatting();
+    }
+
+    @Override
+    protected void updateSelectionRange(boolean shiftDown) {
+        super.updateSelectionRange(shiftDown);
+        updateSelectionFormatting();
+    }
+
+    @Nullable
+    public Formatting getColor() {
+        return color;
+    }
+
+    public Set<Formatting> getModifiers() {
+        return modifiers;
     }
 
     public interface StateCallback {
