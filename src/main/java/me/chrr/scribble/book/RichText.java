@@ -219,6 +219,10 @@ public class RichText implements StringVisitable {
      * @return a RichText instance with the specified string inserted.
      */
     public RichText insert(int offset, String text, Formatting color, Set<Formatting> modifiers) {
+        if (text.isEmpty()) {
+            return this;
+        }
+
         if (this.segments.isEmpty()) {
             return new RichText(Collections.singletonList(new Segment(text, color, modifiers)));
         }
@@ -242,9 +246,19 @@ public class RichText implements StringVisitable {
                 String newText = segment.text.substring(0, localOffset) + text + segment.text.substring(localOffset);
                 newSegments.set(i, new Segment(newText, segment.color, segment.modifiers));
             } else {
-                newSegments.set(i, new Segment(segment.text.substring(0, localOffset), segment.color, segment.modifiers));
-                newSegments.add(i + 1, new Segment(text, color, modifiers));
-                newSegments.add(i + 1, new Segment(segment.text.substring(localOffset), segment.color, modifiers));
+                // We do some reordering to keep the indices correct.
+                // First replace the middle segment.
+                newSegments.set(i, new Segment(text, color, modifiers));
+
+                // Then add the last segment.
+                if (offset < current + length) {
+                    newSegments.add(i + 1, new Segment(segment.text.substring(localOffset), segment.color, modifiers));
+                }
+
+                // Last, add the first segment.
+                if (localOffset > 0) {
+                    newSegments.add(i, new Segment(segment.text.substring(0, localOffset), segment.color, segment.modifiers));
+                }
             }
 
             break;
@@ -270,6 +284,10 @@ public class RichText implements StringVisitable {
             Set<Formatting> addModifiers,
             Set<Formatting> removeModifiers
     ) {
+        if (start == end) {
+            return this;
+        }
+
         int current = 0;
         List<Segment> newSegments = new ArrayList<>();
         for (Segment segment : segments) {
@@ -405,8 +423,8 @@ public class RichText implements StringVisitable {
      */
     public Pair<@Nullable Formatting, Set<Formatting>> getCommonFormat(int start, int end) {
         boolean first = true;
-        Set<Formatting> modifiers = null;
-        Formatting color = null;
+        Set<Formatting> modifiers = Set.of();
+        Formatting color = Formatting.RESET;
 
         int current = 0;
         for (Segment segment : segments) {
@@ -445,10 +463,6 @@ public class RichText implements StringVisitable {
             }
 
             current += length;
-        }
-
-        if (modifiers == null) {
-            modifiers = Set.of();
         }
 
         return new Pair<>(color, modifiers);
