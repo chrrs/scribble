@@ -1,5 +1,6 @@
 package me.chrr.scribble.book;
 
+import me.chrr.scribble.Scribble;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.util.Formatting;
@@ -25,7 +26,13 @@ public class RichSelectionManager extends SelectionManager {
     private Set<Formatting> modifiers = new HashSet<>();
 
     public RichSelectionManager(Supplier<RichText> textGetter, Consumer<RichText> textSetter, Consumer<String> stringSetter, StateCallback stateCallback, Supplier<String> clipboardGetter, Consumer<String> clipboardSetter, Predicate<RichText> textFilter) {
-        super(() -> textGetter.get().getPlainText(), stringSetter, clipboardGetter, clipboardSetter, s -> true);
+        super(
+                () -> textGetter.get().getPlainText(),
+                (text) -> Scribble.LOGGER.warn("stringSetter called with \"{}\"", text),
+                clipboardGetter, clipboardSetter,
+                s -> true
+        );
+
         this.textGetter = textGetter;
         this.textFilter = textFilter;
         this.stateCallback = stateCallback;
