@@ -49,7 +49,7 @@ public class RichSelectionManager extends SelectionManager {
     public void insert(String string) {
         RichText text;
         if (this.selectionStart == this.selectionEnd) {
-            text = this.textGetter.get().insert(this.selectionStart, string, Optional.ofNullable(color).orElse(Formatting.RESET), modifiers);
+            text = this.textGetter.get().insert(this.selectionStart, string, Optional.ofNullable(this.color).orElse(Formatting.RESET), Set.copyOf(this.modifiers));
         } else {
             int start = Math.min(this.selectionStart, this.selectionEnd);
             int end = Math.max(this.selectionStart, this.selectionEnd);

@@ -39,10 +39,10 @@ public class RichText implements StringVisitable {
     /**
      * Create a new empty RichText instance.
      *
-     * @return a rich text with a single, empty, segment.
+     * @return a rich text without any segments.
      */
     public static RichText empty() {
-        return new RichText(List.of(new Segment("", Formatting.RESET, Set.of())));
+        return new RichText(List.of());
     }
 
     /**
@@ -220,7 +220,7 @@ public class RichText implements StringVisitable {
      */
     public RichText insert(int offset, String text, Formatting color, Set<Formatting> modifiers) {
         if (this.segments.isEmpty()) {
-            return new RichText(Collections.singletonList(new Segment(text, Formatting.RESET, Set.of())));
+            return new RichText(Collections.singletonList(new Segment(text, color, modifiers)));
         }
 
         int current = 0;
