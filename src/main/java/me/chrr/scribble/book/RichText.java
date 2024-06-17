@@ -218,7 +218,11 @@ public class RichText implements StringVisitable {
      * @param text   string of text to insert.
      * @return a RichText instance with the specified string inserted.
      */
-    public RichText insert(int offset, String text) {
+    public RichText insert(int offset, String text, Formatting color, Set<Formatting> modifiers) {
+        if (this.segments.isEmpty()) {
+            return new RichText(Collections.singletonList(new Segment(text, Formatting.RESET, Set.of())));
+        }
+
         int current = 0;
         List<Segment> newSegments = new ArrayList<>(segments);
         for (int i = 0; i < segments.size(); i++) {
@@ -232,8 +236,17 @@ public class RichText implements StringVisitable {
             }
 
             int localOffset = offset - current;
-            String newText = segment.text.substring(0, localOffset) + text + segment.text.substring(localOffset);
-            newSegments.set(i, new Segment(newText, segment.color, segment.modifiers));
+
+            // If the color and modifiers are the same, we can avoid creating a new segment.
+            if (segment.color == color && segment.modifiers.equals(modifiers)) {
+                String newText = segment.text.substring(0, localOffset) + text + segment.text.substring(localOffset);
+                newSegments.set(i, new Segment(newText, segment.color, segment.modifiers));
+            } else {
+                newSegments.set(i, new Segment(segment.text.substring(0, localOffset), segment.color, segment.modifiers));
+                newSegments.add(i + 1, new Segment(text, color, modifiers));
+                newSegments.add(i + 1, new Segment(segment.text.substring(localOffset), segment.color, modifiers));
+            }
+
             break;
         }
 

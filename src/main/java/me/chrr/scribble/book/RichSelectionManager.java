@@ -8,6 +8,7 @@ import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -48,13 +49,14 @@ public class RichSelectionManager extends SelectionManager {
     public void insert(String string) {
         RichText text;
         if (this.selectionStart == this.selectionEnd) {
-            text = this.textGetter.get().insert(this.selectionStart, string);
+            text = this.textGetter.get().insert(this.selectionStart, string, Optional.ofNullable(color).orElse(Formatting.RESET), modifiers);
         } else {
             int start = Math.min(this.selectionStart, this.selectionEnd);
             int end = Math.max(this.selectionStart, this.selectionEnd);
 
             text = this.textGetter.get().replace(start, end, string);
             this.selectionStart = this.selectionEnd = start;
+            updateSelectionFormatting();
         }
 
         if (this.textFilter.test(text)) {
@@ -67,7 +69,11 @@ public class RichSelectionManager extends SelectionManager {
     public void delete(int offset) {
         RichText text = this.textGetter.get();
         if (this.selectionEnd != this.selectionStart) {
-            text = text.replace(this.selectionStart, this.selectionEnd, "");
+            int start = Math.min(this.selectionStart, this.selectionEnd);
+            int end = Math.max(this.selectionStart, this.selectionEnd);
+
+            text = text.replace(start, end, "");
+            this.selectionStart = this.selectionEnd = start;
         } else {
             int cursor = Util.moveCursor(text.getPlainText(), this.selectionStart, offset);
             int start = Math.min(cursor, this.selectionStart);
@@ -93,7 +99,6 @@ public class RichSelectionManager extends SelectionManager {
     @Override
     public void paste() {
         this.insert(this.clipboardGetter.get());
-        this.selectionEnd = this.selectionStart;
     }
 
     public void setColor(Formatting color) {
@@ -141,7 +146,7 @@ public class RichSelectionManager extends SelectionManager {
         Pair<Formatting, Set<Formatting>> format = this.textGetter.get().getCommonFormat(start, end);
 
         this.color = format.getLeft();
-        this.modifiers = format.getRight();
+        this.modifiers = new HashSet<>(format.getRight());
 
         this.stateCallback.update(this.color, this.modifiers);
     }
@@ -162,15 +167,6 @@ public class RichSelectionManager extends SelectionManager {
     protected void updateSelectionRange(boolean shiftDown) {
         super.updateSelectionRange(shiftDown);
         updateSelectionFormatting();
-    }
-
-    @Nullable
-    public Formatting getColor() {
-        return color;
-    }
-
-    public Set<Formatting> getModifiers() {
-        return modifiers;
     }
 
     public interface StateCallback {
