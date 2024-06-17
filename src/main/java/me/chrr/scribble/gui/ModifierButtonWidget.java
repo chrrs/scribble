@@ -10,7 +10,11 @@ import net.minecraft.util.Identifier;
 
 import java.util.function.Consumer;
 
-public class FormatButtonWidget extends ClickableWidget {
+/**
+ * A toggle-able button that's used in the book edit screen for toggling
+ * text modifiers. It always uses `gui/scribble_widgets.png` as texture.
+ */
+public class ModifierButtonWidget extends ClickableWidget {
     private static final Identifier WIDGETS_TEXTURE = Scribble.id("textures/gui/scribble_widgets.png");
 
     private final int u;
@@ -19,7 +23,7 @@ public class FormatButtonWidget extends ClickableWidget {
     public boolean toggled;
     private final Consumer<Boolean> onToggle;
 
-    public FormatButtonWidget(Text tooltip, Consumer<Boolean> onToggle, int x, int y, int u, int v, int width, int height, boolean toggled) {
+    public ModifierButtonWidget(Text tooltip, Consumer<Boolean> onToggle, int x, int y, int u, int v, int width, int height, boolean toggled) {
         super(x, y, width, height, tooltip);
         this.setTooltip(Tooltip.of(tooltip));
 

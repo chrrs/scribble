@@ -7,7 +7,7 @@ import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.RichPageContent;
 import me.chrr.scribble.book.RichSelectionManager;
 import me.chrr.scribble.book.RichText;
-import me.chrr.scribble.gui.FormatButtonWidget;
+import me.chrr.scribble.gui.ModifierButtonWidget;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
@@ -75,26 +75,32 @@ public abstract class BookEditScreenMixin extends Screen {
     protected abstract void invalidatePageContent();
     //endregion
 
+    // List of text on the pages of the book. This replaces the usual
+    // `pages` variable in BookEditScreen.
     @Unique
     private final List<RichText> richPages = new ArrayList<>();
 
     @Unique
-    private FormatButtonWidget boldButton;
+    private ModifierButtonWidget boldButton;
     @Unique
-    private FormatButtonWidget italicButton;
+    private ModifierButtonWidget italicButton;
     @Unique
-    private FormatButtonWidget underlineButton;
+    private ModifierButtonWidget underlineButton;
     @Unique
-    private FormatButtonWidget strikethroughButton;
+    private ModifierButtonWidget strikethroughButton;
     @Unique
-    private FormatButtonWidget obfuscatedButton;
+    private ModifierButtonWidget obfuscatedButton;
 
-    // Dummy constructor to match super
+    // Dummy constructor to match super class. The mixin derives from
+    // `Screen` so we don't have to shadow as many methods.
+    // This should never be called.
     protected BookEditScreenMixin(Text title) {
         super(title);
     }
 
-    // RichText replacement for BookEditScreen#getLineSelectionRectangle
+    /**
+     * RichText-based replacement for BookEditScreen#getLineSelectionRectangle
+     */
     @Unique
     private Rect2i getSelectionRectangle(RichText text, TextHandler handler, int selectionStart, int selectionEnd, int lineY, int lineStart) {
         RichText toSelectionStart = text.subText(lineStart, selectionStart);
@@ -104,7 +110,9 @@ public abstract class BookEditScreenMixin extends Screen {
         return this.getRectFromCorners(topLeft, bottomRight);
     }
 
-    // RichText replacement for BookEditScreen#getCurrentPageContent
+    /**
+     * RichText-based replacement for BookEditScreen#getCurrentPageContent
+     */
     @Unique
     private RichText getCurrentPageText() {
         return this.currentPage >= 0 && this.currentPage < this.richPages.size()
@@ -112,7 +120,10 @@ public abstract class BookEditScreenMixin extends Screen {
                 : RichText.empty();
     }
 
-    // RichText replacement for BookEditScreen#setPageContent
+    /**
+     * RichText replacement for BookEditScreen#setPageContent.
+     */
+    //
     @Unique
     private void setPageText(RichText newText) {
         if (this.currentPage >= 0 && this.currentPage < this.richPages.size()) {
@@ -133,23 +144,24 @@ public abstract class BookEditScreenMixin extends Screen {
         int x = this.width / 2 + 78;
         int y = 16;
 
-        boldButton = addDrawableChild(new FormatButtonWidget(
+        // Modifier buttons
+        boldButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.bold"),
                 (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.BOLD, toggled),
                 x, y, 0, 0, 22, 19, false));
-        italicButton = addDrawableChild(new FormatButtonWidget(
+        italicButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.italic"),
                 (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.ITALIC, toggled),
                 x, y + 19, 0, 19, 22, 17, false));
-        underlineButton = addDrawableChild(new FormatButtonWidget(
+        underlineButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.underline"),
                 (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.UNDERLINE, toggled),
                 x, y + 36, 0, 36, 22, 17, false));
-        strikethroughButton = addDrawableChild(new FormatButtonWidget(
+        strikethroughButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.strikethrough"),
                 (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.STRIKETHROUGH, toggled),
                 x, y + 53, 0, 53, 22, 17, false));
-        obfuscatedButton = addDrawableChild(new FormatButtonWidget(
+        obfuscatedButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.obfuscated"),
                 (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.OBFUSCATED, toggled),
                 x, y + 70, 0, 70, 22, 18, false));

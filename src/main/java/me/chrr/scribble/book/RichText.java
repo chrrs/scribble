@@ -8,34 +8,68 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * A string of text that can have formatting applied to various parts
+ * of its contents. Internally, it's divided into smaller segments with
+ * their own formatting each. This rich text can be converted into Minecraft's
+ * built-in text component system, or into color-coded plain strings.
+ * <br>
+ * Note that a RichText instance is immutable, and every method will create a
+ * new instance. Treat this class as a sort of `String` alternative.
+ * <br>
+ * We could've used {@link net.minecraft.text.MutableText} for this, but we
+ * need something more flexible to easily edit portions, and make sure the
+ * amount of segments doesn't spiral out of control.
+ *
+ * @author chrrrs
+ */
 public class RichText implements StringVisitable {
     private final List<Segment> segments;
 
+    /**
+     * Create a new RichText object from existing segments.
+     *
+     * @param segments segments to inherit.
+     */
     public RichText(List<Segment> segments) {
         this.segments = segments;
     }
 
+    /**
+     * Create a new empty RichText instance.
+     *
+     * @return a rich text with a single, empty, segment.
+     */
     public static RichText empty() {
         return new RichText(List.of(new Segment("", Formatting.RESET, Set.of())));
     }
 
-    public static RichText fromFormattedString(String string) {
+    /**
+     * Create a new RichText instance from a color-coded string. Colors
+     * should be indicated with the paragraph-symbol (§) according to the
+     * <a href="https://minecraft.wiki/w/Formatting_codes">formatting codes</a>
+     * available.
+     *
+     * @param input the color-coded input string.
+     * @return a RichText instance containing exactly the same text as the input.
+     */
+    public static RichText fromFormattedString(String input) {
         List<Segment> segments = new ArrayList<>();
 
         StringBuilder text = new StringBuilder();
         Formatting color = Formatting.RESET;
         Set<Formatting> modifiers = new HashSet<>();
 
-        for (int i = 0; i < string.length(); ) {
-            int codePoint = string.codePointAt(i);
+        for (int i = 0; i < input.length(); ) {
+            int codePoint = input.codePointAt(i);
             i += Character.charCount(codePoint);
 
             if (codePoint == (int) '§') {
-                if (i >= string.length()) {
+                if (i >= input.length()) {
                     break;
                 }
 
-                char code = string.charAt(i);
+                char code = input.charAt(i);
                 i++;
 
                 Formatting formatting = Formatting.byCode(code);
@@ -64,23 +98,38 @@ public class RichText implements StringVisitable {
         return new RichText(segments);
     }
 
+    /**
+     * @return the text without any formatting.
+     */
     public String getPlainText() {
         return segments.stream()
                 .map(segment -> segment.text)
                 .collect(Collectors.joining());
     }
 
+    /**
+     * @return if the rich text has a length of zero.
+     */
     public boolean isEmpty() {
         return getPlainText().isEmpty();
     }
 
+    /**
+     * @return the length of the plain text.
+     */
     public int getLength() {
         return segments.stream()
                 .map(segment -> segment.text.length())
                 .reduce(0, Integer::sum);
     }
 
-    // Return a small portion of the rich text, from start to end (exclusive).
+    /**
+     * Get a smaller portion of the rich text.
+     *
+     * @param start start of the sub-text (inclusive).
+     * @param end   end of the sub-text (exclusive).
+     * @return the selected sub-text.
+     */
     public RichText subText(int start, int end) {
         int current = 0;
         List<Segment> subSegments = new ArrayList<>();
@@ -108,7 +157,14 @@ public class RichText implements StringVisitable {
         return new RichText(subSegments);
     }
 
-    // Return the rich text with a portion from start to end (exclusive) replaced.
+    /**
+     * Get the rich text with a portion replaced.
+     *
+     * @param start       start of the replacement area (inclusive).
+     * @param end         end of the replacement area (exclusive).
+     * @param replacement text to replace the area with.
+     * @return a RichText instance with the text in the specified area replaced.
+     */
     public RichText replace(int start, int end, String replacement) {
         int current = 0;
         List<Segment> newSegments = new ArrayList<>();
@@ -153,7 +209,15 @@ public class RichText implements StringVisitable {
         return new RichText(newSegments);
     }
 
-    public RichText insert(int index, String text) {
+    /**
+     * Insert a new string of text. This text copies the style of the text
+     * before it.
+     *
+     * @param offset offset into the text to start inserting.
+     * @param text   string of text to insert.
+     * @return a RichText instance with the specified string inserted.
+     */
+    public RichText insert(int offset, String text) {
         int current = 0;
         List<Segment> newSegments = new ArrayList<>(segments);
         for (int i = 0; i < segments.size(); i++) {
@@ -161,13 +225,13 @@ public class RichText implements StringVisitable {
             int length = segment.text.length();
 
             // We're before the segment we're searching for
-            if (index > current + length) {
+            if (offset > current + length) {
                 current += length;
                 continue;
             }
 
-            int localIndex = index - current;
-            String newText = segment.text.substring(0, localIndex) + text + segment.text.substring(localIndex);
+            int localOffset = offset - current;
+            String newText = segment.text.substring(0, localOffset) + text + segment.text.substring(localOffset);
             newSegments.set(i, new Segment(newText, segment.color, segment.modifiers));
             break;
         }
@@ -175,6 +239,17 @@ public class RichText implements StringVisitable {
         return new RichText(newSegments);
     }
 
+    /**
+     * Apply formatting to a subsection of the rich text. This subsection can
+     * have differing colors and formatting.
+     *
+     * @param start           the start of the subsection (inclusive).
+     * @param end             the end of the subsection (exclusive).
+     * @param newColor        the color to set the subsection to, or null to leave it.
+     * @param addModifiers    the modifiers to add to the subsection.
+     * @param removeModifiers the modifiers to remove from the subsection.
+     * @return a RichText instance with the specified formatting applied.
+     */
     public RichText applyFormatting(
             int start, int end,
             @Nullable Formatting newColor,
@@ -229,7 +304,12 @@ public class RichText implements StringVisitable {
         return new RichText(newSegments);
     }
 
-
+    /**
+     * Get the rich text as a color-coded string, in line with what is described
+     * on the <a href="https://minecraft.wiki/w/Formatting_codes">Formatting Codes wiki page</a>.
+     *
+     * @return the color-coded string.
+     */
     public String getAsFormattedString() {
         StringBuilder out = new StringBuilder();
 
@@ -301,6 +381,14 @@ public class RichText implements StringVisitable {
         return this.getPlainText();
     }
 
+    /**
+     * A segment of rich text. This segment can only have a single color and set of
+     * modifiers.
+     *
+     * @param text      the text that the segment represents.
+     * @param color     the color of the segment.
+     * @param modifiers the list of formatting modifiers for the segment.
+     */
     public record Segment(String text, Formatting color, Set<Formatting> modifiers) {
     }
 }
