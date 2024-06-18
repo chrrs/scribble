@@ -223,6 +223,10 @@ public abstract class BookEditScreenMixin extends Screen {
         if (nbt != null) {
             BookScreen.filterPages(nbt, (string) -> richPages.add(RichText.fromFormattedString(string)));
         }
+
+        if (this.richPages.isEmpty()) {
+            this.richPages.add(RichText.empty());
+        }
     }
 
     @Inject(method = "init", at = @At(value = "HEAD"))
