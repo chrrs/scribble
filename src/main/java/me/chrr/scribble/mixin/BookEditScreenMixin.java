@@ -161,7 +161,7 @@ public abstract class BookEditScreenMixin extends Screen {
     @Unique
     private void initButtons() {
         int x = this.width / 2 + 78;
-        int y = 16;
+        int y = 12;
 
         // Modifier buttons
         // They're all toggled off by default, this is fixed in #initScreen.
@@ -199,7 +199,7 @@ public abstract class BookEditScreenMixin extends Screen {
                     () -> {
                         this.getRichSelectionManager().setColor(color);
                         this.setSwatchColor(color);
-                    }, x + 3 + dx, y + 91 + dy, 8, 8
+                    }, x + 3 + dx, y + 95 + dy, 8, 8
             ));
 
             colorSwatches.add(widget);
