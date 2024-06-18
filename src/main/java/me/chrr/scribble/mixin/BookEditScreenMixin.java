@@ -196,8 +196,10 @@ public abstract class BookEditScreenMixin extends Screen {
 
             ColorSwatchWidget widget = addDrawableChild(new ColorSwatchWidget(
                     Text.translatable("text.scribble.color." + color.getName()), color,
-                    () -> this.getRichSelectionManager().setColor(color),
-                    x + 3 + dx, y + 91 + dy, 8, 8
+                    () -> {
+                        this.getRichSelectionManager().setColor(color);
+                        this.setSwatchColor(color);
+                    }, x + 3 + dx, y + 91 + dy, 8, 8
             ));
 
             colorSwatches.add(widget);
@@ -257,7 +259,11 @@ public abstract class BookEditScreenMixin extends Screen {
         underlineButton.toggled = modifiers.contains(Formatting.UNDERLINE);
         strikethroughButton.toggled = modifiers.contains(Formatting.STRIKETHROUGH);
         obfuscatedButton.toggled = modifiers.contains(Formatting.OBFUSCATED);
+        setSwatchColor(color);
+    }
 
+    @Unique
+    private void setSwatchColor(Formatting color) {
         for (ColorSwatchWidget swatch : colorSwatches) {
             swatch.setToggled(swatch.getColor() == color);
         }
