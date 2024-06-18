@@ -7,6 +7,7 @@ import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.RichPageContent;
 import me.chrr.scribble.book.RichSelectionManager;
 import me.chrr.scribble.book.RichText;
+import me.chrr.scribble.gui.ColorSwatchWidget;
 import me.chrr.scribble.gui.ModifierButtonWidget;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.client.gui.screen.Screen;
@@ -39,6 +40,18 @@ import java.util.Set;
 
 @Mixin(BookEditScreen.class)
 public abstract class BookEditScreenMixin extends Screen {
+    @Unique
+    private static final Formatting[] COLORS = new Formatting[]{
+            Formatting.RESET, Formatting.DARK_GRAY,
+            Formatting.GRAY, Formatting.WHITE,
+            Formatting.DARK_RED, Formatting.RED,
+            Formatting.GOLD, Formatting.YELLOW,
+            Formatting.DARK_GREEN, Formatting.GREEN,
+            Formatting.DARK_AQUA, Formatting.AQUA,
+            Formatting.DARK_BLUE, Formatting.BLUE,
+            Formatting.DARK_PURPLE, Formatting.LIGHT_PURPLE,
+    };
+
     //region @Shadow declarations
     @Mutable
     @Shadow
@@ -94,6 +107,9 @@ public abstract class BookEditScreenMixin extends Screen {
     private ModifierButtonWidget strikethroughButton;
     @Unique
     private ModifierButtonWidget obfuscatedButton;
+
+    @Unique
+    private List<ColorSwatchWidget> colorSwatches;
 
     // Dummy constructor to match super class. The mixin derives from
     // `Screen` so we don't have to shadow as many methods.
@@ -169,6 +185,23 @@ public abstract class BookEditScreenMixin extends Screen {
                 Text.translatable("text.scribble.modifier.obfuscated"),
                 (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.OBFUSCATED, toggled),
                 x, y + 70, 0, 70, 22, 18, false));
+
+        // Color swatches
+        colorSwatches = new ArrayList<>(COLORS.length);
+        for (int i = 0; i < COLORS.length; i++) {
+            Formatting color = COLORS[i];
+
+            int dx = (i % 2) * 8;
+            int dy = (i / 2) * 8;
+
+            ColorSwatchWidget widget = addDrawableChild(new ColorSwatchWidget(
+                    Text.translatable("text.scribble.color." + color.getName()), color,
+                    () -> this.getRichSelectionManager().setColor(color),
+                    x + 3 + dx, y + 91 + dy, 8, 8
+            ));
+
+            colorSwatches.add(widget);
+        }
     }
 
     @Inject(method = "<init>", at = @At(value = "TAIL"))
@@ -207,6 +240,10 @@ public abstract class BookEditScreenMixin extends Screen {
         this.underlineButton.visible = !this.signing;
         this.strikethroughButton.visible = !this.signing;
         this.obfuscatedButton.visible = !this.signing;
+
+        for (ColorSwatchWidget swatch : colorSwatches) {
+            swatch.visible = !this.signing;
+        }
     }
 
     @Unique
@@ -216,6 +253,10 @@ public abstract class BookEditScreenMixin extends Screen {
         underlineButton.toggled = modifiers.contains(Formatting.UNDERLINE);
         strikethroughButton.toggled = modifiers.contains(Formatting.STRIKETHROUGH);
         obfuscatedButton.toggled = modifiers.contains(Formatting.OBFUSCATED);
+
+        for (ColorSwatchWidget swatch : colorSwatches) {
+            swatch.setToggled(swatch.getColor() == color);
+        }
     }
 
     // When asking for the current page content, we return the plain text.

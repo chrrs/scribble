@@ -3,5 +3,21 @@
     "text.scribble.modifier.italic": "Italic",
     "text.scribble.modifier.underline": "Underline",
     "text.scribble.modifier.strikethrough": "Strikethrough",
-    "text.scribble.modifier.obfuscated": "Obfuscated"
+    "text.scribble.modifier.obfuscated": "Obfuscated",
+    "text.scribble.color.reset": "Reset",
+    "text.scribble.color.dark_gray": "Dark Gray",
+    "text.scribble.color.gray": "Gray",
+    "text.scribble.color.white": "White",
+    "text.scribble.color.dark_red": "Dark Red",
+    "text.scribble.color.red": "Red",
+    "text.scribble.color.gold": "Gold",
+    "text.scribble.color.yellow": "Yellow",
+    "text.scribble.color.dark_green": "Green",
+    "text.scribble.color.green": "Lime",
+    "text.scribble.color.dark_aqua": "Cyan",
+    "text.scribble.color.aqua": "Aqua",
+    "text.scribble.color.dark_blue": "Dark Blue",
+    "text.scribble.color.blue": "Blue",
+    "text.scribble.color.dark_purple": "Purple",
+    "text.scribble.color.light_purple": "Magenta"
 }
