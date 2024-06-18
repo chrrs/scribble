@@ -2,8 +2,8 @@
     "schemaVersion": 1,
     "id": "scribble",
     "version": "${modVersion}",
-    "name": "Scribble",
-    "description": "Scribe and scribble.",
+    "name": "${modName}",
+    "description": "Expertly edit your books with rich formatting options, page utilities and more!",
     "authors": [
         "chrrrs"
     ],
@@ -28,7 +28,7 @@
         ]
     },
     "depends": {
-        "minecraft": "${minecraftVersion}",
+        "minecraft": "${minecraftDependency}",
         "fabricloader": ">=0.14",
         "fabric-resource-loader-v0": "*"
     }

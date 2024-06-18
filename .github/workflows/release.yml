@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  push:
+    tags: [ "v*" ]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Fetch Changelog
+        run: |
+          {
+            echo "CHANGELOG<<EOF"
+            tr -d '\r' < CHANGELOG.md | awk -vver="${GITHUB_REF_NAME#v}" '/^## / { if (p) { exit }; if ($2 == ver) { p=1; next } } p'
+            echo "EOF"
+          } >> $GITHUB_ENV
+
+      - run: ./gradlew publishMods
+        env:
+          CHANGELOG: ${{ env.CHANGELOG }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body: ${{ env.CHANGELOG }}
+          files: versions/*/build/libs/*.jar
