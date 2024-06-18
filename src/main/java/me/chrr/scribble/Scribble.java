@@ -11,7 +11,6 @@ public class Scribble implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-
     }
 
     public static Identifier id(String path) {
