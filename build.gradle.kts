@@ -11,7 +11,7 @@ fun Project.prop(namespace: String, key: String) =
 val minecraftVersion = stonecutter.current.version
 
 group = prop("mod", "group")
-version = prop("mod", "version")
+version = "${prop("mod", "version")}+mc$minecraftVersion"
 
 base {
     archivesName.set(prop("mod", "name"))
