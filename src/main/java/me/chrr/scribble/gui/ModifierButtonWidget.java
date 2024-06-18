@@ -34,7 +34,8 @@ public class ModifierButtonWidget extends ClickableWidget {
     }
 
     @Override
-    protected void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
+    //$ renderWidget
+    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
         int u = this.u + (this.isSelected() ? 22 : 0) + (this.toggled ? 44 : 0);
         context.drawTexture(WIDGETS_TEXTURE, getX(), getY(), this.isSelected() ? 1 : 0, u, v, width, height + 1, 128, 128);
     }

@@ -14,6 +14,9 @@ public class Scribble implements ClientModInitializer {
     }
 
     public static Identifier id(String path) {
-        return new Identifier(MOD_ID, path);
+        //? if >=1.21 {
+        return Identifier.of(MOD_ID, path);
+        //?} else
+        /*return new Identifier(MOD_ID, path);*/
     }
 }

@@ -28,7 +28,7 @@ jobs:
             echo "EOF"
           } >> $GITHUB_ENV
 
-      - run: ./gradlew publishMods
+      - run: ./gradlew chiseledPublish
         env:
           CHANGELOG: ${{ env.CHANGELOG }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}

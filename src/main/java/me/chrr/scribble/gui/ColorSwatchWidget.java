@@ -21,7 +21,8 @@ public class ColorSwatchWidget extends ClickableWidget {
     }
 
     @Override
-    protected void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
+    //$ renderWidget
+    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
         if (isSelected() || toggled) {
             context.fill(getX(), getY(), getX() + width, getY() + height, isSelected() ? 0xffffffff : 0xffa0a0a0);
         }

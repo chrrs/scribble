@@ -12,12 +12,10 @@ import me.chrr.scribble.gui.ModifierButtonWidget;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
-import net.minecraft.client.gui.screen.ingame.BookScreen;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.client.util.math.Rect2i;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -220,14 +218,9 @@ public abstract class BookEditScreenMixin extends Screen {
                         && this.textRenderer.getWrappedLinesHeight(text, 114) <= 128
         );
 
-        // Load the text from NBT
-        NbtCompound nbt = itemStack.getNbt();
-        if (nbt != null) {
-            BookScreen.filterPages(nbt, (string) -> richPages.add(RichText.fromFormattedString(string)));
-        }
-
-        if (this.richPages.isEmpty()) {
-            this.richPages.add(RichText.empty());
+        // Load the pages into richPages
+        for (String page : this.pages) {
+            this.richPages.add(RichText.fromFormattedString(page));
         }
     }
 

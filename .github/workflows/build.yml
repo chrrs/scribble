@@ -22,4 +22,4 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - run: ./gradlew build
+      - run: ./gradlew chiseledBuild

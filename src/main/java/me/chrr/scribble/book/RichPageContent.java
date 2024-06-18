@@ -3,10 +3,7 @@ package me.chrr.scribble.book;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
 import net.minecraft.client.util.math.Rect2i;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.StringVisitable;
-import net.minecraft.text.Style;
-import net.minecraft.text.TextContent;
+import net.minecraft.text.*;
 
 import java.util.Optional;
 
@@ -65,6 +62,15 @@ public class RichPageContent extends BookEditScreen.PageContent {
                 public <T> Optional<T> visit(StringVisitable.Visitor<T> visitor) {
                     return stringVisitable.visit(visitor);
                 }
+
+                //? if >=1.20.4 {
+                @Override
+                public Type<?> getType() {
+                    // This is not accurate, but this TextContent is never sent to the
+                    // server, so it doesn't need to be.
+                    return PlainTextContent.TYPE;
+                }
+                //?}
             };
         }
     }

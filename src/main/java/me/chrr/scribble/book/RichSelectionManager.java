@@ -1,7 +1,6 @@
 package me.chrr.scribble.book;
 
 import me.chrr.scribble.Scribble;
-import net.minecraft.SharedConstants;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Pair;
@@ -45,7 +44,12 @@ public class RichSelectionManager extends SelectionManager {
 
     @Override
     public boolean insert(char c) {
-        if (SharedConstants.isValidChar(c)) {
+        //? if >=1.20.5 {
+        Predicate<Character> isValidChar = net.minecraft.util.StringHelper::isValidChar;
+        //?} else
+        /*Predicate<Character> isValidChar = net.minecraft.SharedConstants::isValidChar;*/
+
+        if (isValidChar.test(c)) {
             this.insert(String.valueOf(c));
         }
 
