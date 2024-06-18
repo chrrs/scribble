@@ -381,38 +381,6 @@ public class RichText implements StringVisitable {
         return out.toString();
     }
 
-    @Override
-    public <T> Optional<T> visit(Visitor<T> visitor) {
-        for (Segment segment : segments) {
-            Optional<T> out = visitor.accept(segment.text);
-            if (out.isPresent()) {
-                return out;
-            }
-        }
-
-        return Optional.empty();
-    }
-
-    @Override
-    public <T> Optional<T> visit(StyledVisitor<T> styledVisitor, Style baseStyle) {
-        for (Segment segment : segments) {
-            Style style = baseStyle
-                    .withFormatting(segment.modifiers.toArray(new Formatting[0]))
-                    .withColor(segment.color);
-            Optional<T> out = styledVisitor.accept(style, segment.text);
-            if (out.isPresent()) {
-                return out;
-            }
-        }
-
-        return Optional.empty();
-    }
-
-    @Override
-    public String getString() {
-        return this.getPlainText();
-    }
-
     /**
      * Get the common color and modifiers in the specified text range.
      * The color returned will be null if the range has multiple colors.
@@ -466,6 +434,38 @@ public class RichText implements StringVisitable {
         }
 
         return new Pair<>(color, modifiers);
+    }
+
+    @Override
+    public <T> Optional<T> visit(Visitor<T> visitor) {
+        for (Segment segment : segments) {
+            Optional<T> out = visitor.accept(segment.text);
+            if (out.isPresent()) {
+                return out;
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    public <T> Optional<T> visit(StyledVisitor<T> styledVisitor, Style baseStyle) {
+        for (Segment segment : segments) {
+            Style style = baseStyle
+                    .withFormatting(segment.modifiers.toArray(new Formatting[0]))
+                    .withColor(segment.color);
+            Optional<T> out = styledVisitor.accept(style, segment.text);
+            if (out.isPresent()) {
+                return out;
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    public String getString() {
+        return this.getPlainText();
     }
 
     /**
