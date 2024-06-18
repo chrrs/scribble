@@ -26,9 +26,7 @@ public class ColorSwatchWidget extends ClickableWidget {
             context.fill(getX(), getY(), getX() + width, getY() + height, isSelected() ? 0xffffffff : 0xffa0a0a0);
         }
 
-        Integer color = this.color == Formatting.RESET
-                ? Integer.valueOf(0) : this.color.getColorValue();
-
+        Integer color = this.color.getColorValue();
         if (color == null) {
             return;
         }

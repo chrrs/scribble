@@ -58,7 +58,7 @@ public class RichText implements StringVisitable {
         List<Segment> segments = new ArrayList<>();
 
         StringBuilder text = new StringBuilder();
-        Formatting color = Formatting.RESET;
+        Formatting color = Formatting.BLACK;
         Set<Formatting> modifiers = new HashSet<>();
 
         for (int i = 0; i < input.length(); ) {
@@ -345,7 +345,7 @@ public class RichText implements StringVisitable {
     public String getAsFormattedString() {
         StringBuilder out = new StringBuilder();
 
-        Formatting currentColor = Formatting.RESET;
+        Formatting currentColor = Formatting.BLACK;
         Set<Formatting> currentModifiers = new HashSet<>();
 
         for (Segment segment : segments) {
@@ -424,7 +424,7 @@ public class RichText implements StringVisitable {
     public Pair<@Nullable Formatting, Set<Formatting>> getCommonFormat(int start, int end) {
         boolean first = true;
         Set<Formatting> modifiers = Set.of();
-        Formatting color = Formatting.RESET;
+        Formatting color = Formatting.BLACK;
 
         int current = 0;
         for (Segment segment : segments) {

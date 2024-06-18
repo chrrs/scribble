@@ -42,7 +42,7 @@ import java.util.Set;
 public abstract class BookEditScreenMixin extends Screen {
     @Unique
     private static final Formatting[] COLORS = new Formatting[]{
-            Formatting.RESET, Formatting.DARK_GRAY,
+            Formatting.BLACK, Formatting.DARK_GRAY,
             Formatting.GRAY, Formatting.WHITE,
             Formatting.DARK_RED, Formatting.RED,
             Formatting.GOLD, Formatting.YELLOW,
