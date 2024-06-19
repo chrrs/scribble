@@ -85,9 +85,18 @@ publishMods {
         projectId.set(prop("modrinth", "id"))
         accessToken.set(providers.environmentVariable("MODRINTH_TOKEN"))
 
-        minecraftVersionRange {
-            start = prop("minecraft", "minVersion")
-            end = prop("minecraft", "maxVersion")
+        val min = prop("minecraft", "minVersion")
+        val max = prop("minecraft", "maxVersion")
+
+        // minecraftVersionRange errors out if min == max,
+        // so we handle this case separately.
+        if (min == max) {
+            minecraftVersions.add(max)
+        } else {
+            minecraftVersionRange {
+                start = prop("minecraft", "minVersion")
+                end = prop("minecraft", "maxVersion")
+            }
         }
     }
 }
