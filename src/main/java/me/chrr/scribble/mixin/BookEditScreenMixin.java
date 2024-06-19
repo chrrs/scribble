@@ -286,6 +286,7 @@ public abstract class BookEditScreenMixin extends Screen {
     private void deletePage() {
         this.richPages.remove(this.currentPage);
         this.pages.remove(this.currentPage);
+        this.dirty = true;
 
         this.currentPage = Math.min(this.currentPage, this.richPages.size() - 1);
         this.updateButtons();
