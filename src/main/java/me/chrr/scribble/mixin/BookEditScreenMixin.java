@@ -9,6 +9,7 @@ import me.chrr.scribble.book.RichSelectionManager;
 import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.gui.ColorSwatchWidget;
 import me.chrr.scribble.gui.ModifierButtonWidget;
+import me.chrr.scribble.gui.PageButtonWidget;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
@@ -88,6 +89,12 @@ public abstract class BookEditScreenMixin extends Screen {
 
     @Shadow
     protected abstract void invalidatePageContent();
+
+    @Shadow
+    protected abstract void changePage();
+
+    @Shadow
+    protected abstract void updateButtons();
     //endregion
 
     // List of text on the pages of the book. This replaces the usual
@@ -108,6 +115,9 @@ public abstract class BookEditScreenMixin extends Screen {
 
     @Unique
     private List<ColorSwatchWidget> colorSwatches;
+
+    @Unique
+    private PageButtonWidget deletePageButton;
 
     // Dummy constructor to match super class. The mixin derives from
     // `Screen` so we don't have to shadow as many methods.
@@ -202,6 +212,14 @@ public abstract class BookEditScreenMixin extends Screen {
 
             colorSwatches.add(widget);
         }
+
+        // Page buttons
+        int px = this.width / 2 - 96;
+        deletePageButton = addDrawableChild(new PageButtonWidget(
+                Text.translatable("text.scribble.action.delete_page"),
+                this::deletePage,
+                px + 86, 160, 0, 90, 11, 11)
+        );
     }
 
     @Inject(method = "<init>", at = @At(value = "TAIL"))
@@ -243,6 +261,8 @@ public abstract class BookEditScreenMixin extends Screen {
         for (ColorSwatchWidget swatch : colorSwatches) {
             swatch.visible = !this.signing;
         }
+
+        this.deletePageButton.visible = !this.signing && this.richPages.size() > 1;
     }
 
     @Unique
@@ -260,6 +280,16 @@ public abstract class BookEditScreenMixin extends Screen {
         for (ColorSwatchWidget swatch : colorSwatches) {
             swatch.setToggled(swatch.getColor() == color);
         }
+    }
+
+    @Unique
+    private void deletePage() {
+        this.richPages.remove(this.currentPage);
+        this.pages.remove(this.currentPage);
+
+        this.currentPage = Math.min(this.currentPage, this.richPages.size() - 1);
+        this.updateButtons();
+        this.changePage();
     }
 
     // When asking for the current page content, we return the plain text.
