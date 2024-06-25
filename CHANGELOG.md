@@ -1,3 +1,8 @@
+## 1.0.1
+
+- Change text cursor color to the current selected color.
+- Toggle the narrator when pressing Ctrl-Shift-B.
+
 ## 1.0.0
 
 - Add a button to delete the current page.
