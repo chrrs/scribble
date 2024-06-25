@@ -2,6 +2,7 @@ package me.chrr.scribble.mixin;
 
 import net.minecraft.client.Keyboard;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
@@ -21,9 +22,12 @@ public class KeyboardMixin {
     // that we can mixin into to change the condition.
     @ModifyConstant(method = "onKey", constant = @Constant(intValue = GLFW.GLFW_KEY_B))
     public int getNarratorKey(int constant) {
-        // We'll change the key needed to activate the narrator to
-        // a known non-existent key if we're currently editing a book.
-        return client.currentScreen instanceof BookEditScreen
-                ? GLFW.GLFW_KEY_LAST + 1 : GLFW.GLFW_KEY_B;
+        if (client.currentScreen instanceof BookEditScreen && !Screen.hasShiftDown()) {
+            // We'll change the key needed to activate the narrator to
+            // a known non-existent key if we're currently editing a book.
+            return GLFW.GLFW_KEY_LAST + 1;
+        } else {
+            return GLFW.GLFW_KEY_B;
+        }
     }
 }
