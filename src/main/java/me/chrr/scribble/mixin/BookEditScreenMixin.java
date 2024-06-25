@@ -26,9 +26,7 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.*;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -358,6 +356,18 @@ public abstract class BookEditScreenMixin extends Screen {
             cir.setReturnValue(true);
             cir.cancel();
         }
+    }
+
+    @ModifyArg(method = "drawCursor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawText(Lnet/minecraft/client/font/TextRenderer;Ljava/lang/String;IIIZ)I"), index = 4)
+    private int modifyEndCursorColor(int constant) {
+        Formatting color = this.getRichSelectionManager().getColor();
+        return color == null || color.getColorValue() == null
+                ? constant : color.getColorValue();
+    }
+
+    @ModifyArg(method = "drawCursor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;fill(IIIII)V"), index = 4)
+    private int modifyLineCursorColor(int constant) {
+        return modifyEndCursorColor(constant) | 0xff000000;
     }
 
     /**

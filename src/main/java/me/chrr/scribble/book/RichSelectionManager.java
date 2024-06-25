@@ -180,6 +180,11 @@ public class RichSelectionManager extends SelectionManager {
         updateSelectionFormatting();
     }
 
+    @Nullable
+    public Formatting getColor() {
+        return color;
+    }
+
     public interface StateCallback {
         void update(@Nullable Formatting color, Set<Formatting> modifiers);
     }
