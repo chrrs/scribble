@@ -44,11 +44,11 @@ dependencies {
 
 // renderButton was changed to renderWidget after 1.20.3
 stonecutter.swap("renderWidget") {
-    if (stonecutter.compare(minecraftVersion, "1.20.3") >= 0) {
-        "protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {"
-    } else {
-        "protected void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {"
-    }
+    val method =
+        if (stonecutter.compare(minecraftVersion, "1.20.3") >= 0) "renderWidget"
+        else "renderButton"
+
+    "protected void $method(DrawContext context, int mouseX, int mouseY, float delta) {"
 }
 
 tasks {
