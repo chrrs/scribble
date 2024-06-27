@@ -30,8 +30,6 @@ repositories {
 }
 
 dependencies {
-    // To change the versions, see the gradle.properties file
-
     fun fabricApiModule(name: String) =
         modImplementation(fabricApi.module(name, prop("fabric", "apiVersion")))
 
@@ -58,7 +56,7 @@ tasks {
             expand(
                 "modName" to prop("mod", "name"),
                 "modVersion" to prop("mod", "version"),
-                "minecraftDependency" to ">=${prop("minecraft", "minVersion")} <=${prop("minecraft", "maxVersion")}"
+                "minecraftDependency" to prop("minecraft", "versions").replace(",", " || ")
             )
         }
     }
@@ -81,22 +79,17 @@ publishMods {
     type.set(if (prop("mod", "version").contains("beta")) ReleaseType.BETA else ReleaseType.STABLE)
     modLoaders.addAll("fabric", "quilt")
 
+    val gameVersions = prop("minecraft", "versions").split(",")
+
     modrinth {
         projectId.set(prop("modrinth", "id"))
         accessToken.set(providers.environmentVariable("MODRINTH_TOKEN"))
+        minecraftVersions.addAll(gameVersions)
+    }
 
-        val min = prop("minecraft", "minVersion")
-        val max = prop("minecraft", "maxVersion")
-
-        // minecraftVersionRange errors out if min == max,
-        // so we handle this case separately.
-        if (min == max) {
-            minecraftVersions.add(max)
-        } else {
-            minecraftVersionRange {
-                start = prop("minecraft", "minVersion")
-                end = prop("minecraft", "maxVersion")
-            }
-        }
+    curseforge {
+        projectId.set(prop("curseforge", "id"))
+        accessToken.set(providers.environmentVariable("CURSEFORGE_TOKEN"))
+        minecraftVersions.addAll(gameVersions)
     }
 }
