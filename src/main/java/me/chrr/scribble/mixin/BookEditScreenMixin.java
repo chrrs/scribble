@@ -169,6 +169,10 @@ public abstract class BookEditScreenMixin extends Screen {
         int x = this.width / 2 + 78;
         int y = 12;
 
+        if (Scribble.shouldCenter) {
+            y += (height - 192) / 3;
+        }
+
         // Modifier buttons
         // They're all toggled off by default, this is fixed in #initScreen.
         boldButton = addDrawableChild(new ModifierButtonWidget(
@@ -216,7 +220,7 @@ public abstract class BookEditScreenMixin extends Screen {
         deletePageButton = addDrawableChild(new PageButtonWidget(
                 Text.translatable("text.scribble.action.delete_page"),
                 this::deletePage,
-                px + 86, 160, 0, 90, 11, 11)
+                px + 86, y + 148, 0, 90, 11, 11)
         );
     }
 
