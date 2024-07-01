@@ -116,6 +116,8 @@ public abstract class BookEditScreenMixin extends Screen {
 
     @Unique
     private PageButtonWidget deletePageButton;
+    @Unique
+    private PageButtonWidget insertPageButton;
 
     // Dummy constructor to match super class. The mixin derives from
     // `Screen` so we don't have to shadow as many methods.
@@ -220,8 +222,11 @@ public abstract class BookEditScreenMixin extends Screen {
         deletePageButton = addDrawableChild(new PageButtonWidget(
                 Text.translatable("text.scribble.action.delete_page"),
                 this::deletePage,
-                px + 86, y + 148, 0, 90, 11, 11)
-        );
+                px + 78, y + 148, 0, 90, 11, 12));
+        insertPageButton = addDrawableChild(new PageButtonWidget(
+                Text.translatable("text.scribble.action.insert_new_page"),
+                this::insertPage,
+                px + 94, y + 148, 22, 90, 11, 12));
     }
 
     @Inject(method = "<init>", at = @At(value = "TAIL"))
@@ -265,6 +270,7 @@ public abstract class BookEditScreenMixin extends Screen {
         }
 
         this.deletePageButton.visible = !this.signing && this.richPages.size() > 1;
+        this.insertPageButton.visible = !this.signing;
     }
 
     @Unique
@@ -291,6 +297,16 @@ public abstract class BookEditScreenMixin extends Screen {
         this.dirty = true;
 
         this.currentPage = Math.min(this.currentPage, this.richPages.size() - 1);
+        this.updateButtons();
+        this.changePage();
+    }
+
+    @Unique
+    private void insertPage() {
+        this.richPages.add(this.currentPage, RichText.empty());
+        this.pages.add(this.currentPage, "");
+        this.dirty = true;
+
         this.updateButtons();
         this.changePage();
     }
@@ -376,7 +392,7 @@ public abstract class BookEditScreenMixin extends Screen {
 
     /**
      * The contents of this method are basically a 1 to 1 translation of
-     * {@link BookEditScreen#createPageContent}, but edited to work with rich text.
+     * BookEditScreen#createPageContent, but edited to work with rich text.
      *
      * @reason To help with rich page editing, we replace this function to always
      * return a {@link RichPageContent} instance. There's too many changes
