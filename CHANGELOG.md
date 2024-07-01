@@ -1,3 +1,8 @@
+## 1.1.0
+
+- Add a button to insert a new page before the current page.
+- Fix compatibility with FixBookGUI.
+
 ## 1.0.1
 
 - Change text cursor color to the current selected color.
