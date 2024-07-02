@@ -1,4 +1,4 @@
-# Camerapture
+# Scribble
 
 > Expertly edit your books with rich formatting options, page utilities and more!
 
