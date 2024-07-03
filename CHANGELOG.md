@@ -1,3 +1,7 @@
+## 1.1.1
+
+- Fix Minecraft dependency string causing the mod to not load.
+
 ## 1.1.0
 
 - Add a button to insert a new page before the current page.
