@@ -51,12 +51,18 @@ stonecutter.swap("renderWidget") {
 
 tasks {
     processResources {
+        // We construct our minecraft dependency string based on the versions provided in gradle.properties
+        val gameVersions = prop("minecraft", "versions").split(",")
+        val first = gameVersions.firstOrNull()!!
+        val last = gameVersions.lastOrNull()!!
+        val minecraftDependency = if (gameVersions.size == 1) first else ">=$first <=$last"
+
         inputs.property("version", project.version)
         filesMatching("fabric.mod.json") {
             expand(
                 "modName" to prop("mod", "name"),
                 "modVersion" to prop("mod", "version"),
-                "minecraftDependency" to prop("minecraft", "versions").replace(",", " || ")
+                "minecraftDependency" to minecraftDependency
             )
         }
     }
