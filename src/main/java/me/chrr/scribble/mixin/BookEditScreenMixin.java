@@ -315,6 +315,7 @@ public abstract class BookEditScreenMixin extends Screen {
     // This method is only actively used when double-clicking to select a word.
     @Redirect(method = "getCurrentPageContent", at = @At(value = "INVOKE", target = "Ljava/util/List;get(I)Ljava/lang/Object;"))
     public Object getCurrentPageContent(List<String> pages, int page) {
+        if (this.currentPage >= this.richPages.size()) return "";
         return this.richPages.get(page).getPlainText();
     }
 
