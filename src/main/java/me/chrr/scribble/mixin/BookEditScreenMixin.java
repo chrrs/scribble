@@ -328,13 +328,8 @@ public abstract class BookEditScreenMixin extends Screen {
         }
     }
 
-    /**
-     * @reason We can't be too sure that the `pages` variable is accurate on checking if it's
-     * empty, so we check with `richPages` instead.
-     * @author chrrrs
-     */
-    @Overwrite
-    private void removeEmptyPages() {
+    @Inject(method = "removeEmptyPages", at = @At(value = "TAIL"))
+    private void removeEmptyPages(CallbackInfo ci) {
         ListIterator<RichText> listIterator = this.richPages.listIterator(this.richPages.size());
         while (listIterator.hasPrevious() && listIterator.previous().isEmpty()) {
             listIterator.remove();
