@@ -64,15 +64,13 @@ public class RichSelectionManager extends SelectionManager {
         } else {
             int start = Math.min(this.selectionStart, this.selectionEnd);
             int end = Math.max(this.selectionStart, this.selectionEnd);
-
             text = this.textGetter.get().replace(start, end, string);
-            this.selectionStart = this.selectionEnd = start;
-            updateSelectionFormatting();
         }
 
         if (this.textFilter.test(text)) {
             this.textSetter.accept(text);
             this.selectionEnd = this.selectionStart = Math.min(text.getLength(), this.selectionStart + string.length());
+            updateSelectionFormatting();
         }
     }
 
@@ -91,10 +89,7 @@ public class RichSelectionManager extends SelectionManager {
             int end = Math.max(cursor, this.selectionStart);
 
             text = text.replace(start, end, "");
-
-            if (offset < 0) {
-                this.selectionEnd = this.selectionStart = start;
-            }
+            this.selectionEnd = this.selectionStart = start;
         }
 
         this.textSetter.accept(text);
