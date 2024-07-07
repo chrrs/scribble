@@ -58,18 +58,19 @@ public class RichSelectionManager extends SelectionManager {
 
     @Override
     public void insert(String string) {
-        RichText text;
-        if (this.selectionStart == this.selectionEnd) {
-            text = this.textGetter.get().insert(this.selectionStart, string, Optional.ofNullable(this.color).orElse(Formatting.BLACK), Set.copyOf(this.modifiers));
+        RichText text = this.textGetter.get();
+        int start = Math.min(this.selectionStart, this.selectionEnd);
+        int end = Math.max(this.selectionStart, this.selectionEnd);
+
+        if (start == end) {
+            text = text.insert(start, string, Optional.ofNullable(this.color).orElse(Formatting.BLACK), Set.copyOf(this.modifiers));
         } else {
-            int start = Math.min(this.selectionStart, this.selectionEnd);
-            int end = Math.max(this.selectionStart, this.selectionEnd);
-            text = this.textGetter.get().replace(start, end, string);
+            text = text.replace(start, end, string);
         }
 
         if (this.textFilter.test(text)) {
             this.textSetter.accept(text);
-            this.selectionEnd = this.selectionStart = Math.min(text.getLength(), this.selectionStart + string.length());
+            this.selectionEnd = this.selectionStart = Math.min(text.getLength(), start + string.length());
             updateSelectionFormatting();
         }
     }
