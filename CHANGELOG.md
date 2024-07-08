@@ -1,3 +1,10 @@
+## 1.1.2
+
+- Skip to first or last page when holding SHIFT while pressing the next or previous page button.
+- Properly position cursor after pasting text.
+- Properly update selection when selecting at the end of a page.
+- Properly remove empty pages when saving book.
+
 ## 1.1.1
 
 - Fix Minecraft dependency string causing the mod to not load.
