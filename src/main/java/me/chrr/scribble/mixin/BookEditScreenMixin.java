@@ -311,6 +311,29 @@ public abstract class BookEditScreenMixin extends Screen {
         this.changePage();
     }
 
+    // When shift is held down, skip to the last page.
+    @Inject(method = "openNextPage", at = @At(value = "HEAD"), cancellable = true)
+    public void openNextPage(CallbackInfo ci) {
+        int lastPage = this.richPages.size() - 1;
+        if (this.currentPage < lastPage && Screen.hasShiftDown()) {
+            this.currentPage = lastPage;
+            this.updateButtons();
+            this.changePage();
+            ci.cancel();
+        }
+    }
+
+    // When shift is held down, skip to the first page.
+    @Inject(method = "openPreviousPage", at = @At(value = "HEAD"), cancellable = true)
+    public void openPreviousPage(CallbackInfo ci) {
+        if (Screen.hasShiftDown()) {
+            this.currentPage = 0;
+            this.updateButtons();
+            this.changePage();
+            ci.cancel();
+        }
+    }
+
     // When asking for the current page content, we return the plain text.
     // This method is only actively used when double-clicking to select a word.
     @Redirect(method = "getCurrentPageContent", at = @At(value = "INVOKE", target = "Ljava/util/List;get(I)Ljava/lang/Object;"))
