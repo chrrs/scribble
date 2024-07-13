@@ -303,12 +303,14 @@ public abstract class BookEditScreenMixin extends Screen {
 
     @Unique
     private void insertPage() {
-        this.richPages.add(this.currentPage, RichText.empty());
-        this.pages.add(this.currentPage, "");
-        this.dirty = true;
+        if (this.richPages.size() < 100) {
+            this.richPages.add(this.currentPage, RichText.empty());
+            this.pages.add(this.currentPage, "");
+            this.dirty = true;
 
-        this.updateButtons();
-        this.changePage();
+            this.updateButtons();
+            this.changePage();
+        }
     }
 
     // When shift is held down, skip to the last page.
