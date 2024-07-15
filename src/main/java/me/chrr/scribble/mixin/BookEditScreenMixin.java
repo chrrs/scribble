@@ -4,13 +4,12 @@ import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import me.chrr.scribble.Scribble;
-import me.chrr.scribble.book.RichPageContent;
-import me.chrr.scribble.book.RichSelectionManager;
-import me.chrr.scribble.book.RichText;
+import me.chrr.scribble.book.*;
 import me.chrr.scribble.gui.ColorSwatchWidget;
+import me.chrr.scribble.gui.IconButtonWidget;
 import me.chrr.scribble.gui.ModifierButtonWidget;
-import me.chrr.scribble.gui.PageButtonWidget;
 import net.minecraft.client.font.TextHandler;
+import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
 import net.minecraft.client.util.SelectionManager;
@@ -30,6 +29,8 @@ import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
@@ -115,9 +116,14 @@ public abstract class BookEditScreenMixin extends Screen {
     private List<ColorSwatchWidget> colorSwatches;
 
     @Unique
-    private PageButtonWidget deletePageButton;
+    private IconButtonWidget deletePageButton;
     @Unique
-    private PageButtonWidget insertPageButton;
+    private IconButtonWidget insertPageButton;
+
+    @Unique
+    private IconButtonWidget saveBookButton;
+    @Unique
+    private IconButtonWidget loadBookButton;
 
     // Dummy constructor to match super class. The mixin derives from
     // `Screen` so we don't have to shadow as many methods.
@@ -219,14 +225,25 @@ public abstract class BookEditScreenMixin extends Screen {
 
         // Page buttons
         int px = this.width / 2 - 96;
-        deletePageButton = addDrawableChild(new PageButtonWidget(
+        deletePageButton = addDrawableChild(new IconButtonWidget(
                 Text.translatable("text.scribble.action.delete_page"),
                 this::deletePage,
                 px + 78, y + 148, 0, 90, 11, 12));
-        insertPageButton = addDrawableChild(new PageButtonWidget(
+        insertPageButton = addDrawableChild(new IconButtonWidget(
                 Text.translatable("text.scribble.action.insert_new_page"),
                 this::insertPage,
                 px + 94, y + 148, 22, 90, 11, 12));
+
+        // Save / Load buttons
+        int fx = this.width / 2 - 78 - 22;
+        saveBookButton = addDrawableChild(new IconButtonWidget(
+                Text.translatable("text.scribble.action.save_book_to_file"),
+                () -> FileChooser.chooseBook(true, this::saveTo),
+                fx, y, 44, 91, 18, 18));
+        loadBookButton = addDrawableChild(new IconButtonWidget(
+                Text.translatable("text.scribble.action.load_book_from_file"),
+                () -> this.confirmOverwrite(() -> FileChooser.chooseBook(false, this::loadFrom)),
+                fx, y + 18 + 2, 44, 109, 18, 18));
     }
 
     @Inject(method = "<init>", at = @At(value = "TAIL"))
@@ -271,6 +288,9 @@ public abstract class BookEditScreenMixin extends Screen {
 
         this.deletePageButton.visible = !this.signing && this.richPages.size() > 1;
         this.insertPageButton.visible = !this.signing;
+
+        this.saveBookButton.visible = !this.signing;
+        this.loadBookButton.visible = !this.signing;
     }
 
     @Unique
@@ -287,6 +307,78 @@ public abstract class BookEditScreenMixin extends Screen {
     private void setSwatchColor(Formatting color) {
         for (ColorSwatchWidget swatch : colorSwatches) {
             swatch.setToggled(swatch.getColor() == color);
+        }
+    }
+
+    /**
+     * If the book is not empty, ask for confirmation before executing a function.
+     *
+     * @param callback function to call if player accepted overwriting.
+     */
+    @Unique
+    private void confirmOverwrite(Runnable callback) {
+        if (!richPages.stream().allMatch(RichText::isEmpty)) {
+            if (client == null) {
+                return;
+            }
+
+            client.setScreen(new ConfirmScreen(
+                    confirmed -> {
+                        if (confirmed) {
+                            callback.run();
+                        }
+
+                        client.setScreen(this);
+                    },
+                    Text.translatable("text.scribble.overwrite_warning.title"),
+                    Text.translatable("text.scribble.overwrite_warning.description")
+            ));
+        } else {
+            callback.run();
+        }
+    }
+
+    @Unique
+    private void saveTo(Path path) {
+        if (client == null) {
+            return;
+        }
+
+        try {
+            BookFile bookFile = new BookFile(client.getGameProfile().getName(), List.copyOf(richPages));
+            bookFile.write(path);
+        } catch (IOException e) {
+            Scribble.LOGGER.error("could not save book to file", e);
+        }
+    }
+
+    @Unique
+    private void loadFrom(Path path) {
+        try {
+            BookFile bookFile = BookFile.read(path);
+
+            this.richPages.clear();
+            this.pages.clear();
+
+            // Loading an empty book file would set the total amount of pages to 0.
+            // We work around this by just inserting a new empty page.
+            if (bookFile.pages().isEmpty()) {
+                this.currentPage = 0;
+                this.insertPage();
+                return;
+            }
+
+            for (RichText page : bookFile.pages()) {
+                this.richPages.add(page);
+                this.pages.add(page.getAsFormattedString());
+            }
+
+            this.currentPage = 0;
+            this.dirty = true;
+            this.updateButtons();
+            this.changePage();
+        } catch (IOException e) {
+            Scribble.LOGGER.error("could not load book from file", e);
         }
     }
 

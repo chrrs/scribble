@@ -8,7 +8,7 @@ import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
-public class PageButtonWidget extends ClickableWidget {
+public class IconButtonWidget extends ClickableWidget {
     private static final Identifier WIDGETS_TEXTURE = Scribble.id("textures/gui/scribble_widgets.png");
 
     private final Runnable onPress;
@@ -16,7 +16,7 @@ public class PageButtonWidget extends ClickableWidget {
     private final int u;
     private final int v;
 
-    public PageButtonWidget(Text tooltip, Runnable onPress, int x, int y, int u, int v, int width, int height) {
+    public IconButtonWidget(Text tooltip, Runnable onPress, int x, int y, int u, int v, int width, int height) {
         super(x, y, width, height, tooltip);
         this.setTooltip(Tooltip.of(tooltip));
         this.onPress = onPress;
