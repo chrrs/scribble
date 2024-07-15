@@ -98,8 +98,8 @@ public abstract class BookEditScreenMixin extends Screen {
 
     @Shadow
     protected abstract void updateButtons();
-
     //endregion
+
     // List of text on the pages of the book. This replaces the usual
     // `pages` variable in BookEditScreen.
     @Unique
