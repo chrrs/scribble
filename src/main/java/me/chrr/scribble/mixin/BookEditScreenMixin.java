@@ -70,6 +70,10 @@ public abstract class BookEditScreenMixin extends Screen {
     private boolean signing;
 
     @Shadow
+    @Final
+    private PlayerEntity player;
+
+    @Shadow
     protected abstract BookEditScreen.Position absolutePositionToScreenPosition(BookEditScreen.Position position);
 
     @Shadow
@@ -94,8 +98,8 @@ public abstract class BookEditScreenMixin extends Screen {
 
     @Shadow
     protected abstract void updateButtons();
-    //endregion
 
+    //endregion
     // List of text on the pages of the book. This replaces the usual
     // `pages` variable in BookEditScreen.
     @Unique
@@ -345,7 +349,7 @@ public abstract class BookEditScreenMixin extends Screen {
         }
 
         try {
-            BookFile bookFile = new BookFile(client.getGameProfile().getName(), List.copyOf(richPages));
+            BookFile bookFile = new BookFile(this.player.getGameProfile().getName(), List.copyOf(richPages));
             bookFile.write(path);
         } catch (IOException e) {
             Scribble.LOGGER.error("could not save book to file", e);

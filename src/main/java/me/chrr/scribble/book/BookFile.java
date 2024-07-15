@@ -15,7 +15,11 @@ import java.util.Collection;
  */
 public record BookFile(String author, Collection<RichText> pages) {
     public static BookFile read(Path path) throws IOException {
+        //? if >=1.20.4 {
         NbtCompound root = NbtIo.read(path);
+        //?} else
+        /*NbtCompound root = NbtIo.read(path.toFile());*/
+
         if (root == null) {
             throw new IOException("could not read book nbt file");
         }
@@ -40,6 +44,9 @@ public record BookFile(String author, Collection<RichText> pages) {
         root.putString("author", author);
         root.put("pages", pagesNbt);
 
+        //? if >=1.20.4 {
         NbtIo.write(root, path);
+        //?} else
+        /*NbtIo.write(root, path.toFile());*/
     }
 }
