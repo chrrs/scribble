@@ -1,3 +1,8 @@
+## 1.2.0
+
+- Add buttons to save books to files and load them.
+- Don't insert a new page when there's already 100 pages.
+
 ## 1.1.2
 
 - Skip to first or last page when holding SHIFT while pressing the next or previous page button.
