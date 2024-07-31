@@ -5,6 +5,8 @@
     "text.scribble.action.load_book_from_file": "Load book from file...",
     "text.scribble.overwrite_warning.title": "Are you sure you want to overwrite this book?",
     "text.scribble.overwrite_warning.description": "The current contents will be lost forever! (A long time!)",
+    "text.scribble.quit_without_saving.title": "Are you sure you want to quit without saving?",
+    "text.scribble.quit_without_saving.description": "The changes made to this book will be lost!",
     "text.scribble.modifier.bold": "Bold",
     "text.scribble.modifier.italic": "Italic",
     "text.scribble.modifier.underline": "Underline",

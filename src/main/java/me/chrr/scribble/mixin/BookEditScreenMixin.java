@@ -29,7 +29,6 @@ import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -406,6 +405,28 @@ public abstract class BookEditScreenMixin extends Screen {
 
             this.updateButtons();
             this.changePage();
+        }
+    }
+
+    /**
+     * Ask for confirmation before closing without saving.
+     */
+    @Override
+    public void close() {
+        if (this.dirty && this.client != null) {
+            this.client.setScreen(new ConfirmScreen(
+                    confirmed -> {
+                        if (confirmed) {
+                            super.close();
+                        } else {
+                            this.client.setScreen(this);
+                        }
+                    },
+                    Text.translatable("text.scribble.quit_without_saving.title"),
+                    Text.translatable("text.scribble.quit_without_saving.description")
+            ));
+        } else {
+            super.close();
         }
     }
 
