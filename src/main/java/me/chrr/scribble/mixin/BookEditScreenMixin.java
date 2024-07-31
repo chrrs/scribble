@@ -351,7 +351,7 @@ public abstract class BookEditScreenMixin extends Screen {
         try {
             BookFile bookFile = new BookFile(this.player.getGameProfile().getName(), List.copyOf(richPages));
             bookFile.write(path);
-        } catch (IOException e) {
+        } catch (Exception e) {
             Scribble.LOGGER.error("could not save book to file", e);
         }
     }
@@ -381,7 +381,7 @@ public abstract class BookEditScreenMixin extends Screen {
             this.dirty = true;
             this.updateButtons();
             this.changePage();
-        } catch (IOException e) {
+        } catch (Exception e) {
             Scribble.LOGGER.error("could not load book from file", e);
         }
     }
