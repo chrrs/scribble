@@ -5,6 +5,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.Language;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.Platform;
 import org.lwjgl.util.tinyfd.TinyFileDialogs;
 
 import java.nio.file.Files;
@@ -33,6 +34,13 @@ public class FileChooser {
                             Language.getInstance().get("text.scribble.action.save_book_to_file"), defaultPath,
                             filter, "Scribble Book (.book)");
                 } else {
+                    // FIXME: For macOS, we don't set a file filter on open.
+                    //        - https://github.com/chrrs/scribble/issues/11
+                    //        - https://github.com/LWJGL/lwjgl3/issues/921
+                    if (Platform.get() == Platform.MACOSX) {
+                        filter = null;
+                    }
+
                     path = TinyFileDialogs.tinyfd_openFileDialog(
                             Language.getInstance().get("text.scribble.action.load_book_from_file"), defaultPath,
                             filter, "Scribble Book (.book)", false);
