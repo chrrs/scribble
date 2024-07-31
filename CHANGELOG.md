@@ -1,3 +1,8 @@
+## 1.2.1
+
+- Fix not being able to load a pick a book when trying to load from a file on macOS.
+- Ask for confirmation before closing without saving.
+
 ## 1.2.0
 
 - Add buttons to save books to files and load them.
