@@ -1,3 +1,7 @@
+## 1.2.2
+
+- Add support for 1.21.1.
+
 ## 1.2.1
 
 - Fix not being able to load a pick a book when trying to load from a file on macOS.
