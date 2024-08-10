@@ -38,6 +38,11 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:${prop("fabric", "loaderVersion")}")
 
     include(fabricApiModule("fabric-resource-loader-v0")!!)
+
+    // Test dependencies
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.3")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.3")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.3")
 }
 
 // renderButton was changed to renderWidget after 1.20.3
@@ -69,6 +74,10 @@ tasks {
 
     jar {
         from("LICENSE")
+    }
+
+    "test"(Test::class) {
+        useJUnitPlatform()
     }
 }
 

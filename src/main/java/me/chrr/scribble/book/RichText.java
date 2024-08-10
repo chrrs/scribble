@@ -36,6 +36,10 @@ public class RichText implements StringVisitable {
         this.segments = segments;
     }
 
+    public List<Segment> getSegments() {
+        return segments;
+    }
+
     /**
      * Create a new empty RichText instance.
      *
@@ -466,6 +470,19 @@ public class RichText implements StringVisitable {
     @Override
     public String getString() {
         return this.getPlainText();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RichText richText = (RichText) o;
+        return Objects.equals(segments, richText.segments);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(segments);
     }
 
     /**
