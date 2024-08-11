@@ -10,7 +10,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
-public class ReachTextReplaceTest {
+public class RichTextReplaceTest {
 
     @Test
     public void testPlainTextReplacementAtTheStartOfRichText() {
