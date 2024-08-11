@@ -8,7 +8,6 @@ import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -63,14 +62,20 @@ public class RichSelectionManager extends SelectionManager {
         int end = Math.max(this.selectionStart, this.selectionEnd);
 
         if (start == end) {
-            text = text.insert(start, string, Optional.ofNullable(this.color).orElse(Formatting.BLACK), Set.copyOf(this.modifiers));
+            text = text.insert(start, string);
         } else {
             text = text.replace(start, end, string);
         }
 
         if (this.textFilter.test(text)) {
             this.textSetter.accept(text);
-            this.selectionEnd = this.selectionStart = Math.min(text.getLength(), start + string.length());
+
+            // Using RichText here to remove all formatting from the string
+            // and get correct position of a cursor
+            String plaintStringToInsert = RichText.fromFormattedString(string).getPlainText();
+            int newCursorPosition = Math.min(text.getPlainText().length(), start + plaintStringToInsert.length());
+            this.selectionEnd = this.selectionStart = newCursorPosition;
+
             updateSelectionFormatting();
         }
     }
@@ -98,9 +103,23 @@ public class RichSelectionManager extends SelectionManager {
     }
 
     @Override
+    public void copy() {
+        this.clipboardSetter.accept(this.getSelectedFormattedText());
+    }
+
+    @Override
     public void cut() {
-        this.clipboardSetter.accept(this.getSelectedText(textGetter.get().getPlainText()));
+        this.clipboardSetter.accept(this.getSelectedFormattedText());
         this.delete(0);
+    }
+
+    private String getSelectedFormattedText() {
+        String fullText = textGetter.get().getAsFormattedString();
+
+        int i = Math.min(this.selectionStart, this.selectionEnd);
+        int j = Math.max(this.selectionStart, this.selectionEnd);
+        RichText richText = RichText.fromFormattedString(fullText);
+        return richText.subText(i, j).getAsFormattedString();
     }
 
     @Override
