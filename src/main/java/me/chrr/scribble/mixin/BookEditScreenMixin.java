@@ -134,7 +134,7 @@ public abstract class BookEditScreenMixin extends Screen {
 
 
     @Unique
-    protected String getClipboard() {
+    private String getClipboard() {
         // the original logic of BookEditScreen.getClipboard without Formatting.strip() call
         // to keep text styling modifiers in copied text
         return this.client != null ? client.keyboard.getClipboard().replaceAll("\\r", "") : "";
