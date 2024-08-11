@@ -7,8 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 public class RichTextReplaceTest {
@@ -24,12 +23,10 @@ public class RichTextReplaceTest {
         // Action
         richText = richText.replace(0, textToReplace.length(), replacementText);
 
-        assertEquals(2, richText.getSegments().size());
-        assertEquals(
-                singleSegmentPlainString.length() - textToReplace.length() + replacementText.length(),
-                richText.getAsFormattedString().length()
-        );
-        assertEquals(replacementText, richText.getSegments().getFirst().text());
+        assertEquals(1, richText.getSegments().size());
+        String expectedText = replacementText + singleSegmentPlainString.replaceAll(textToReplace, "");
+        assertEquals(expectedText, richText.getAsFormattedString());
+        assertTrue(richText.getSegments().getFirst().text().contains(replacementText));
     }
 
     @Test
@@ -50,12 +47,9 @@ public class RichTextReplaceTest {
         richText = richText.replace(replaceStartOffset, replaceEndOffset, replacementText);
 
         // Assert
-        // New number of segments is 4 because:
-        // origin segment 1 -> splitted into two -> 2 segments
-        // origin segment 2 -> still the same  -> 1 segment
-        // new segment inserted -> 1 segment
-        assertEquals(originSegments.size() + 2, richText.getSegments().size());
-        assertEquals(replacementText, richText.getSegments().get(1).text());
+        // The number of segments is still the same, because replacementText has no formatting:
+        assertEquals(originSegments.size(), richText.getSegments().size());
+        assertTrue(richText.getSegments().get(0).text().contains(replacementText));
     }
 
     @Test
@@ -97,12 +91,10 @@ public class RichTextReplaceTest {
         );
 
         // Assert
-        assertEquals(2, richText.getSegments().size());
-        assertEquals(
-                singleSegmentPlainString.length() - textToReplace.length() + replacementText.length(),
-                richText.getAsFormattedString().length()
-        );
-        assertEquals(replacementText, richText.getSegments().getLast().text());
+        assertEquals(1, richText.getSegments().size());
+        String expectedText = singleSegmentPlainString.replaceAll(textToReplace, "") + replacementText;
+        assertEquals(expectedText, richText.getAsFormattedString());
+        assertTrue(richText.getSegments().getLast().text().contains(replacementText));
     }
 
     @Test
@@ -124,17 +116,11 @@ public class RichTextReplaceTest {
         richText = richText.replace(replaceStartOffset, replaceEndOffset, replacementText);
 
         // Assert
-        // richText.getSegments().get(0) -> AA - splitted segment, first half
+        // richText.getSegments().get(0) -> AAYYCC
         assertEquals(originSegments.get(0).color(), richText.getSegments().get(0).color());
 
-        // richText.getSegments().get(1) -> replacementText
-        assertEquals(originSegments.get(0).color(), richText.getSegments().get(1).color());
-
-        // richText.getSegments().get(2) -> CC - splitted segment, second half
-        assertEquals(originSegments.get(0).color(), richText.getSegments().get(2).color());
-
         // richText.getSegments().get(3) -> DD
-        assertEquals(originSegments.get(1).color(), richText.getSegments().get(3).color());
+        assertEquals(originSegments.get(1).color(), richText.getSegments().get(1).color());
     }
 
     @Test
@@ -156,17 +142,11 @@ public class RichTextReplaceTest {
         richText = richText.replace(replaceStartOffset, replaceEndOffset, replacementText);
 
         // Assert
-        // richText.getSegments().get(0) -> AA - splitted segment, first half
+        // richText.getSegments().get(0) -> AAYYCC
         assertEquals(originSegments.get(0).modifiers(), richText.getSegments().get(0).modifiers());
 
-        // richText.getSegments().get(1) -> replacementText
-        assertEquals(originSegments.get(0).modifiers(), richText.getSegments().get(1).modifiers());
-
-        // richText.getSegments().get(2) -> CC - splitted segment, second half
-        assertEquals(originSegments.get(0).modifiers(), richText.getSegments().get(2).modifiers());
-
         // richText.getSegments().get(3) -> DD
-        assertEquals(originSegments.get(1).modifiers(), richText.getSegments().get(3).modifiers());
+        assertEquals(originSegments.get(1).modifiers(), richText.getSegments().get(1).modifiers());
     }
 
     @Test
