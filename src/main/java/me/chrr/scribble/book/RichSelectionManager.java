@@ -161,12 +161,9 @@ public class RichSelectionManager extends SelectionManager {
     }
 
     private String getSelectedFormattedText() {
-        String fullText = textGetter.get().getAsFormattedString();
-
         int i = Math.min(this.selectionStart, this.selectionEnd);
         int j = Math.max(this.selectionStart, this.selectionEnd);
-        RichText richText = RichText.fromFormattedString(fullText);
-        return richText.subText(i, j).getAsFormattedString();
+        return textGetter.get().subText(i, j).getAsFormattedString();
     }
 
     @Override
