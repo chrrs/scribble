@@ -212,21 +212,12 @@ public class RichText implements StringVisitable {
 
     /**
      * Returns the rich text with a portion replaced.
-     * <p>
-     * If the replacement string contains formatting, its color and modifiers are used. If not, the formatting from the
-     * start replacement position is applied. See {@link #createSegmentsWithLocalFormatting(int, int, String)}
-     * <p>
      *
-     * @param start       start of the replacement area (inclusive).
-     * @param end         end of the replacement area (exclusive).
-     * @param replacement text to replace the area with.
+     * @param start               start of the replacement area (inclusive).
+     * @param end                 end of the replacement area (exclusive).
+     * @param replacementSegments segments to replace the area with.
      * @return a RichText instance with the text in the specified area replaced.
      */
-    public RichText replace(int start, int end, String replacement) {
-        List<Segment> replacementSegments = createSegmentsWithLocalFormatting(start, end, replacement);
-        return replace(start, end, replacementSegments);
-    }
-
     public RichText replace(int start, int end, List<Segment> replacementSegments) {
         int current = 0;
         List<Segment> newSegments = new ArrayList<>();
@@ -270,35 +261,6 @@ public class RichText implements StringVisitable {
 
         newSegments = mergeSimilarStyledSegments(newSegments);
         return new RichText(newSegments);
-    }
-
-    /**
-     * Insert a new string of text with specified styling.
-     *
-     * @param offset    offset into the text to start inserting.
-     * @param text      string of text to insert.
-     * @param color     color of the text. See {@link Formatting}
-     * @param modifiers modifiers of the text. See {@link Formatting}
-     * @return a RichText instance with the specified string inserted.
-     */
-    public RichText insert(int offset, String text, Formatting color, Set<Formatting> modifiers) {
-        return insert(offset, List.of(new Segment(text, color, modifiers)));
-    }
-
-    /**
-     * Inserts the given string at the specified offset.
-     * <p>
-     * If the string contains formatting, its color and modifiers are used. If not, the formatting from the
-     * insertion location is applied. See {@link #createSegmentsWithLocalFormatting(int, int, String)}
-     * <p>
-     *
-     * @param offset the position at which to insert the string
-     * @param string the string to insert
-     * @return a new {@link RichText} with the string inserted
-     */
-    public RichText insert(int offset, String string) {
-        List<Segment> insertSegments = createSegmentsWithLocalFormatting(offset, offset, string);
-        return insert(offset, insertSegments);
     }
 
     /**
@@ -361,52 +323,6 @@ public class RichText implements StringVisitable {
 
         combinedSegments = mergeSimilarStyledSegments(combinedSegments);
         return new RichText(combinedSegments);
-    }
-
-    /**
-     * Creates the segments for the given string, applying formatting based on its content and location.
-     * <p>
-     * If the string contains formatting (e.g., color or modifiers), that formatting is preserved.
-     * If it does not contain formatting, the formatting from the start till end location is applied.
-     * Strings with only the RESET formatting tag are treated as non-formatted.
-     *
-     * @param start  the start of a formating selection range in the text
-     * @param end    the end of a formating selection range in the text
-     * @param string the string to be inserted, which may or may not contain formatting
-     * @return a list of {@link Segment} objects representing the formatted segments of the string
-     */
-    private List<Segment> createSegmentsWithLocalFormatting(int start, int end, String string) {
-        // A non-formatted string copied from the book will always contain the RESET formatting tag.
-        // We need to exclude this tag from the check to ensure
-        // that we can properly apply the existing text formatting
-        // ToDo change the logic of copying non-formatted string from a book to return string without any styles at all
-        boolean isFormattedString = !Formatting.strip(string)
-                .equals(string.replaceAll(Formatting.RESET.toString(), ""));
-
-        if (isFormattedString) {
-            // The isFormattedString check is required here,
-            // because RichText.fromFormattedString creates a RichText with Back color by default,
-            // instead of keeping the origin color(no color).
-            // ToDo make RichText.fromFormattedString return no color for non formatted strings
-            RichText richString = RichText.fromFormattedString(string);
-            return richString.getSegments();
-
-        } else {
-            // If the string does not contain formatting, apply formatting from the start-end range.
-
-            // Read formatting from the position just after the start offset when possible
-            // to get a more accurate formatting for cases where start != end.
-            int offsetToReadCurrentFormatting = Math.max(Math.min(start + 1, end), start);
-
-            Pair<@Nullable Formatting, Set<Formatting>> colorAndModifiersFromOffset =
-                    getCommonFormat(offsetToReadCurrentFormatting, offsetToReadCurrentFormatting);
-            Segment segmentWithFormatting = new Segment(
-                    string,
-                    Optional.ofNullable(colorAndModifiersFromOffset.getLeft()).orElse(Formatting.RESET),
-                    colorAndModifiersFromOffset.getRight()
-            );
-            return List.of(segmentWithFormatting);
-        }
     }
 
     /**

@@ -8,19 +8,24 @@ import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class RichSelectionManager extends SelectionManager {
+
+    public static final Formatting DEFAULT_COLOR = Formatting.BLACK;
+
     private final Supplier<RichText> textGetter;
     private final Consumer<RichText> textSetter;
     private final Predicate<RichText> textFilter;
     private final StateCallback stateCallback;
 
     @Nullable
-    private Formatting color = Formatting.BLACK;
+    private Formatting color = DEFAULT_COLOR;
     private Set<Formatting> modifiers = new HashSet<>();
 
     public RichSelectionManager(Supplier<RichText> textGetter, Consumer<RichText> textSetter, Consumer<String> stringSetter, StateCallback stateCallback, Supplier<String> clipboardGetter, Consumer<String> clipboardSetter, Predicate<RichText> textFilter) {
@@ -39,6 +44,10 @@ public class RichSelectionManager extends SelectionManager {
             textSetter.accept(text);
             stringSetter.accept(text.getAsFormattedString());
         };
+    }
+
+    private Formatting getSelectedColor() {
+        return Optional.ofNullable(this.color).orElse(DEFAULT_COLOR);
     }
 
     @Override
@@ -61,10 +70,11 @@ public class RichSelectionManager extends SelectionManager {
         int start = Math.min(this.selectionStart, this.selectionEnd);
         int end = Math.max(this.selectionStart, this.selectionEnd);
 
+        List<RichText.Segment> stringSegments = createSegmentsWithSelectedFormatting(string);
         if (start == end) {
-            text = text.insert(start, string);
+            text = text.insert(start, stringSegments);
         } else {
-            text = text.replace(start, end, string);
+            text = text.replace(start, end, stringSegments);
         }
 
         if (this.textFilter.test(text)) {
@@ -80,6 +90,43 @@ public class RichSelectionManager extends SelectionManager {
         }
     }
 
+    /**
+     * Creates the segments for the given string, applying formatting based on its content and current selected.
+     * <p>
+     * If the string contains formatting (e.g., color or modifiers), that formatting is preserved.
+     * If it does not contain formatting, the current selected formatting {@link #color} and {@link #modifiers} are applied.
+     * Strings with only the RESET formatting tag are treated as non-formatted.
+     *
+     * @param string the string with a text, which may or may not contain formatting
+     * @return a list of {@link RichText.Segment} objects representing the formatted segments of the string
+     */
+    private List<RichText.Segment> createSegmentsWithSelectedFormatting(String string) {
+        // Exclude RESET formatting tag from isFormatted check
+        // since it doesn't make sense to have it in the string if no any other formatting is present
+        boolean isFormattedString = !Formatting.strip(string)
+                .equals(string.replaceAll(Formatting.RESET.toString(), ""));
+
+        if (isFormattedString) {
+            // The only reason why isFormattedString check is here,
+            // is because even if the string has not formatting at all
+            // the RichText.fromFormattedString will create a RichText with Back color,
+            // instead of keeping the origin color - no color.
+            // ToDo make RichText.fromFormattedString return no color for non formatted strings
+            RichText richString = RichText.fromFormattedString(string);
+            return richString.getSegments();
+
+        } else {
+            // The string do not contain any formatting tags (or contains RESET tag only)
+
+            // Remove leftover RESET tags
+            string = Formatting.strip(string);
+
+            // Apply current selected formatting
+            RichText.Segment segmentWithFormatting = new RichText.Segment(string, getSelectedColor(), modifiers);
+            return List.of(segmentWithFormatting);
+        }
+    }
+
     @Override
     public void delete(int offset) {
         RichText text = this.textGetter.get();
@@ -87,14 +134,14 @@ public class RichSelectionManager extends SelectionManager {
             int start = Math.min(this.selectionStart, this.selectionEnd);
             int end = Math.max(this.selectionStart, this.selectionEnd);
 
-            text = text.replace(start, end, "");
+            text = text.replace(start, end, createSegmentsWithSelectedFormatting(""));
             this.selectionStart = this.selectionEnd = start;
         } else {
             int cursor = Util.moveCursor(text.getPlainText(), this.selectionStart, offset);
             int start = Math.min(cursor, this.selectionStart);
             int end = Math.max(cursor, this.selectionStart);
 
-            text = text.replace(start, end, "");
+            text = text.replace(start, end, createSegmentsWithSelectedFormatting(""));
             this.selectionEnd = this.selectionStart = start;
         }
 
