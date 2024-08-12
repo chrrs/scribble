@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public class RichTextInsertTest {
 
-    // ---- Plain text insertion tests bellow ----
+    // ---- Plain text insertion tests below ----
 
     @Test
     public void testPlainTextInsertionAtTheStartOfRichText() {
