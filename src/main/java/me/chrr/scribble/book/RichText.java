@@ -527,6 +527,13 @@ public class RichText implements StringVisitable {
     }
 
     @Override
+    public String toString() {
+        return "RichText{" +
+                "segments=" + segments +
+                '}';
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
