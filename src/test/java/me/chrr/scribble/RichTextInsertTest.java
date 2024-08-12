@@ -13,8 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public class RichTextInsertTest {
 
-    // ---- Plain text insertion tests below ----
-
     @Test
     public void testDifferentFormattedTextInsertionAtTheStartOfRichText() {
         String singleSegmentPlainString = "The quick brown fox\njumps over the lazy dog.";
@@ -156,7 +154,7 @@ public class RichTextInsertTest {
     }
 
     @Test
-    public void testIfMergingSimilarStyledSegmentsAfterStringInsertionAtTheStart() {
+    public void testIfMergingSimilarStyledSegmentsAfterDifferentFormattedStringInsertionAtTheStart() {
         // Arrange
         Formatting color = Formatting.BLUE;
         Set<Formatting> modifiers = Set.of(Formatting.UNDERLINE, Formatting.BOLD);
@@ -235,7 +233,7 @@ public class RichTextInsertTest {
     }
 
     @Test
-    public void testIfMergingSimilarStyledSegmentsAfterFormattedStringInsertionAtTheEnd() {
+    public void testIfMergingSimilarStyledSegmentsAfterDifferentFormattedFormattedStringInsertionAtTheEnd() {
         // Arrange
         Formatting color = Formatting.BLUE;
         Set<Formatting> modifiers = Set.of(Formatting.UNDERLINE, Formatting.BOLD);
