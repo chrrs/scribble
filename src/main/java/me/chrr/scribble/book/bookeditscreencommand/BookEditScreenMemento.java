@@ -1,5 +1,6 @@
 package me.chrr.scribble.book.bookeditscreencommand;
 
+import me.chrr.scribble.book.RichText;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
 
 /**
@@ -7,8 +8,8 @@ import net.minecraft.client.gui.screen.ingame.BookEditScreen;
  * This immutable record captures the essential data needed to restore the screen's state at a later point.
  */
 public record BookEditScreenMemento(
-        BookEditScreen.PageContent pageContent,
         int selectionStart,
-        int selectionEnd
+        int selectionEnd,
+        RichText currentPageRichText
 ) {
 }

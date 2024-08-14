@@ -15,11 +15,18 @@ import java.util.LinkedList;
  */
 public class CommandManager {
 
+    private static final int EMPTY_STACK_INDEX = -1;
+
     private final Deque<Command> commandStack;
-    private int currentIndex = -1;
+    private int currentIndex = EMPTY_STACK_INDEX;
 
     public CommandManager() {
         commandStack = new LinkedList<>();
+    }
+
+    public void clear() {
+        currentIndex = EMPTY_STACK_INDEX;
+        commandStack.clear();
     }
 
     /**

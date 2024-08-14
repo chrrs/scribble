@@ -5,8 +5,8 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.*;
-import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenMemento;
 import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenCutCommand;
+import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenMemento;
 import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenPasteCommand;
 import me.chrr.scribble.gui.ColorSwatchWidget;
 import me.chrr.scribble.gui.IconButtonWidget;
@@ -136,6 +136,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     @Unique
     private IconButtonWidget loadBookButton;
 
+    @Unique
     private final CommandManager commandManager = new CommandManager();
 
     // Dummy constructor to match super class. The mixin derives from
@@ -471,6 +472,12 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         }
     }
 
+    @Inject(method = "changePage", at = @At(value = "TAIL"))
+    private void pageWasChanged(CallbackInfo ci) {
+        // clear undo/redo history when user change page
+        commandManager.clear();
+    }
+
     // When asking for the current page content, we return the plain text.
     // This method is only actively used when double-clicking to select a word.
     @Redirect(method = "getCurrentPageContent", at = @At(value = "INVOKE", target = "Ljava/util/List;get(I)Ljava/lang/Object;"))
@@ -670,17 +677,16 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     @Override
     public BookEditScreenMemento scribble$createMemento() {
         return new BookEditScreenMemento(
-                pageContent,
                 this.getRichSelectionManager().selectionStart,
-                this.getRichSelectionManager().selectionEnd
+                this.getRichSelectionManager().selectionEnd,
+                getCurrentPageText()
         );
     }
 
     @Override
     public void scribble$restore(BookEditScreenMemento memento) {
-        this.pageContent = memento.pageContent();
         this.getRichSelectionManager().selectionStart = memento.selectionStart();
         this.getRichSelectionManager().selectionEnd = memento.selectionEnd();
-        this.getRichSelectionManager().updateSelectionFormatting();
+        setPageText(memento.currentPageRichText());
     }
 }
