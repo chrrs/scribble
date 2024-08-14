@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.*;
 import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenCutCommand;
+import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenInsertCommand;
 import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenMemento;
 import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenPasteCommand;
 import me.chrr.scribble.gui.ColorSwatchWidget;
@@ -515,6 +516,24 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     @Overwrite
     private void setPageContent(String newContent) {
         Scribble.LOGGER.warn("setPageContent() was called, but ignored.");
+    }
+
+    @Inject(
+            method = "charTyped",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/util/SelectionManager;insert(Ljava/lang/String;)V",
+                    ordinal = 0,
+                    shift = At.Shift.BEFORE
+            ),
+            cancellable = true
+    )
+    private void charTypedEditMode(char chr, int modifiers, CallbackInfoReturnable<Boolean> cir) {
+        commandManager.execute(
+                new BookEditScreenInsertCommand(this, this.currentPageSelectionManager, chr)
+        );
+        cir.setReturnValue(true);
+        cir.cancel();
     }
 
     @Inject(method = "keyPressedEditMode", at = @At(value = "HEAD"), cancellable = true)
