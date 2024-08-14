@@ -5,13 +5,11 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.*;
-import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenCutCommand;
-import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenInsertCommand;
-import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenMemento;
-import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenPasteCommand;
+import me.chrr.scribble.book.bookeditscreencommand.*;
 import me.chrr.scribble.gui.ColorSwatchWidget;
 import me.chrr.scribble.gui.IconButtonWidget;
 import me.chrr.scribble.gui.ModifierButtonWidget;
+import me.chrr.scribble.tool.commandmanager.Command;
 import me.chrr.scribble.tool.commandmanager.CommandManager;
 import me.chrr.scribble.tool.commandmanager.Restorable;
 import net.minecraft.client.font.TextHandler;
@@ -105,9 +103,6 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     protected abstract void updateButtons();
     //endregion
 
-    @Shadow
-    @Nullable
-    private BookEditScreen.PageContent pageContent;
     // List of text on the pages of the book. This replaces the usual
     // `pages` variable in BookEditScreen.
     @Unique
@@ -208,23 +203,39 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         // They're all toggled off by default, this is fixed in #initScreen.
         boldButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.bold"),
-                (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.BOLD, toggled),
+                (toggled) -> {
+                    Command command =
+                            new BookEditScreenToggleModifierCommand(this, getRichSelectionManager(), Formatting.BOLD, toggled);
+                    commandManager.execute(command);
+                },
                 x, y, 0, 0, 22, 19, false));
         italicButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.italic"),
-                (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.ITALIC, toggled),
+                (toggled) -> {
+                    Command command = new BookEditScreenToggleModifierCommand(this, getRichSelectionManager(), Formatting.ITALIC, toggled);
+                    commandManager.execute(command);
+                },
                 x, y + 19, 0, 19, 22, 17, false));
         underlineButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.underline"),
-                (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.UNDERLINE, toggled),
+                (toggled) -> {
+                    Command command = new BookEditScreenToggleModifierCommand(this, getRichSelectionManager(), Formatting.UNDERLINE, toggled);
+                    commandManager.execute(command);
+                },
                 x, y + 36, 0, 36, 22, 17, false));
         strikethroughButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.strikethrough"),
-                (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.STRIKETHROUGH, toggled),
+                (toggled) -> {
+                    Command command = new BookEditScreenToggleModifierCommand(this, getRichSelectionManager(), Formatting.STRIKETHROUGH, toggled);
+                    commandManager.execute(command);
+                },
                 x, y + 53, 0, 53, 22, 17, false));
         obfuscatedButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.obfuscated"),
-                (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.OBFUSCATED, toggled),
+                (toggled) -> {
+                    Command command = new BookEditScreenToggleModifierCommand(this, getRichSelectionManager(), Formatting.OBFUSCATED, toggled);
+                    commandManager.execute(command);
+                },
                 x, y + 70, 0, 70, 22, 18, false));
 
         // Color swatches
@@ -238,7 +249,10 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
             ColorSwatchWidget widget = addDrawableChild(new ColorSwatchWidget(
                     Text.translatable("text.scribble.color." + color.getName()), color,
                     () -> {
-                        this.getRichSelectionManager().setColor(color);
+//                        this.getRichSelectionManager().setColor(color);
+                        Command command = new BookEditScreenSetColorCommand(this, getRichSelectionManager(), color);
+                        commandManager.execute(command);
+
                         this.setSwatchColor(color);
                     }, x + 3 + dx, y + 95 + dy, 8, 8
             ));
@@ -699,17 +713,22 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
 
     @Override
     public BookEditScreenMemento scribble$createMemento() {
+        RichSelectionManager selectionManager = this.getRichSelectionManager();
         return new BookEditScreenMemento(
-                this.getRichSelectionManager().selectionStart,
-                this.getRichSelectionManager().selectionEnd,
-                getCurrentPageText()
+                selectionManager.selectionStart,
+                selectionManager.selectionEnd,
+                getCurrentPageText(),
+                selectionManager.getColor(),
+                selectionManager.getModifiers()
         );
     }
 
     @Override
     public void scribble$restore(BookEditScreenMemento memento) {
-        this.getRichSelectionManager().selectionStart = memento.selectionStart();
-        this.getRichSelectionManager().selectionEnd = memento.selectionEnd();
+        RichSelectionManager selectionManager = this.getRichSelectionManager();
+        selectionManager.selectionStart = memento.selectionStart();
+        selectionManager.selectionEnd = memento.selectionEnd();
         setPageText(memento.currentPageRichText());
+        updateState(memento.color(), memento.modifiers());
     }
 }

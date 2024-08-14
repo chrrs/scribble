@@ -252,6 +252,10 @@ public class RichSelectionManager extends SelectionManager {
         return color;
     }
 
+    public Set<Formatting> getModifiers() {
+        return modifiers;
+    }
+
     public interface StateCallback {
         void update(@Nullable Formatting color, Set<Formatting> modifiers);
     }

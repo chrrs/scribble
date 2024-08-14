@@ -2,6 +2,10 @@ package me.chrr.scribble.book.bookeditscreencommand;
 
 import me.chrr.scribble.book.RichText;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
+import net.minecraft.util.Formatting;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Set;
 
 /**
  * Represents the state of a {@link BookEditScreen}.
@@ -10,6 +14,8 @@ import net.minecraft.client.gui.screen.ingame.BookEditScreen;
 public record BookEditScreenMemento(
         int selectionStart,
         int selectionEnd,
-        RichText currentPageRichText
+        RichText currentPageRichText,
+        @Nullable Formatting color,
+        Set<Formatting> modifiers
 ) {
 }
