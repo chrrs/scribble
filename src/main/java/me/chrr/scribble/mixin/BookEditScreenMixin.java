@@ -551,8 +551,12 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         }
 
         // And we inject some new hotkeys
-        if (hasControlDown() && !hasShiftDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_Z) {
-            commandManager.tryUndo();
+        if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_Z) {
+            if (hasShiftDown()) {
+                commandManager.tryRedo();
+            } else {
+                commandManager.tryUndo();
+            }
         }
 
         // Hotkeys for toggling formatting options.

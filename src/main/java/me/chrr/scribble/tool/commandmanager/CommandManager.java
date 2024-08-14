@@ -2,7 +2,6 @@ package me.chrr.scribble.tool.commandmanager;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Objects;
 
@@ -12,7 +11,6 @@ import java.util.Objects;
  * <p>This class maintains a stack of commands and tracks the current index.
  * It allows executing commands, undoing the last executed command, and checking if an undo operation is possible.</p>
  * <p>
- * ToDo add redo logic
  */
 public class CommandManager {
 
@@ -20,9 +18,11 @@ public class CommandManager {
     private static final int EMPTY_STACK_INDEX = -1;
 
     private final int maxHistorySize;
-    private final Deque<Command> commandStack;
+    private final LinkedList<Command> commandStack;
 
-    private int currentIndex = EMPTY_STACK_INDEX;
+    // contains index of the last executed command
+    // or -1
+    private int lastExecutedCommandIndex = EMPTY_STACK_INDEX;
 
     public CommandManager(int maxHistorySize) {
         this.maxHistorySize = maxHistorySize;
@@ -34,7 +34,7 @@ public class CommandManager {
     }
 
     public void clear() {
-        currentIndex = EMPTY_STACK_INDEX;
+        lastExecutedCommandIndex = EMPTY_STACK_INDEX;
         commandStack.clear();
     }
 
@@ -49,12 +49,14 @@ public class CommandManager {
         if (commandStack.size() >= maxHistorySize) {
             // size limit was reached
             // drop a command from the bottom of the stack
-            commandStack.pollLast();
+            commandStack.pollFirst();
+            // also more the current index by one
+            lastExecutedCommandIndex--;
         }
 
-        commandStack.push(command);
+        commandStack.add(command);
         command.execute();
-        currentIndex++;
+        lastExecutedCommandIndex++;
     }
 
     private void dropAllAboveCurrentIndex() {
@@ -67,8 +69,8 @@ public class CommandManager {
         // undo - moves currentIndex to B
         // undo - moves currentIndex to A
         // execute D - will drop all commands that were above currentIndex(above A)
-        while (currentIndex < commandStack.size() - 1) {
-            commandStack.pollFirst();
+        while (lastExecutedCommandIndex < commandStack.size() - 1) {
+            commandStack.pollLast();
         }
     }
 
@@ -79,8 +81,8 @@ public class CommandManager {
      */
     public boolean tryUndo() {
         if (canUndo()) {
-            Objects.requireNonNull(commandStack.pollFirst(), "Check the canUndo() logic.").undo();
-            currentIndex--;
+            Objects.requireNonNull(commandStack.get(lastExecutedCommandIndex), "Check the canUndo() logic.").undo();
+            lastExecutedCommandIndex--;
             return true;
         }
         return false;
@@ -93,10 +95,25 @@ public class CommandManager {
      */
     public boolean canUndo() {
         if (commandStack.isEmpty()) {
-            currentIndex = EMPTY_STACK_INDEX;
+            lastExecutedCommandIndex = EMPTY_STACK_INDEX;
             return false;
         } else {
-            return currentIndex >= 0;
+            return lastExecutedCommandIndex >= 0;
         }
+    }
+
+    public boolean tryRedo() {
+        if (canRedo()) {
+            lastExecutedCommandIndex++;
+            commandStack.get(lastExecutedCommandIndex).execute();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean canRedo() {
+        int lastAvailableIndexInStack = commandStack.size() - 1;
+        return lastExecutedCommandIndex < lastAvailableIndexInStack;
     }
 }
