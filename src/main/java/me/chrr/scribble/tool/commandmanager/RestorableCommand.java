@@ -1,5 +1,8 @@
 package me.chrr.scribble.tool.commandmanager;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 /**
  * Class for commands that support undo/redo functionality.
  *
@@ -10,7 +13,10 @@ package me.chrr.scribble.tool.commandmanager;
  */
 public abstract class RestorableCommand<T> implements Command {
 
+    @NotNull
     private final Restorable<T> restorable;
+
+    @Nullable
     private T memento;
 
     /**
@@ -18,7 +24,7 @@ public abstract class RestorableCommand<T> implements Command {
      *
      * @param restorable The restorable object to be managed by this command.
      */
-    protected RestorableCommand(Restorable<T> restorable) {
+    protected RestorableCommand(@NotNull Restorable<T> restorable) {
         this.restorable = restorable;
     }
 
@@ -32,10 +38,17 @@ public abstract class RestorableCommand<T> implements Command {
 
     /**
      * Undoes the command by restoring the state from the previously created memento.
+     * <p>
+     * Do nothing if nothing to undo.
      */
     @Override
-    public void undo() {
-        restorable.scribble$restore(memento);
+    public boolean undo() {
+        if (memento != null) {
+            restorable.scribble$restore(memento);
+            return true;
+        } else {
+            return false;
+        }
     }
 }
 

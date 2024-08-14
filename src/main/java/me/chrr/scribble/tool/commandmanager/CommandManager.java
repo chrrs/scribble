@@ -1,5 +1,7 @@
 package me.chrr.scribble.tool.commandmanager;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Deque;
 import java.util.LinkedList;
 
@@ -8,6 +10,8 @@ import java.util.LinkedList;
  *
  * <p>This class maintains a stack of commands and tracks the current index.
  * It allows executing commands, undoing the last executed command, and checking if an undo operation is possible.</p>
+ * <p>
+ * ToDo add redo logic
  */
 public class CommandManager {
 
@@ -23,7 +27,7 @@ public class CommandManager {
      *
      * @param command The command to execute.
      */
-    public void execute(Command command) {
+    public void execute(@NotNull Command command) {
         while (currentIndex < commandStack.size() - 1) {
             commandStack.pop();
         }
