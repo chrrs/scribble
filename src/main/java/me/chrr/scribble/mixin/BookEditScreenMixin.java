@@ -5,9 +5,14 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.*;
+import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenMemento;
+import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenCutCommand;
+import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenPasteCommand;
 import me.chrr.scribble.gui.ColorSwatchWidget;
 import me.chrr.scribble.gui.IconButtonWidget;
 import me.chrr.scribble.gui.ModifierButtonWidget;
+import me.chrr.scribble.tool.commandmanager.CommandManager;
+import me.chrr.scribble.tool.commandmanager.Restorable;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
@@ -25,7 +30,10 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.*;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -36,7 +44,7 @@ import java.util.ListIterator;
 import java.util.Set;
 
 @Mixin(BookEditScreen.class)
-public abstract class BookEditScreenMixin extends Screen {
+public abstract class BookEditScreenMixin extends Screen implements Restorable<BookEditScreenMemento> {
     @Unique
     private static final Formatting[] COLORS = new Formatting[]{
             Formatting.BLACK, Formatting.DARK_GRAY,
@@ -96,6 +104,9 @@ public abstract class BookEditScreenMixin extends Screen {
     protected abstract void updateButtons();
     //endregion
 
+    @Shadow
+    @Nullable
+    private BookEditScreen.PageContent pageContent;
     // List of text on the pages of the book. This replaces the usual
     // `pages` variable in BookEditScreen.
     @Unique
@@ -124,6 +135,8 @@ public abstract class BookEditScreenMixin extends Screen {
     private IconButtonWidget saveBookButton;
     @Unique
     private IconButtonWidget loadBookButton;
+
+    private final CommandManager commandManager = new CommandManager();
 
     // Dummy constructor to match super class. The mixin derives from
     // `Screen` so we don't have to shadow as many methods.
@@ -499,7 +512,24 @@ public abstract class BookEditScreenMixin extends Screen {
 
     @Inject(method = "keyPressedEditMode", at = @At(value = "HEAD"), cancellable = true)
     private void keyPressedEditMode(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
-        // We inject some hotkeys for toggling formatting options.
+        // Override default shortcuts behavior with command pattern
+        if (Screen.isPaste(keyCode)) {
+            commandManager.execute(new BookEditScreenPasteCommand(this, this.currentPageSelectionManager));
+            cir.setReturnValue(true);
+            cir.cancel();
+
+        } else if (Screen.isCut(keyCode)) {
+            commandManager.execute(new BookEditScreenCutCommand(this, this.currentPageSelectionManager));
+            cir.setReturnValue(true);
+            cir.cancel();
+        }
+
+        // And we inject some new hotkeys
+        if (hasControlDown() && !hasShiftDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_Z) {
+            commandManager.tryUndo();
+        }
+
+        // Hotkeys for toggling formatting options.
         if (hasControlDown() && !hasShiftDown() && !hasAltDown()) {
             if (keyCode == GLFW.GLFW_KEY_B) {
                 this.boldButton.toggle();
@@ -634,5 +664,23 @@ public abstract class BookEditScreenMixin extends Screen {
         }
 
         return new RichPageContent(text, cursorPosition, atEnd, lineStartsArray, lines.toArray(new BookEditScreen.Line[0]), selectionRectangles.toArray(new Rect2i[0]));
+    }
+
+
+    @Override
+    public BookEditScreenMemento scribble$createMemento() {
+        return new BookEditScreenMemento(
+                pageContent,
+                this.getRichSelectionManager().selectionStart,
+                this.getRichSelectionManager().selectionEnd
+        );
+    }
+
+    @Override
+    public void scribble$restore(BookEditScreenMemento memento) {
+        this.pageContent = memento.pageContent();
+        this.getRichSelectionManager().selectionStart = memento.selectionStart();
+        this.getRichSelectionManager().selectionEnd = memento.selectionEnd();
+        this.getRichSelectionManager().updateSelectionFormatting();
     }
 }

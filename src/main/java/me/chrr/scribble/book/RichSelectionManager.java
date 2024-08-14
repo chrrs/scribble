@@ -28,7 +28,15 @@ public class RichSelectionManager extends SelectionManager {
     private Formatting color = DEFAULT_COLOR;
     private Set<Formatting> modifiers = new HashSet<>();
 
-    public RichSelectionManager(Supplier<RichText> textGetter, Consumer<RichText> textSetter, Consumer<String> stringSetter, StateCallback stateCallback, Supplier<String> clipboardGetter, Consumer<String> clipboardSetter, Predicate<RichText> textFilter) {
+    public RichSelectionManager(
+            Supplier<RichText> textGetter,
+            Consumer<RichText> textSetter,
+            Consumer<String> stringSetter,
+            StateCallback stateCallback,
+            Supplier<String> clipboardGetter,
+            Consumer<String> clipboardSetter,
+            Predicate<RichText> textFilter
+    ) {
         super(
                 () -> textGetter.get().getPlainText(),
                 (text) -> Scribble.LOGGER.warn("stringSetter called with \"{}\"", text),
