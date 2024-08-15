@@ -28,6 +28,9 @@ public class RichSelectionManagerInsertTest {
     ) {
         Supplier<RichText> richTextGetter = () -> initialRichText;
 
+        CommandManager commandManager = new CommandManager();
+        Supplier<CommandManager> commandManagerGetter = () -> commandManager;
+
         Consumer<String> stringSetter = string -> {
         };
 
@@ -72,7 +75,7 @@ public class RichSelectionManagerInsertTest {
                 clipboardGetter,
                 clipboardSetter,
                 textFilter,
-                new CommandManager()
+                commandManagerGetter
         );
     }
 

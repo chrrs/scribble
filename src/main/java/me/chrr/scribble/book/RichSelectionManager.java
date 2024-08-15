@@ -28,7 +28,7 @@ public class RichSelectionManager extends SelectionManager implements Restorable
     private final Consumer<RichText> textSetter;
     private final Predicate<RichText> textFilter;
     private final StateCallback stateCallback;
-    private final CommandManager commandManager;
+    private final Supplier<CommandManager> commandManagerGetter;
 
     @Nullable
     private Formatting color = DEFAULT_COLOR;
@@ -42,7 +42,7 @@ public class RichSelectionManager extends SelectionManager implements Restorable
             Supplier<String> clipboardGetter,
             Consumer<String> clipboardSetter,
             Predicate<RichText> textFilter,
-            CommandManager commandManager
+            Supplier<CommandManager> commandManagerGetter
     ) {
         super(
                 () -> textGetter.get().getPlainText(),
@@ -60,7 +60,7 @@ public class RichSelectionManager extends SelectionManager implements Restorable
             stringSetter.accept(text.getAsFormattedString());
         };
 
-        this.commandManager = commandManager;
+        this.commandManagerGetter = commandManagerGetter;
     }
 
     private Formatting getSelectedColor() {
@@ -217,7 +217,7 @@ public class RichSelectionManager extends SelectionManager implements Restorable
                     removeModifiers
             );
 
-            commandManager.execute(command);
+            commandManagerGetter.get().execute(command);
         } else {
             if (newColor != null) {
                 this.color = newColor;

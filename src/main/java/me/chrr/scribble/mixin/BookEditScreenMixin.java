@@ -5,7 +5,10 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.*;
-import me.chrr.scribble.book.bookeditscreencommand.*;
+import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenCutCommand;
+import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenInsertCommand;
+import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenMemento;
+import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenPasteCommand;
 import me.chrr.scribble.gui.ColorSwatchWidget;
 import me.chrr.scribble.gui.IconButtonWidget;
 import me.chrr.scribble.gui.ModifierButtonWidget;
@@ -109,6 +112,9 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     private final List<RichText> richPages = new ArrayList<>();
 
     @Unique
+    private final List<@Nullable CommandManager> pageCommandManagers = new ArrayList<>();
+
+    @Unique
     private ModifierButtonWidget boldButton;
     @Unique
     private ModifierButtonWidget italicButton;
@@ -131,9 +137,6 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     private IconButtonWidget saveBookButton;
     @Unique
     private IconButtonWidget loadBookButton;
-
-    @Unique
-    private final CommandManager commandManager = new CommandManager();
 
     // Dummy constructor to match super class. The mixin derives from
     // `Screen` so we don't have to shadow as many methods.
@@ -170,6 +173,36 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         return this.currentPage >= 0 && this.currentPage < this.richPages.size()
                 ? this.richPages.get(this.currentPage)
                 : RichText.empty();
+    }
+
+    @Unique
+    private CommandManager getCurrentCommandManager() {
+        if (currentPage < 0) {
+            // how the hell it can happen?
+            // I'm gonna keep it just because this check exist in #getCurrentPageText()
+            return new CommandManager(0);
+        }
+
+        if (currentPage < pageCommandManagers.size()) {
+            CommandManager nullableCommandManager = pageCommandManagers.get(currentPage);
+            if (nullableCommandManager != null) {
+                return nullableCommandManager;
+            } else {
+                CommandManager newCommandManager = new CommandManager();
+                pageCommandManagers.add(currentPage, newCommandManager);
+                return newCommandManager;
+            }
+        } else {
+            // fill up the list with missing items
+            int requiredSize = currentPage + 1;
+            int elementsToAdd = requiredSize - pageCommandManagers.size();
+            for (int i = 0; i < elementsToAdd; i++) {
+                pageCommandManagers.add(new CommandManager());
+            }
+
+            // to return just added item
+            return getCurrentCommandManager();
+        }
     }
 
     /**
@@ -276,7 +309,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
                 this::setClipboard,
                 text -> text.getAsFormattedString().length() < 1024
                         && this.textRenderer.getWrappedLinesHeight(text, 114) <= 128,
-                commandManager
+                this::getCurrentCommandManager
         );
 
         // Load the pages into richPages
@@ -404,6 +437,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     @Unique
     private void deletePage() {
         this.richPages.remove(this.currentPage);
+        this.pageCommandManagers.remove(this.currentPage);
         this.pages.remove(this.currentPage);
         this.dirty = true;
 
@@ -469,12 +503,6 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         }
     }
 
-    @Inject(method = "changePage", at = @At(value = "TAIL"))
-    private void pageWasChanged(CallbackInfo ci) {
-        // clear undo/redo history when user change page
-        commandManager.clear();
-    }
-
     // When asking for the current page content, we return the plain text.
     // This method is only actively used when double-clicking to select a word.
     @Redirect(method = "getCurrentPageContent", at = @At(value = "INVOKE", target = "Ljava/util/List;get(I)Ljava/lang/Object;"))
@@ -525,9 +553,8 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
             cancellable = true
     )
     private void charTypedEditMode(char chr, int modifiers, CallbackInfoReturnable<Boolean> cir) {
-        commandManager.execute(
-                new BookEditScreenInsertCommand(this, this.currentPageSelectionManager, chr)
-        );
+        Command command = new BookEditScreenInsertCommand(this, this.currentPageSelectionManager, chr);
+        getCurrentCommandManager().execute(command);
         cir.setReturnValue(true);
         cir.cancel();
     }
@@ -536,12 +563,12 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     private void keyPressedEditMode(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
         // Override default shortcuts behavior with command pattern
         if (Screen.isPaste(keyCode)) {
-            commandManager.execute(new BookEditScreenPasteCommand(this, this.currentPageSelectionManager));
+            getCurrentCommandManager().execute(new BookEditScreenPasteCommand(this, this.currentPageSelectionManager));
             cir.setReturnValue(true);
             cir.cancel();
 
         } else if (Screen.isCut(keyCode)) {
-            commandManager.execute(new BookEditScreenCutCommand(this, this.currentPageSelectionManager));
+            getCurrentCommandManager().execute(new BookEditScreenCutCommand(this, this.currentPageSelectionManager));
             cir.setReturnValue(true);
             cir.cancel();
         }
@@ -549,9 +576,9 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         // And we inject some new hotkeys
         if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_Z) {
             if (hasShiftDown()) {
-                commandManager.tryRedo();
+                getCurrentCommandManager().tryRedo();
             } else {
-                commandManager.tryUndo();
+                getCurrentCommandManager().tryUndo();
             }
         }
 

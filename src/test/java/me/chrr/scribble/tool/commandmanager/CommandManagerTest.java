@@ -169,4 +169,17 @@ public class CommandManagerTest {
 
         assertFalse(commandManager.canRedo());
     }
+
+    @Test
+    public void testIfCanExecuteCommandWhenMaxHistorySizeIsZero() {
+        // Arrange
+        CommandManager commandManager = new CommandManager(0);
+        Command command = mock();
+
+        // Action
+        commandManager.execute(command);
+
+        // Assert
+        verify(command, times(1)).execute();
+    }
 }
