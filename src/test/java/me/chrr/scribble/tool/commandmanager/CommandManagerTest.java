@@ -10,7 +10,7 @@ import static org.mockito.Mockito.*;
 public class CommandManagerTest {
 
     @Test
-    public void testThatCantUndoIfCommandHistoryIsEmpty() {
+    public void testIfCantUndoIfCommandHistoryIsEmpty() {
         CommandManager commandManager = new CommandManager();
 
         // Assert
@@ -18,7 +18,7 @@ public class CommandManagerTest {
     }
 
     @Test
-    public void testThatCantDedoIfCommandHistoryIsEmpty() {
+    public void testThatCantRedoIfCommandHistoryIsEmpty() {
         CommandManager commandManager = new CommandManager();
 
         // Assert
@@ -42,7 +42,7 @@ public class CommandManagerTest {
     }
 
     @Test
-    public void testIfPutsCommandToCommandHistoryWhenExecuted() {
+    public void testIfCommandAddedToCommandHistoryWhenExecuted() {
         CommandManager commandManager = new CommandManager();
         assertFalse(commandManager.canUndo(), "Unexpected commandManager state");
         Command doNothingCommand = mock();
@@ -73,7 +73,7 @@ public class CommandManagerTest {
     }
 
     @Test
-    public void testIfDropsFirstExecutedCommandWhenCommandHistorySizeReached() {
+    public void testIfDropsFirstExecutedCommandWhenCommandHistoryOverflowed() {
         // Arrange
         CommandManager commandManager = new CommandManager(3);
 
@@ -132,7 +132,7 @@ public class CommandManagerTest {
     }
 
     @Test
-    public void testIfThatAreNothingToRedoWhenNewCommandExecutedAfterUndo() {
+    public void testIfThereAreNothingToRedoWhenNewCommandExecutedAfterUndo() {
         // Arrange
         CommandManager commandManager = new CommandManager();
 

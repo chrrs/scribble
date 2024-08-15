@@ -2,6 +2,8 @@ package me.chrr.scribble.tool.commandmanager;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 public class RestorableCommandTest {
@@ -19,7 +21,7 @@ public class RestorableCommandTest {
     }
 
     @Test
-    public void testIfCreatesMementoOnExecuting() {
+    public void testIfCreatesMementoOnExecute() {
         // Arrange
         String mementoState = "STATE";
         Restorable<String> restorableObject = mock();
@@ -31,18 +33,17 @@ public class RestorableCommandTest {
 
         // Verify
         verify(restorableObject, times(1)).scribble$createMemento();
-        doReturn(mementoState).when(restorableObject).scribble$createMemento();
     }
 
     @Test
-    public void testIfRestoreStateWithMementoOnUndoCall() {
+    public void testIfRestoreStateWithCreatedMementoCalledOnUndoWhenExecuteWasCalledBefore() {
         // Arrange
         String mementoState = "STATE";
         Restorable<String> restorableObject = mock();
         when(restorableObject.scribble$createMemento()).thenReturn(mementoState);
 
         StringRestorableCommand command = new StringRestorableCommand(restorableObject);
-        // to create internal memento
+        // to create internal memento to be able to restore
         command.execute();
 
         // Action
@@ -54,7 +55,7 @@ public class RestorableCommandTest {
     }
 
     @Test
-    public void testIfDoNotRestoreOnUndoIfExecuteWasNotCalled() {
+    public void testIfRestoreStateWithCreatedMementoNotCalledOnUndoWhenExecuteWasNeverCalledBefore() {
         // Arrange
         String mementoState = "STATE";
         Restorable<String> restorableObject = mock();
@@ -66,7 +67,41 @@ public class RestorableCommandTest {
         command.undo();
 
         // Verify
-        verify(restorableObject, times(0)).scribble$restore(anyString());
+        verify(restorableObject, never());
+    }
+
+    @Test
+    public void testIfUndoReturnsTrueWhenExecuteWasCalledBefore() {
+        // Arrange
+        String mementoState = "STATE";
+        Restorable<String> restorableObject = mock();
+        when(restorableObject.scribble$createMemento()).thenReturn(mementoState);
+
+        StringRestorableCommand command = new StringRestorableCommand(restorableObject);
+        // to create internal memento to be able to restore
+        command.execute();
+
+        // Action
+        boolean undoResult = command.undo();
+
+        // Verify
+        assertTrue(undoResult);
+    }
+
+    @Test
+    public void testIfUndoReturnsFalseWhenExecuteWasNeverCalledBefore() {
+        // Arrange
+        String mementoState = "STATE";
+        Restorable<String> restorableObject = mock();
+        when(restorableObject.scribble$createMemento()).thenReturn(mementoState);
+
+        StringRestorableCommand command = new StringRestorableCommand(restorableObject);
+
+        // Action
+        boolean undoResult = command.undo();
+
+        // Verify
+        assertFalse(undoResult);
     }
 
 }

@@ -218,12 +218,6 @@ public class RichSelectionManager extends SelectionManager implements Restorable
             );
 
             commandManager.execute(command);
-//            int start = Math.min(this.selectionStart, this.selectionEnd);
-//            int end = Math.max(this.selectionStart, this.selectionEnd);
-//
-//            RichText text = this.textGetter.get()
-//                    .applyFormatting(start, end, newColor, addModifiers, removeModifiers);
-//            this.textSetter.accept(text);
         } else {
             if (newColor != null) {
                 this.color = newColor;
