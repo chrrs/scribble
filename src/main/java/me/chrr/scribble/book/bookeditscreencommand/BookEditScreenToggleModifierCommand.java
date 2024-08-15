@@ -5,6 +5,10 @@ import me.chrr.scribble.tool.commandmanager.Restorable;
 import me.chrr.scribble.tool.commandmanager.RestorableCommand;
 import net.minecraft.util.Formatting;
 
+/**
+ * Was replaced with {@link RichSelectionManagerApplyFormattingToSelectionCommand}
+ */
+@Deprecated
 public class BookEditScreenToggleModifierCommand extends RestorableCommand<BookEditScreenMemento> {
 
     private final RichSelectionManager selectionManager;

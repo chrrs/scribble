@@ -203,39 +203,23 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         // They're all toggled off by default, this is fixed in #initScreen.
         boldButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.bold"),
-                (toggled) -> {
-                    Command command =
-                            new BookEditScreenToggleModifierCommand(this, getRichSelectionManager(), Formatting.BOLD, toggled);
-                    commandManager.execute(command);
-                },
+                (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.BOLD, toggled),
                 x, y, 0, 0, 22, 19, false));
         italicButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.italic"),
-                (toggled) -> {
-                    Command command = new BookEditScreenToggleModifierCommand(this, getRichSelectionManager(), Formatting.ITALIC, toggled);
-                    commandManager.execute(command);
-                },
+                (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.ITALIC, toggled),
                 x, y + 19, 0, 19, 22, 17, false));
         underlineButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.underline"),
-                (toggled) -> {
-                    Command command = new BookEditScreenToggleModifierCommand(this, getRichSelectionManager(), Formatting.UNDERLINE, toggled);
-                    commandManager.execute(command);
-                },
+                (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.UNDERLINE, toggled),
                 x, y + 36, 0, 36, 22, 17, false));
         strikethroughButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.strikethrough"),
-                (toggled) -> {
-                    Command command = new BookEditScreenToggleModifierCommand(this, getRichSelectionManager(), Formatting.STRIKETHROUGH, toggled);
-                    commandManager.execute(command);
-                },
+                (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.STRIKETHROUGH, toggled),
                 x, y + 53, 0, 53, 22, 17, false));
         obfuscatedButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.obfuscated"),
-                (toggled) -> {
-                    Command command = new BookEditScreenToggleModifierCommand(this, getRichSelectionManager(), Formatting.OBFUSCATED, toggled);
-                    commandManager.execute(command);
-                },
+                (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.OBFUSCATED, toggled),
                 x, y + 70, 0, 70, 22, 18, false));
 
         // Color swatches
@@ -249,10 +233,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
             ColorSwatchWidget widget = addDrawableChild(new ColorSwatchWidget(
                     Text.translatable("text.scribble.color." + color.getName()), color,
                     () -> {
-//                        this.getRichSelectionManager().setColor(color);
-                        Command command = new BookEditScreenSetColorCommand(this, getRichSelectionManager(), color);
-                        commandManager.execute(command);
-
+                        this.getRichSelectionManager().setColor(color);
                         this.setSwatchColor(color);
                     }, x + 3 + dx, y + 95 + dy, 8, 8
             ));
@@ -294,7 +275,8 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
                 this::getClipboard,
                 this::setClipboard,
                 text -> text.getAsFormattedString().length() < 1024
-                        && this.textRenderer.getWrappedLinesHeight(text, 114) <= 128
+                        && this.textRenderer.getWrappedLinesHeight(text, 114) <= 128,
+                commandManager
         );
 
         // Load the pages into richPages

@@ -2,6 +2,7 @@ package me.chrr.scribble;
 
 import me.chrr.scribble.book.RichSelectionManager;
 import me.chrr.scribble.book.RichText;
+import me.chrr.scribble.tool.commandmanager.CommandManager;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -70,7 +71,8 @@ public class RichSelectionManagerInsertTest {
                 stateCallback,
                 clipboardGetter,
                 clipboardSetter,
-                textFilter
+                textFilter,
+                new CommandManager()
         );
     }
 

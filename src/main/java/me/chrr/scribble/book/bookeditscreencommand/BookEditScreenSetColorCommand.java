@@ -6,6 +6,10 @@ import me.chrr.scribble.tool.commandmanager.RestorableCommand;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Was replaced with {@link RichSelectionManagerApplyFormattingToSelectionCommand}
+ */
+@Deprecated
 public class BookEditScreenSetColorCommand extends RestorableCommand<BookEditScreenMemento> {
 
     private final RichSelectionManager selectionManager;

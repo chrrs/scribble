@@ -1,6 +1,11 @@
 package me.chrr.scribble.book;
 
 import me.chrr.scribble.Scribble;
+import me.chrr.scribble.book.bookeditscreencommand.RichSelectionManagerApplyFormattingToSelectionCommand;
+import me.chrr.scribble.book.bookeditscreencommand.RichSelectionManagerMemento;
+import me.chrr.scribble.tool.commandmanager.Command;
+import me.chrr.scribble.tool.commandmanager.CommandManager;
+import me.chrr.scribble.tool.commandmanager.Restorable;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Pair;
@@ -15,7 +20,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public class RichSelectionManager extends SelectionManager {
+public class RichSelectionManager extends SelectionManager implements Restorable<RichSelectionManagerMemento> {
 
     public static final Formatting DEFAULT_COLOR = Formatting.BLACK;
 
@@ -23,6 +28,7 @@ public class RichSelectionManager extends SelectionManager {
     private final Consumer<RichText> textSetter;
     private final Predicate<RichText> textFilter;
     private final StateCallback stateCallback;
+    private final CommandManager commandManager;
 
     @Nullable
     private Formatting color = DEFAULT_COLOR;
@@ -35,7 +41,8 @@ public class RichSelectionManager extends SelectionManager {
             StateCallback stateCallback,
             Supplier<String> clipboardGetter,
             Consumer<String> clipboardSetter,
-            Predicate<RichText> textFilter
+            Predicate<RichText> textFilter,
+            CommandManager commandManager
     ) {
         super(
                 () -> textGetter.get().getPlainText(),
@@ -52,6 +59,8 @@ public class RichSelectionManager extends SelectionManager {
             textSetter.accept(text);
             stringSetter.accept(text.getAsFormattedString());
         };
+
+        this.commandManager = commandManager;
     }
 
     private Formatting getSelectedColor() {
@@ -197,12 +206,24 @@ public class RichSelectionManager extends SelectionManager {
             Set<Formatting> removeModifiers
     ) {
         if (isSelecting()) {
-            int start = Math.min(this.selectionStart, this.selectionEnd);
-            int end = Math.max(this.selectionStart, this.selectionEnd);
+            Command command = new RichSelectionManagerApplyFormattingToSelectionCommand(
+                    this,
+                    textGetter,
+                    textSetter,
+                    selectionStart,
+                    selectionEnd,
+                    newColor,
+                    addModifiers,
+                    removeModifiers
+            );
 
-            RichText text = this.textGetter.get()
-                    .applyFormatting(start, end, newColor, addModifiers, removeModifiers);
-            this.textSetter.accept(text);
+            commandManager.execute(command);
+//            int start = Math.min(this.selectionStart, this.selectionEnd);
+//            int end = Math.max(this.selectionStart, this.selectionEnd);
+//
+//            RichText text = this.textGetter.get()
+//                    .applyFormatting(start, end, newColor, addModifiers, removeModifiers);
+//            this.textSetter.accept(text);
         } else {
             if (newColor != null) {
                 this.color = newColor;
@@ -254,6 +275,27 @@ public class RichSelectionManager extends SelectionManager {
 
     public Set<Formatting> getModifiers() {
         return modifiers;
+    }
+
+    @Override
+    public RichSelectionManagerMemento scribble$createMemento() {
+        return new RichSelectionManagerMemento(
+                selectionStart,
+                selectionEnd,
+                textGetter.get(),
+                getColor(),
+                getModifiers()
+        );
+    }
+
+    @Override
+    public void scribble$restore(RichSelectionManagerMemento memento) {
+        selectionStart = memento.selectionStart();
+        selectionEnd = memento.selectionEnd();
+        textSetter.accept(memento.richText());
+        color = memento.color();
+        modifiers = memento.modifiers();
+        updateSelectionFormatting();
     }
 
     public interface StateCallback {
