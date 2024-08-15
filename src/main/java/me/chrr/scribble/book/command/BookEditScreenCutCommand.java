@@ -1,7 +1,7 @@
-package me.chrr.scribble.book.bookeditscreencommand;
+package me.chrr.scribble.book.command;
 
-import me.chrr.scribble.tool.commandmanager.RestorableCommand;
 import me.chrr.scribble.tool.commandmanager.Restorable;
+import me.chrr.scribble.tool.commandmanager.RestorableCommand;
 import net.minecraft.client.util.SelectionManager;
 
 public class BookEditScreenCutCommand extends RestorableCommand<BookEditScreenMemento> {
@@ -16,10 +16,8 @@ public class BookEditScreenCutCommand extends RestorableCommand<BookEditScreenMe
         this.selectionManager = selectionManager;
     }
 
-
     @Override
-    public void execute() {
-        super.execute();
+    public void doo() {
         selectionManager.cut();
     }
 }

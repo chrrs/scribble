@@ -15,8 +15,8 @@ public class RestorableCommandTest {
         }
 
         @Override
-        public void execute() {
-            super.execute();
+        public void doo() {
+            // do nothing
         }
     }
 
@@ -104,4 +104,50 @@ public class RestorableCommandTest {
         assertFalse(undoResult);
     }
 
+    @Test
+    public void testIfRestoresOriginalStateOnExecuteCallWhenMementoExist() {
+        // Arrange
+        String mementoState = "STATE";
+        Restorable<String> restorableObject = mock();
+        when(restorableObject.scribble$createMemento()).thenReturn(mementoState);
+
+        StringRestorableCommand command = new StringRestorableCommand(restorableObject);
+        command.execute(); // to create memento
+
+        // Action
+        command.execute(); // to create memento
+
+        // Verify
+        verify(restorableObject, times(1))
+                .scribble$restore(argThat(argument -> argument.equals(mementoState)));
+    }
+
+    @Test
+    public void testIfDoNotRestoresOriginalStateOnExecuteCallWhenMementoDoNotExist() {
+        // Arrange
+        String mementoState = "STATE";
+        Restorable<String> restorableObject = mock();
+        when(restorableObject.scribble$createMemento()).thenReturn(mementoState);
+
+        // memento should not exist after creating a command
+        StringRestorableCommand command = new StringRestorableCommand(restorableObject);
+
+        // Action
+        command.execute();
+
+        // Verify
+        verify(restorableObject, never()).scribble$restore(any());
+    }
+
+    @Test
+    public void testIfCallsDoOnExecute() {
+        // Arrange
+        StringRestorableCommand command = spy(new StringRestorableCommand(mock()));
+
+        // Action
+        command.execute();
+
+        // Verify
+        verify(command, times(1)).doo();
+    }
 }

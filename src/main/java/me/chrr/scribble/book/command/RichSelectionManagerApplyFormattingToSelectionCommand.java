@@ -1,4 +1,4 @@
-package me.chrr.scribble.book.bookeditscreencommand;
+package me.chrr.scribble.book.command;
 
 import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.tool.commandmanager.Restorable;
@@ -45,8 +45,7 @@ public class RichSelectionManagerApplyFormattingToSelectionCommand extends Resto
     }
 
     @Override
-    public void execute() {
-        super.execute();
+    public void doo() {
 
         int start = Math.min(this.selectionStart, this.selectionEnd);
         int end = Math.max(this.selectionStart, this.selectionEnd);

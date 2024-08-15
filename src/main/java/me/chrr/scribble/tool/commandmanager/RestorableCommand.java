@@ -29,17 +29,38 @@ public abstract class RestorableCommand<T> implements Command {
     }
 
     /**
-     * Executes the command, creating a memento of the current state.
+     * Executes the command.
+     * <p>
+     * If the command is being executed for the first time,
+     * it creates and stores a memento of the current state.
+     * <p>
+     * If the command is being executed again (e.g., as part of a redo operation),
+     * it restores the state from the previously saved memento to ensure
+     * that the {@link #restorable} is in the exact state it was before the original execution.
      */
     @Override
     public void execute() {
-        this.memento = restorable.scribble$createMemento();
+        if (memento == null) {
+            // Create a memento of the current state if this is the first execution
+            memento = restorable.scribble$createMemento();
+        } else {
+            // Restore the first/original state from the saved memento for redo operations
+            restorable.scribble$restore(memento);
+        }
+        doo();
     }
+
+    /**
+     * Does the command action.
+     */
+    public abstract void doo();
 
     /**
      * Undoes the command by restoring the state from the previously created memento.
      * <p>
      * Do nothing if nothing to undo.
+     *
+     * @return true if the state that was stored before the last execution was restore, otherwise false
      */
     @Override
     public boolean undo() {

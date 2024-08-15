@@ -1,4 +1,4 @@
-package me.chrr.scribble.book.bookeditscreencommand;
+package me.chrr.scribble.book.command;
 
 import me.chrr.scribble.book.RichText;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;

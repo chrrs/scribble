@@ -5,10 +5,10 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.*;
-import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenCutCommand;
-import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenInsertCommand;
-import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenMemento;
-import me.chrr.scribble.book.bookeditscreencommand.BookEditScreenPasteCommand;
+import me.chrr.scribble.book.command.BookEditScreenCutCommand;
+import me.chrr.scribble.book.command.BookEditScreenInsertCommand;
+import me.chrr.scribble.book.command.BookEditScreenMemento;
+import me.chrr.scribble.book.command.BookEditScreenPasteCommand;
 import me.chrr.scribble.gui.ColorSwatchWidget;
 import me.chrr.scribble.gui.IconButtonWidget;
 import me.chrr.scribble.gui.ModifierButtonWidget;
@@ -58,6 +58,15 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
             Formatting.DARK_BLUE, Formatting.BLUE,
             Formatting.DARK_PURPLE, Formatting.LIGHT_PURPLE,
     };
+
+    @Unique
+    private static final Set<Formatting> ALL_MODIFIERS = Set.of(
+            Formatting.BOLD,
+            Formatting.ITALIC,
+            Formatting.UNDERLINE,
+            Formatting.STRIKETHROUGH,
+            Formatting.OBFUSCATED
+    );
 
     //region @Shadow declarations
     @Mutable
@@ -738,6 +747,17 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         selectionManager.selectionStart = memento.selectionStart();
         selectionManager.selectionEnd = memento.selectionEnd();
         setPageText(memento.currentPageRichText());
+
+        // set color value from memento
+        selectionManager.setColor(memento.color());
+
+        // set modifiers value from memento
+        ALL_MODIFIERS.forEach(modifier -> {
+            boolean isActive = memento.modifiers().contains(modifier);
+            selectionManager.toggleModifier(modifier, isActive);
+        });
+
+        // update color and modifiers on the UI
         updateState(memento.color(), memento.modifiers());
     }
 }

@@ -1,4 +1,4 @@
-package me.chrr.scribble.book.bookeditscreencommand;
+package me.chrr.scribble.book.command;
 
 import me.chrr.scribble.tool.commandmanager.Restorable;
 import me.chrr.scribble.tool.commandmanager.RestorableCommand;
@@ -20,8 +20,7 @@ public class BookEditScreenInsertCommand extends RestorableCommand<BookEditScree
     }
 
     @Override
-    public void execute() {
-        super.execute();
+    public void doo() {
         selectionManager.insert(character);
     }
 }
