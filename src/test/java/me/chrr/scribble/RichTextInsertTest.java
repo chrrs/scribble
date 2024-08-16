@@ -24,7 +24,7 @@ public class RichTextInsertTest {
 
         // Action
         // insert at the very start of rich text
-        richText = richText.insert(0, List.of(segmentToInsert));
+        richText = richText.insert(0, new RichText(List.of(segmentToInsert)));
 
         // Assert
         assertEquals(2, richText.getSegments().size());
@@ -44,7 +44,7 @@ public class RichTextInsertTest {
         int middleOfTheFirstSegmentOffset = originSegments.getFirst().text().length() / 2;
 
         // Action
-        richText = richText.insert(middleOfTheFirstSegmentOffset, List.of(segmentToInsert));
+        richText = richText.insert(middleOfTheFirstSegmentOffset, new RichText(List.of(segmentToInsert)));
 
         // Assert
         // expecting 4 segments:
@@ -69,7 +69,7 @@ public class RichTextInsertTest {
         int endOfTheFirstSegmentOffset = originSegments.getFirst().text().length();
 
         // Action
-        richText = richText.insert(endOfTheFirstSegmentOffset, List.of(segmentToInsert));
+        richText = richText.insert(endOfTheFirstSegmentOffset, new RichText(List.of(segmentToInsert)));
 
         // Asset
         assertEquals(originSegments.size() + 1, richText.getSegments().size());
@@ -85,7 +85,7 @@ public class RichTextInsertTest {
         RichText.Segment segmentToInsert = new RichText.Segment(stringToInsert, Formatting.WHITE, Set.of(Formatting.OBFUSCATED));
 
         // Action
-        richText = richText.insert(richText.getLength(), List.of(segmentToInsert));
+        richText = richText.insert(richText.getLength(), new RichText(List.of(segmentToInsert)));
 
         // Asset
         assertEquals(2, richText.getSegments().size());
@@ -107,7 +107,7 @@ public class RichTextInsertTest {
 
 
         // Action
-        richText = richText.insert(middleOfTheFirstSegmentOffset, List.of(segmentToInsert));
+        richText = richText.insert(middleOfTheFirstSegmentOffset, new RichText(List.of(segmentToInsert)));
 
 
         // Assert
@@ -138,7 +138,7 @@ public class RichTextInsertTest {
 
 
         // Action
-        richText = richText.insert(middleOfTheFirstSegmentOffset, List.of(segmentToInsert));
+        richText = richText.insert(middleOfTheFirstSegmentOffset, new RichText(List.of(segmentToInsert)));
 
 
         // Assert
@@ -178,7 +178,7 @@ public class RichTextInsertTest {
 
 
         // Action
-        richText = richText.insert(0, List.of(segmentToInsert));
+        richText = richText.insert(0, new RichText(List.of(segmentToInsert)));
 
 
         // Assert
@@ -216,7 +216,7 @@ public class RichTextInsertTest {
 
 
         // Action
-        richText = richText.insert(originSegments.get(2).text().length() / 2, List.of(segmentToInsert));
+        richText = richText.insert(originSegments.get(2).text().length() / 2, new RichText(List.of(segmentToInsert)));
 
 
         // Assert
@@ -256,7 +256,7 @@ public class RichTextInsertTest {
 
 
         // Action
-        richText = richText.insert(richText.getLength(), List.of(segmentToInsert));
+        richText = richText.insert(richText.getLength(), new RichText(List.of(segmentToInsert)));
 
 
         // Assert

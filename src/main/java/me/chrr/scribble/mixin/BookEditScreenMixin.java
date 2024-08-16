@@ -134,7 +134,7 @@ public abstract class BookEditScreenMixin extends Screen {
 
 
     @Unique
-    private String getClipboard() {
+    private String getRawClipboard() {
         // the original logic of BookEditScreen.getClipboard without Formatting.strip() call
         // to keep text styling modifiers in copied text
         return this.client != null ? client.keyboard.getClipboard().replaceAll("\\r", "") : "";
@@ -262,7 +262,7 @@ public abstract class BookEditScreenMixin extends Screen {
                 this::setPageText,
                 (string) -> this.pages.set(this.currentPage, string),
                 this::updateState,
-                this::getClipboard,
+                this::getRawClipboard,
                 this::setClipboard,
                 text -> text.getAsFormattedString().length() < 1024
                         && this.textRenderer.getWrappedLinesHeight(text, 114) <= 128
