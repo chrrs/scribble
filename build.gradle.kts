@@ -80,6 +80,11 @@ tasks {
 
     "test"(Test::class) {
         useJUnitPlatform()
+
+        // To log test status in console
+        testLogging {
+            events("passed", "skipped", "failed")
+        }
     }
 }
 
