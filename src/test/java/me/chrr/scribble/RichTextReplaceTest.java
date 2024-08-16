@@ -203,9 +203,4 @@ public class RichTextReplaceTest {
         assertEquals(otherColor, richText.getSegments().get(3).color());
         assertEquals(otherModifiers, richText.getSegments().get(3).modifiers());
     }
-
-    @Test
-    public void testThatAlwaysFails() {
-        assertTrue(false);
-    }
 }
