@@ -11,6 +11,12 @@ val chiseledVersions = providers.environmentVariable("CHISELED_VERSIONS")
 val chiseledProjects = stonecutter.versions
     .filter { chiseledVersions?.contains(it.version) ?: true }
 
+stonecutter registerChiseled tasks.register("chiseledTest", stonecutter.chiseled) {
+    versions.set(chiseledProjects)
+    group = "project"
+    ofTask("test")
+}
+
 stonecutter registerChiseled tasks.register("chiseledBuild", stonecutter.chiseled) {
     versions.set(chiseledProjects)
     group = "project"
