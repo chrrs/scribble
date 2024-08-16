@@ -84,9 +84,6 @@ public abstract class BookEditScreenMixin extends Screen {
     protected abstract Rect2i getRectFromCorners(BookEditScreen.Position start, BookEditScreen.Position end);
 
     @Shadow
-    protected abstract String getClipboard();
-
-    @Shadow
     protected abstract void setClipboard(String clipboard);
 
     @Shadow
@@ -133,6 +130,14 @@ public abstract class BookEditScreenMixin extends Screen {
     // This should never be called.
     protected BookEditScreenMixin(Text title) {
         super(title);
+    }
+
+
+    @Unique
+    private String getClipboard() {
+        // the original logic of BookEditScreen.getClipboard without Formatting.strip() call
+        // to keep text styling modifiers in copied text
+        return this.client != null ? client.keyboard.getClipboard().replaceAll("\\r", "") : "";
     }
 
     /**
