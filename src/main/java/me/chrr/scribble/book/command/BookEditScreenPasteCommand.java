@@ -1,24 +1,30 @@
 package me.chrr.scribble.book.command;
 
-import me.chrr.scribble.tool.commandmanager.RestorableCommand;
+import me.chrr.scribble.book.RichSelectionManager;
 import me.chrr.scribble.tool.commandmanager.Restorable;
-import net.minecraft.client.util.SelectionManager;
+import me.chrr.scribble.tool.commandmanager.RestorableCommand;
 
 public class BookEditScreenPasteCommand extends RestorableCommand<BookEditScreenMemento> {
 
-    private final SelectionManager selectionManager;
+    private final RichSelectionManager selectionManager;
+    private final boolean ignoreFormatting;
 
     public BookEditScreenPasteCommand(
             Restorable<BookEditScreenMemento> bookEditScreenMementoRestorable,
-            SelectionManager selectionManager
+            RichSelectionManager selectionManager,
+            boolean ignoreFormatting
     ) {
         super(bookEditScreenMementoRestorable);
         this.selectionManager = selectionManager;
+        this.ignoreFormatting = ignoreFormatting;
     }
-
 
     @Override
     public void doo() {
-        selectionManager.paste();
+        if (ignoreFormatting) {
+            selectionManager.pasteWithoutFormatting();
+        } else {
+            selectionManager.paste();
+        }
     }
 }

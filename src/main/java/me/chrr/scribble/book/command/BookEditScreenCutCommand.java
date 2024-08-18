@@ -1,23 +1,30 @@
 package me.chrr.scribble.book.command;
 
+import me.chrr.scribble.book.RichSelectionManager;
 import me.chrr.scribble.tool.commandmanager.Restorable;
 import me.chrr.scribble.tool.commandmanager.RestorableCommand;
-import net.minecraft.client.util.SelectionManager;
 
 public class BookEditScreenCutCommand extends RestorableCommand<BookEditScreenMemento> {
 
-    private final SelectionManager selectionManager;
+    private final RichSelectionManager selectionManager;
+    private final boolean ignoreFormatting;
 
     public BookEditScreenCutCommand(
             Restorable<BookEditScreenMemento> bookEditScreenMementoRestorable,
-            SelectionManager selectionManager
+            RichSelectionManager selectionManager,
+            boolean ignoreFormatting
     ) {
         super(bookEditScreenMementoRestorable);
         this.selectionManager = selectionManager;
+        this.ignoreFormatting = ignoreFormatting;
     }
 
     @Override
     public void doo() {
-        selectionManager.cut();
+        if (ignoreFormatting) {
+            selectionManager.cutWithoutFormatting();
+        } else {
+            selectionManager.cut();
+        }
     }
 }

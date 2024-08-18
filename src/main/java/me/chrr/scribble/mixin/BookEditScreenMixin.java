@@ -574,28 +574,23 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
 
     @Inject(method = "keyPressedEditMode", at = @At(value = "HEAD"), cancellable = true)
     private void keyPressedEditMode(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
-        // Override default shortcuts behavior with command pattern
-        // fixme
-//        if (Screen.isPaste(keyCode)) {
-//            getCurrentCommandManager().execute(new BookEditScreenPasteCommand(this, this.currentPageSelectionManager));
-//            cir.setReturnValue(true);
-//            cir.cancel();
-//
-//        } else if (Screen.isCut(keyCode)) {
-//            getCurrentCommandManager().execute(new BookEditScreenCutCommand(this, this.currentPageSelectionManager));
-//            cir.setReturnValue(true);
-//            cir.cancel();
-//        }
+        // Override default cut/paste (with and without formatting) shortcuts behavior with command pattern
+        if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_X) {
+            Command command = new BookEditScreenCutCommand(this, getRichSelectionManager(), hasShiftDown());
+            getCurrentCommandManager().execute(command);
+            cir.setReturnValue(true);
+            cir.cancel();
 
-        // Copy/cut/paste without formatting when SHIFT is held down.
-        if (hasControlDown() && hasShiftDown() && !hasAltDown()) {
-            if (keyCode == GLFW.GLFW_KEY_C) {
-                this.getRichSelectionManager().copyWithoutFormatting();
-            } else if (keyCode == GLFW.GLFW_KEY_X) {
-                this.getRichSelectionManager().cutWithoutFormatting();
-            } else if (keyCode == GLFW.GLFW_KEY_V) {
-                this.getRichSelectionManager().pasteWithoutFormatting();
-            }
+        } else if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_V) {
+            Command command = new BookEditScreenPasteCommand(this, getRichSelectionManager(), hasShiftDown());
+            getCurrentCommandManager().execute(command);
+            cir.setReturnValue(true);
+            cir.cancel();
+        }
+
+        // Copy without formatting when SHIFT is held down.
+        if (hasControlDown() && hasShiftDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_C) {
+            this.getRichSelectionManager().copyWithoutFormatting();
         }
 
         // And we inject some new hotkeys
