@@ -1,10 +1,10 @@
 package me.chrr.scribble.book.command;
 
 import me.chrr.scribble.tool.commandmanager.Restorable;
-import me.chrr.scribble.tool.commandmanager.RestorableCommand;
+import me.chrr.scribble.tool.commandmanager.MementoCommand;
 import net.minecraft.client.util.SelectionManager;
 
-public class BookEditScreenInsertCommand extends RestorableCommand<BookEditScreenMemento> {
+public class BookEditScreenInsertCommand extends MementoCommand<BookEditScreenMemento> {
 
     private final SelectionManager selectionManager;
     private final char character;

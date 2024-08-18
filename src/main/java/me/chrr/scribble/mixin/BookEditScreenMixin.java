@@ -580,7 +580,6 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
             getCurrentCommandManager().execute(command);
             cir.setReturnValue(true);
             cir.cancel();
-
         } else if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_V) {
             Command command = new BookEditScreenPasteCommand(this, getRichSelectionManager(), hasShiftDown());
             getCurrentCommandManager().execute(command);
@@ -593,7 +592,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
             this.getRichSelectionManager().copyWithoutFormatting();
         }
 
-        // And we inject some new hotkeys
+        // Inject hotkeys for Undo and Redo
         if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_Z) {
             if (hasShiftDown()) {
                 getCurrentCommandManager().tryRedo();

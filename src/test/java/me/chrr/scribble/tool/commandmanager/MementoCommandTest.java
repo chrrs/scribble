@@ -6,11 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
-public class RestorableCommandTest {
+public class MementoCommandTest {
 
-    private static class StringRestorableCommand extends RestorableCommand<String> {
+    private static class StringMementoCommand extends MementoCommand<String> {
 
-        protected StringRestorableCommand(Restorable<String> restorable) {
+        protected StringMementoCommand(Restorable<String> restorable) {
             super(restorable);
         }
 
@@ -26,7 +26,7 @@ public class RestorableCommandTest {
         String mementoState = "STATE";
         Restorable<String> restorableObject = mock();
         when(restorableObject.scribble$createMemento()).thenReturn(mementoState);
-        StringRestorableCommand command = new StringRestorableCommand(restorableObject);
+        StringMementoCommand command = new StringMementoCommand(restorableObject);
 
         // Action
         command.execute();
@@ -42,7 +42,7 @@ public class RestorableCommandTest {
         Restorable<String> restorableObject = mock();
         when(restorableObject.scribble$createMemento()).thenReturn(mementoState);
 
-        StringRestorableCommand command = new StringRestorableCommand(restorableObject);
+        StringMementoCommand command = new StringMementoCommand(restorableObject);
         // to create internal memento to be able to restore
         command.execute();
 
@@ -61,7 +61,7 @@ public class RestorableCommandTest {
         Restorable<String> restorableObject = mock();
         when(restorableObject.scribble$createMemento()).thenReturn(mementoState);
 
-        StringRestorableCommand command = new StringRestorableCommand(restorableObject);
+        StringMementoCommand command = new StringMementoCommand(restorableObject);
 
         // Action
         command.undo();
@@ -77,7 +77,7 @@ public class RestorableCommandTest {
         Restorable<String> restorableObject = mock();
         when(restorableObject.scribble$createMemento()).thenReturn(mementoState);
 
-        StringRestorableCommand command = new StringRestorableCommand(restorableObject);
+        StringMementoCommand command = new StringMementoCommand(restorableObject);
         // to create internal memento to be able to restore
         command.execute();
 
@@ -95,7 +95,7 @@ public class RestorableCommandTest {
         Restorable<String> restorableObject = mock();
         when(restorableObject.scribble$createMemento()).thenReturn(mementoState);
 
-        StringRestorableCommand command = new StringRestorableCommand(restorableObject);
+        StringMementoCommand command = new StringMementoCommand(restorableObject);
 
         // Action
         boolean undoResult = command.undo();
@@ -111,7 +111,7 @@ public class RestorableCommandTest {
         Restorable<String> restorableObject = mock();
         when(restorableObject.scribble$createMemento()).thenReturn(mementoState);
 
-        StringRestorableCommand command = new StringRestorableCommand(restorableObject);
+        StringMementoCommand command = new StringMementoCommand(restorableObject);
         command.execute(); // to create memento
 
         // Action
@@ -130,7 +130,7 @@ public class RestorableCommandTest {
         when(restorableObject.scribble$createMemento()).thenReturn(mementoState);
 
         // memento should not exist after creating a command
-        StringRestorableCommand command = new StringRestorableCommand(restorableObject);
+        StringMementoCommand command = new StringMementoCommand(restorableObject);
 
         // Action
         command.execute();
@@ -142,7 +142,7 @@ public class RestorableCommandTest {
     @Test
     public void testIfCallsDoOnExecute() {
         // Arrange
-        StringRestorableCommand command = spy(new StringRestorableCommand(mock()));
+        StringMementoCommand command = spy(new StringMementoCommand(mock()));
 
         // Action
         command.execute();

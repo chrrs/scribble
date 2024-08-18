@@ -2,7 +2,7 @@ package me.chrr.scribble.book.command;
 
 import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.tool.commandmanager.Restorable;
-import me.chrr.scribble.tool.commandmanager.RestorableCommand;
+import me.chrr.scribble.tool.commandmanager.MementoCommand;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class RichSelectionManagerApplyFormattingToSelectionCommand extends RestorableCommand<RichSelectionManagerMemento> {
+public class RichSelectionManagerApplyFormattingToSelectionCommand extends MementoCommand<RichSelectionManagerMemento> {
 
     private final Supplier<RichText> textGetter;
     private final Consumer<RichText> textSetter;

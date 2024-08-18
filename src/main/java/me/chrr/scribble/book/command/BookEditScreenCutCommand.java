@@ -2,9 +2,9 @@ package me.chrr.scribble.book.command;
 
 import me.chrr.scribble.book.RichSelectionManager;
 import me.chrr.scribble.tool.commandmanager.Restorable;
-import me.chrr.scribble.tool.commandmanager.RestorableCommand;
+import me.chrr.scribble.tool.commandmanager.MementoCommand;
 
-public class BookEditScreenCutCommand extends RestorableCommand<BookEditScreenMemento> {
+public class BookEditScreenCutCommand extends MementoCommand<BookEditScreenMemento> {
 
     private final RichSelectionManager selectionManager;
     private final boolean ignoreFormatting;

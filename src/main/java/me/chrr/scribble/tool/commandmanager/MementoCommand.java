@@ -6,12 +6,12 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Class for commands that support undo/redo functionality.
  *
- * <p>This class encapsulates the logic for creating a memento before command execution and restoring
- * the state from the memento when the command is undone.</p>
+ * <p>This class encapsulates the logic for creating a memento before command execution
+ * and restoring the state from the memento when the command is undone.</p>
  *
  * @param <T> The type of the memento used to capture the state of the restorable object.
  */
-public abstract class RestorableCommand<T> implements Command {
+public abstract class MementoCommand<T> implements Command {
 
     @NotNull
     private final Restorable<T> restorable;
@@ -24,7 +24,7 @@ public abstract class RestorableCommand<T> implements Command {
      *
      * @param restorable The restorable object to be managed by this command.
      */
-    protected RestorableCommand(@NotNull Restorable<T> restorable) {
+    protected MementoCommand(@NotNull Restorable<T> restorable) {
         this.restorable = restorable;
     }
 
@@ -32,7 +32,7 @@ public abstract class RestorableCommand<T> implements Command {
      * Executes the command.
      * <p>
      * If the command is being executed for the first time,
-     * it creates and stores a memento of the current state.
+     * it creates and stores a memento of the original state.
      * <p>
      * If the command is being executed again (e.g., as part of a redo operation),
      * it restores the state from the previously saved memento to ensure
