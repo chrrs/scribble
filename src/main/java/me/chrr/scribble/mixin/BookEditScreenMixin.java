@@ -446,7 +446,11 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     @Unique
     private void deletePage() {
         this.richPages.remove(this.currentPage);
-        this.pageCommandManagers.remove(this.currentPage);
+
+        if (currentPage >= 0 && currentPage < pageCommandManagers.size()) {
+            pageCommandManagers.remove(currentPage);
+        }
+
         this.pages.remove(this.currentPage);
         this.dirty = true;
 
