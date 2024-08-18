@@ -24,7 +24,11 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - run: ./gradlew chiseledBuild
+      - name: Run Tests
+        run: ./gradlew chiseledTest
+
+      - name: Run Build
+        run: ./gradlew chiseledBuild
 
       - name: Fetch changelog
         run: |
