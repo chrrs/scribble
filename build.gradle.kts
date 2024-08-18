@@ -1,7 +1,7 @@
 import me.modmuss50.mpp.ReleaseType
 
 plugins {
-    id("fabric-loom") version "1.6-SNAPSHOT"
+    id("fabric-loom") version "1.7-SNAPSHOT"
     id("me.modmuss50.mod-publish-plugin") version "0.5.1"
 }
 
@@ -27,6 +27,8 @@ loom {
 }
 
 repositories {
+    maven("https://maven.terraformersmc.com/releases/")
+    maven("https://maven.shedaniel.me/")
 }
 
 dependencies {
@@ -38,6 +40,9 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:${prop("fabric", "loaderVersion")}")
 
     include(fabricApiModule("fabric-resource-loader-v0")!!)
+
+    modCompileOnlyApi("com.terraformersmc:modmenu:${prop("modmenu", "version")}")
+    modCompileOnlyApi("me.shedaniel.cloth:cloth-config-fabric:${prop("clothconfig", "version")}")
 
     // Test dependencies
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.3")
