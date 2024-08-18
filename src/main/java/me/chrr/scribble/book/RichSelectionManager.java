@@ -223,6 +223,19 @@ public class RichSelectionManager extends SelectionManager {
         return color;
     }
 
+    public void copyWithoutFormatting() {
+        this.clipboardSetter.accept(Formatting.strip(this.getSelectedFormattedText()));
+    }
+
+    public void cutWithoutFormatting() {
+        this.clipboardSetter.accept(Formatting.strip(this.getSelectedFormattedText()));
+        this.delete(0);
+    }
+
+    public void pasteWithoutFormatting() {
+        this.insert(Formatting.strip(this.clipboardGetter.get()));
+    }
+
     public interface StateCallback {
         void update(@Nullable Formatting color, Set<Formatting> modifiers);
     }

@@ -499,6 +499,17 @@ public abstract class BookEditScreenMixin extends Screen {
 
     @Inject(method = "keyPressedEditMode", at = @At(value = "HEAD"), cancellable = true)
     private void keyPressedEditMode(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
+        // Copy/cut/paste without formatting when SHIFT is held down.
+        if (hasControlDown() && hasShiftDown() && !hasAltDown()) {
+            if (keyCode == GLFW.GLFW_KEY_C) {
+                this.getRichSelectionManager().copyWithoutFormatting();
+            } else if (keyCode == GLFW.GLFW_KEY_X) {
+                this.getRichSelectionManager().cutWithoutFormatting();
+            } else if (keyCode == GLFW.GLFW_KEY_V) {
+                this.getRichSelectionManager().pasteWithoutFormatting();
+            }
+        }
+
         // We inject some hotkeys for toggling formatting options.
         if (hasControlDown() && !hasShiftDown() && !hasAltDown()) {
             if (keyCode == GLFW.GLFW_KEY_B) {
