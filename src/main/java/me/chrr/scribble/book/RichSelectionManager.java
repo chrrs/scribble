@@ -13,7 +13,6 @@ import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -84,14 +83,31 @@ public class RichSelectionManager extends SelectionManager implements Restorable
     @Override
     public void insert(String string) {
         RichText text = this.textGetter.get();
+
         int start = Math.min(this.selectionStart, this.selectionEnd);
         int end = Math.max(this.selectionStart, this.selectionEnd);
 
-        List<RichText.Segment> stringSegments = createSegmentsWithSelectedFormatting(string);
-        if (start == end) {
-            text = text.insert(start, stringSegments);
+        RichText insertion;
+
+        // If the string contains formatting codes, we keep them in. Otherwise,
+        // we want to keep the formatting that is already selected.
+        // We consider the RESET formatting code to be void, as it messes with books.
+        boolean isFormattedString = !Formatting.strip(string)
+                .equals(string.replaceAll(Formatting.RESET.toString(), ""));
+
+        if (isFormattedString) {
+            insertion = RichText.fromFormattedString(string);
         } else {
-            text = text.replace(start, end, stringSegments);
+            // We strip any leftover RESET tags from the string.
+            string = string.replaceAll(Formatting.RESET.toString(), "");
+            insertion = new RichText(string, getSelectedColor(), modifiers);
+        }
+
+        // If no text is selected, we can just insert instead of replace.
+        if (start == end) {
+            text = text.insert(start, insertion);
+        } else {
+            text = text.replace(start, end, insertion);
         }
 
         if (this.textFilter.test(text)) {
@@ -107,43 +123,6 @@ public class RichSelectionManager extends SelectionManager implements Restorable
         }
     }
 
-    /**
-     * Creates the segments for the given string, applying formatting based on its content and current selected.
-     * <p>
-     * If the string contains formatting (e.g., color or modifiers), that formatting is preserved.
-     * If it does not contain formatting, the current selected formatting {@link #color} and {@link #modifiers} are applied.
-     * Strings with only the RESET formatting tag are treated as non-formatted.
-     *
-     * @param string the string with a text, which may or may not contain formatting
-     * @return a list of {@link RichText.Segment} objects representing the formatted segments of the string
-     */
-    private List<RichText.Segment> createSegmentsWithSelectedFormatting(String string) {
-        // Exclude RESET formatting tag from isFormatted check
-        // since it doesn't make sense to have it in the string if no any other formatting is present
-        boolean isFormattedString = !Formatting.strip(string)
-                .equals(string.replaceAll(Formatting.RESET.toString(), ""));
-
-        if (isFormattedString) {
-            // The only reason why isFormattedString check is here,
-            // is because even if the string has not formatting at all
-            // the RichText.fromFormattedString will create a RichText with Back color,
-            // instead of keeping the origin color - no color.
-            // ToDo make RichText.fromFormattedString return no color for non formatted strings
-            RichText richString = RichText.fromFormattedString(string);
-            return richString.getSegments();
-
-        } else {
-            // The string do not contain any formatting tags (or contains RESET tag only)
-
-            // Remove leftover RESET tags
-            string = Formatting.strip(string);
-
-            // Apply current selected formatting
-            RichText.Segment segmentWithFormatting = new RichText.Segment(string, getSelectedColor(), modifiers);
-            return List.of(segmentWithFormatting);
-        }
-    }
-
     @Override
     public void delete(int offset) {
         RichText text = this.textGetter.get();
@@ -151,14 +130,14 @@ public class RichSelectionManager extends SelectionManager implements Restorable
             int start = Math.min(this.selectionStart, this.selectionEnd);
             int end = Math.max(this.selectionStart, this.selectionEnd);
 
-            text = text.replace(start, end, createSegmentsWithSelectedFormatting(""));
+            text = text.replace(start, end, RichText.empty());
             this.selectionStart = this.selectionEnd = start;
         } else {
             int cursor = Util.moveCursor(text.getPlainText(), this.selectionStart, offset);
             int start = Math.min(cursor, this.selectionStart);
             int end = Math.max(cursor, this.selectionStart);
 
-            text = text.replace(start, end, createSegmentsWithSelectedFormatting(""));
+            text = text.replace(start, end, RichText.empty());
             this.selectionEnd = this.selectionStart = start;
         }
 
@@ -269,6 +248,19 @@ public class RichSelectionManager extends SelectionManager implements Restorable
 
     public Set<Formatting> getModifiers() {
         return modifiers;
+    }
+
+    public void copyWithoutFormatting() {
+        this.clipboardSetter.accept(Formatting.strip(this.getSelectedFormattedText()));
+    }
+
+    public void cutWithoutFormatting() {
+        this.clipboardSetter.accept(Formatting.strip(this.getSelectedFormattedText()));
+        this.delete(0);
+    }
+
+    public void pasteWithoutFormatting() {
+        this.insert(Formatting.strip(this.clipboardGetter.get()));
     }
 
     @Override

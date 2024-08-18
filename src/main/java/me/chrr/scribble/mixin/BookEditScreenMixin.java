@@ -156,7 +156,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
 
 
     @Unique
-    private String getClipboard() {
+    private String getRawClipboard() {
         // the original logic of BookEditScreen.getClipboard without Formatting.strip() call
         // to keep text styling modifiers in copied text
         return this.client != null ? client.keyboard.getClipboard().replaceAll("\\r", "") : "";
@@ -314,7 +314,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
                 this::setPageText,
                 (string) -> this.pages.set(this.currentPage, string),
                 this::updateState,
-                this::getClipboard,
+                this::getRawClipboard,
                 this::setClipboard,
                 text -> text.getAsFormattedString().length() < 1024
                         && this.textRenderer.getWrappedLinesHeight(text, 114) <= 128,
@@ -575,15 +575,27 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     @Inject(method = "keyPressedEditMode", at = @At(value = "HEAD"), cancellable = true)
     private void keyPressedEditMode(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
         // Override default shortcuts behavior with command pattern
-        if (Screen.isPaste(keyCode)) {
-            getCurrentCommandManager().execute(new BookEditScreenPasteCommand(this, this.currentPageSelectionManager));
-            cir.setReturnValue(true);
-            cir.cancel();
+        // fixme
+//        if (Screen.isPaste(keyCode)) {
+//            getCurrentCommandManager().execute(new BookEditScreenPasteCommand(this, this.currentPageSelectionManager));
+//            cir.setReturnValue(true);
+//            cir.cancel();
+//
+//        } else if (Screen.isCut(keyCode)) {
+//            getCurrentCommandManager().execute(new BookEditScreenCutCommand(this, this.currentPageSelectionManager));
+//            cir.setReturnValue(true);
+//            cir.cancel();
+//        }
 
-        } else if (Screen.isCut(keyCode)) {
-            getCurrentCommandManager().execute(new BookEditScreenCutCommand(this, this.currentPageSelectionManager));
-            cir.setReturnValue(true);
-            cir.cancel();
+        // Copy/cut/paste without formatting when SHIFT is held down.
+        if (hasControlDown() && hasShiftDown() && !hasAltDown()) {
+            if (keyCode == GLFW.GLFW_KEY_C) {
+                this.getRichSelectionManager().copyWithoutFormatting();
+            } else if (keyCode == GLFW.GLFW_KEY_X) {
+                this.getRichSelectionManager().cutWithoutFormatting();
+            } else if (keyCode == GLFW.GLFW_KEY_V) {
+                this.getRichSelectionManager().pasteWithoutFormatting();
+            }
         }
 
         // And we inject some new hotkeys
@@ -595,7 +607,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
             }
         }
 
-        // Hotkeys for toggling formatting options.
+        // We inject some hotkeys for toggling formatting options.
         if (hasControlDown() && !hasShiftDown() && !hasAltDown()) {
             if (keyCode == GLFW.GLFW_KEY_B) {
                 this.boldButton.toggle();

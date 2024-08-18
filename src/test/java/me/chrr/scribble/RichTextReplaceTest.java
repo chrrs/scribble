@@ -24,7 +24,7 @@ public class RichTextReplaceTest {
         assertEquals(1, richText.getSegments().size(), "Unexpected initial state");
 
         // Action
-        richText = richText.replace(0, textToReplace.length(), List.of(replacementTextSegment));
+        richText = richText.replace(0, textToReplace.length(), new RichText(List.of(replacementTextSegment)));
 
         assertEquals(2, richText.getSegments().size());
         String expectedText = replacementText + singleSegmentPlainString.replaceAll(textToReplace, "");
@@ -50,7 +50,7 @@ public class RichTextReplaceTest {
         // replace text in the middle of the first segment
         int replaceStartOffset = (originSegments.getFirst().text().length() - textToReplace.length()) / 2;
         int replaceEndOffset = replaceStartOffset + textToReplace.length();
-        richText = richText.replace(replaceStartOffset, replaceEndOffset, List.of(replacementTextSegment));
+        richText = richText.replace(replaceStartOffset, replaceEndOffset, new RichText(List.of(replacementTextSegment)));
 
         // Assert
         // expected size is 4 because of the segments: AA + YY + CC + DD
@@ -77,7 +77,7 @@ public class RichTextReplaceTest {
         // replace text in the middle of the first segment
         int replaceStartOffset = originSegments.getFirst().text().length();
         int replaceEndOffset = replaceStartOffset + textToReplace.length();
-        richText = richText.replace(replaceStartOffset, replaceEndOffset, List.of(replacementTextSegment));
+        richText = richText.replace(replaceStartOffset, replaceEndOffset, new RichText(List.of(replacementTextSegment)));
 
         // Assert
         assertEquals(originSegments.size(), richText.getSegments().size());
@@ -99,7 +99,7 @@ public class RichTextReplaceTest {
         richText = richText.replace(
                 singleSegmentPlainString.length() - textToReplace.length(),
                 singleSegmentPlainString.length(),
-                List.of(replacementTextSegment)
+                new RichText(List.of(replacementTextSegment))
         );
 
         // Assert
@@ -139,7 +139,7 @@ public class RichTextReplaceTest {
         richText = richText.replace(
                 originSegments.get(0).text().length() / 2,
                 originSegments.get(1).text().length() / 2,
-                List.of(replacementTextSegment)
+                new RichText(List.of(replacementTextSegment))
         );
 
         // Assert
@@ -185,7 +185,7 @@ public class RichTextReplaceTest {
         richText = richText.replace(
                 originSegments.get(0).text().length() / 2,
                 originSegments.get(1).text().length() / 2,
-                List.of(replacementTextSegment)
+                new RichText(List.of(replacementTextSegment))
         );
 
         // Assert
