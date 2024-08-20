@@ -2,7 +2,7 @@ plugins {
     id("dev.kikugie.stonecutter")
 }
 
-stonecutter active "1.21.3" /* [SC] DO NOT EDIT */
+stonecutter active "1.21.3-fabric" /* [SC] DO NOT EDIT */
 
 // Read the versions from CHISELED_VERSIONS, and only build / publish those versions.
 // If it's blank, we build / publish all available versions.
@@ -27,4 +27,18 @@ stonecutter registerChiseled tasks.register("chiseledPublish", stonecutter.chise
     versions.set(chiseledProjects)
     group = "project"
     ofTask("publishMods")
+}
+
+stonecutter configureEach {
+    // Define loader constants
+    val loader = current.project.split("-").last()
+    consts(listOf("fabric", "forge", "neoforge").map { it to (loader == it) })
+
+    // renderButton was changed to renderWidget after 1.20.3
+    swap("renderWidget") {
+        val method =
+            if (stonecutter.eval(current.version, ">=1.20.3")) "renderWidget"
+            else "renderButton"
+        "protected void $method(DrawContext context, int mouseX, int mouseY, float delta) {"
+    }
 }

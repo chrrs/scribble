@@ -2,7 +2,7 @@
     "schemaVersion": 1,
     "id": "scribble",
     "version": "${modVersion}",
-    "name": "${modName}",
+    "name": "Scribble",
     "description": "Expertly edit your books with rich formatting options, page utilities and more!",
     "authors": [
         "chrrrs"
@@ -24,7 +24,7 @@
     "environment": "client",
     "entrypoints": {
         "client": [
-            "me.chrr.scribble.Scribble"
+            "me.chrr.scribble.PlatformEntry"
         ],
         "modmenu": [
             "me.chrr.scribble.compat.ModMenuCompat"
