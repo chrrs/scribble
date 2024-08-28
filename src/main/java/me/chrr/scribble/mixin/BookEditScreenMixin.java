@@ -316,6 +316,11 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
 
     @Inject(method = "<init>", at = @At(value = "TAIL"))
     public void init(PlayerEntity player, ItemStack itemStack, Hand hand, CallbackInfo ci) {
+        // Load the pages into pageDataList
+        for (String page : this.pages) {
+            pageDataList.add(new PageData(page));
+        }
+
         // Replace the selection manager with our own
         currentPageSelectionManager = new RichSelectionManager(
                 this::getCurrentPageText,
@@ -328,11 +333,6 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
                         && this.textRenderer.getWrappedLinesHeight(text, 114) <= 128,
                 this::getCurrentPageCommandManager
         );
-
-        // Load the pages into richPages
-        for (String page : this.pages) {
-            pageDataList.add(new PageData(page));
-        }
     }
 
     @Inject(method = "init", at = @At(value = "HEAD"))
@@ -443,8 +443,9 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
             }
 
             for (RichText page : bookFile.pages()) {
-                this.pageDataList.add(new PageData(page));
-                this.pages.add(page.getAsFormattedString());
+                PageData pageData = new PageData(page);
+                this.pageDataList.add(pageData);
+                this.pages.add(pageData.text().getAsFormattedString());
             }
 
             this.currentPage = 0;
@@ -529,7 +530,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     // This method is only actively used when double-clicking to select a word.
     @Redirect(method = "getCurrentPageContent", at = @At(value = "INVOKE", target = "Ljava/util/List;get(I)Ljava/lang/Object;"))
     public Object getCurrentPageContent(List<String> pages, int page) {
-        return this.pageDataList.get(page).text().getPlainText();
+        return getPageData(page).text().getPlainText();
     }
 
     // We cancel any drags outside the width of the book interface.
