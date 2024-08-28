@@ -12,6 +12,7 @@ import me.chrr.scribble.book.command.BookEditScreenPasteCommand;
 import me.chrr.scribble.gui.ColorSwatchWidget;
 import me.chrr.scribble.gui.IconButtonWidget;
 import me.chrr.scribble.gui.ModifierButtonWidget;
+import me.chrr.scribble.model.PageData;
 import me.chrr.scribble.tool.commandmanager.Command;
 import me.chrr.scribble.tool.commandmanager.CommandManager;
 import me.chrr.scribble.tool.commandmanager.Restorable;
@@ -115,13 +116,13 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     protected abstract void updateButtons();
     //endregion
 
-    // List of text on the pages of the book. This replaces the usual
-    // `pages` variable in BookEditScreen.
+    /**
+     * List of a data for each pages of the book. This replaces the usual `pages` variable in BookEditScreen.
+     *
+     * @see #getPageData(int)
+     */
     @Unique
-    private final List<RichText> richPages = new ArrayList<>();
-
-    @Unique
-    private final List<@Nullable CommandManager> pageCommandManagers = new ArrayList<>();
+    private final List<PageData> pageDataList = new ArrayList<>();
 
     @Unique
     private ModifierButtonWidget boldButton;
@@ -179,39 +180,43 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
      */
     @Unique
     private RichText getCurrentPageText() {
-        return this.currentPage >= 0 && this.currentPage < this.richPages.size()
-                ? this.richPages.get(this.currentPage)
-                : RichText.empty();
+        return getPageData(currentPage).text();
     }
 
+    /**
+     * Retrieves or creates the PageData at the specified index.
+     * If the index is out of {@code pageDataList} range,
+     * the list is extended and filled with empty {@link PageData} objects.
+     * Negative indexes return an empty PageData with a logged error.
+     *
+     * @param pageIndex The index of the page.
+     * @return The {@link PageData} at the specified index or an empty {@link PageData} for negative index.
+     */
     @Unique
-    private CommandManager getCurrentCommandManager() {
-        if (currentPage < 0) {
-            // how the hell it can happen?
-            // I'm gonna keep it just because this check exist in #getCurrentPageText()
-            return new CommandManager(0);
+    private PageData getPageData(int pageIndex) {
+        if (pageIndex < 0) {
+            Scribble.LOGGER.error("Attempt to get PageData for negative page index '{}'", pageIndex);
+            return new PageData(RichText.empty(), new CommandManager(0));
         }
 
-        if (currentPage < pageCommandManagers.size()) {
-            CommandManager nullableCommandManager = pageCommandManagers.get(currentPage);
-            if (nullableCommandManager != null) {
-                return nullableCommandManager;
-            } else {
-                CommandManager newCommandManager = new CommandManager();
-                pageCommandManagers.add(currentPage, newCommandManager);
-                return newCommandManager;
-            }
+        if (pageIndex < pageDataList.size()) {
+            return pageDataList.get(currentPage);
         } else {
             // fill up the list with missing items
             int requiredSize = currentPage + 1;
-            int elementsToAdd = requiredSize - pageCommandManagers.size();
+            int elementsToAdd = requiredSize - pageDataList.size();
             for (int i = 0; i < elementsToAdd; i++) {
-                pageCommandManagers.add(new CommandManager());
+                pageDataList.add(PageData.empty());
             }
 
             // to return just added item
-            return getCurrentCommandManager();
+            return getPageData(pageIndex);
         }
+    }
+
+    @Unique
+    private CommandManager getCurrentPageCommandManager() {
+        return getPageData(currentPage).manager();
     }
 
     /**
@@ -219,11 +224,14 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
      */
     @Unique
     private void setPageText(RichText newText) {
-        if (this.currentPage >= 0 && this.currentPage < this.richPages.size()) {
-            this.richPages.set(this.currentPage, newText);
-            this.dirty = true;
-            this.invalidatePageContent();
-        }
+        PageData updatedPageData = getPageData(currentPage).withText(newText);
+
+        // The pageDataList.set(currentPage) call won't cause OutOfBoarder exception,
+        // because the getPageData(currentPage) above gets ir CREATES a PageData for current page
+        pageDataList.set(currentPage, updatedPageData);
+
+        this.dirty = true;
+        this.invalidatePageContent();
     }
 
     @Unique
@@ -318,12 +326,12 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
                 this::setClipboard,
                 text -> text.getAsFormattedString().length() < 1024
                         && this.textRenderer.getWrappedLinesHeight(text, 114) <= 128,
-                this::getCurrentCommandManager
+                this::getCurrentPageCommandManager
         );
 
         // Load the pages into richPages
         for (String page : this.pages) {
-            this.richPages.add(RichText.fromFormattedString(page));
+            pageDataList.add(new PageData(page));
         }
     }
 
@@ -347,7 +355,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
             swatch.visible = !this.signing;
         }
 
-        this.deletePageButton.visible = !this.signing && this.richPages.size() > 1;
+        this.deletePageButton.visible = !this.signing && this.pageDataList.size() > 1;
         this.insertPageButton.visible = !this.signing;
 
         this.saveBookButton.visible = !this.signing;
@@ -378,7 +386,11 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
      */
     @Unique
     private void confirmOverwrite(Runnable callback) {
-        if (!richPages.stream().allMatch(RichText::isEmpty)) {
+        boolean allPagesAreEmpty = pageDataList.stream()
+                .map(PageData::text)
+                .allMatch(RichText::isEmpty);
+
+        if (!allPagesAreEmpty) {
             if (client == null) {
                 return;
             }
@@ -406,6 +418,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         }
 
         try {
+            List<RichText> richPages = pageDataList.stream().map(PageData::text).toList();
             BookFile bookFile = new BookFile(this.player.getGameProfile().getName(), List.copyOf(richPages));
             bookFile.write(path);
         } catch (Exception e) {
@@ -418,7 +431,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         try {
             BookFile bookFile = BookFile.read(path);
 
-            this.richPages.clear();
+            this.pageDataList.clear();
             this.pages.clear();
 
             // Loading an empty book file would set the total amount of pages to 0.
@@ -430,7 +443,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
             }
 
             for (RichText page : bookFile.pages()) {
-                this.richPages.add(page);
+                this.pageDataList.add(new PageData(page));
                 this.pages.add(page.getAsFormattedString());
             }
 
@@ -445,24 +458,20 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
 
     @Unique
     private void deletePage() {
-        this.richPages.remove(this.currentPage);
-
-        if (currentPage >= 0 && currentPage < pageCommandManagers.size()) {
-            pageCommandManagers.remove(currentPage);
-        }
+        this.pageDataList.remove(this.currentPage);
 
         this.pages.remove(this.currentPage);
         this.dirty = true;
 
-        this.currentPage = Math.min(this.currentPage, this.richPages.size() - 1);
+        this.currentPage = Math.min(this.currentPage, this.pageDataList.size() - 1);
         this.updateButtons();
         this.changePage();
     }
 
     @Unique
     private void insertPage() {
-        if (this.richPages.size() < 100) {
-            this.richPages.add(this.currentPage, RichText.empty());
+        if (this.pageDataList.size() < 100) {
+            this.pageDataList.add(this.currentPage, PageData.empty());
             this.pages.add(this.currentPage, "");
             this.dirty = true;
 
@@ -496,7 +505,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     // When shift is held down, skip to the last page.
     @Inject(method = "openNextPage", at = @At(value = "HEAD"), cancellable = true)
     public void openNextPage(CallbackInfo ci) {
-        int lastPage = this.richPages.size() - 1;
+        int lastPage = this.pageDataList.size() - 1;
         if (this.currentPage < lastPage && Screen.hasShiftDown()) {
             this.currentPage = lastPage;
             this.updateButtons();
@@ -520,7 +529,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     // This method is only actively used when double-clicking to select a word.
     @Redirect(method = "getCurrentPageContent", at = @At(value = "INVOKE", target = "Ljava/util/List;get(I)Ljava/lang/Object;"))
     public Object getCurrentPageContent(List<String> pages, int page) {
-        return this.richPages.get(page).getPlainText();
+        return this.pageDataList.get(page).text().getPlainText();
     }
 
     // We cancel any drags outside the width of the book interface.
@@ -535,15 +544,15 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
 
     @Inject(method = "removeEmptyPages", at = @At(value = "TAIL"))
     private void removeEmptyPages(CallbackInfo ci) {
-        ListIterator<RichText> listIterator = this.richPages.listIterator(this.richPages.size());
-        while (listIterator.hasPrevious() && listIterator.previous().isEmpty()) {
+        ListIterator<PageData> listIterator = this.pageDataList.listIterator(this.pageDataList.size());
+        while (listIterator.hasPrevious() && listIterator.previous().text().isEmpty()) {
             listIterator.remove();
         }
     }
 
     @Inject(method = "appendNewPage", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z"))
     private void appendNewPage(CallbackInfo ci) {
-        richPages.add(RichText.empty());
+        pageDataList.add(PageData.empty());
     }
 
     /**
@@ -567,7 +576,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     )
     private void charTypedEditMode(char chr, int modifiers, CallbackInfoReturnable<Boolean> cir) {
         Command command = new BookEditScreenInsertCommand(this, this.currentPageSelectionManager, chr);
-        getCurrentCommandManager().execute(command);
+        getCurrentPageCommandManager().execute(command);
         cir.setReturnValue(true);
         cir.cancel();
     }
@@ -577,12 +586,12 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         // Override default cut/paste (with and without formatting) shortcuts behavior with command pattern
         if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_X) {
             Command command = new BookEditScreenCutCommand(this, getRichSelectionManager(), hasShiftDown());
-            getCurrentCommandManager().execute(command);
+            getCurrentPageCommandManager().execute(command);
             cir.setReturnValue(true);
             cir.cancel();
         } else if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_V) {
             Command command = new BookEditScreenPasteCommand(this, getRichSelectionManager(), hasShiftDown());
-            getCurrentCommandManager().execute(command);
+            getCurrentPageCommandManager().execute(command);
             cir.setReturnValue(true);
             cir.cancel();
         }
@@ -595,9 +604,9 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         // Inject hotkeys for Undo and Redo
         if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_Z) {
             if (hasShiftDown()) {
-                getCurrentCommandManager().tryRedo();
+                getCurrentPageCommandManager().tryRedo();
             } else {
-                getCurrentCommandManager().tryUndo();
+                getCurrentPageCommandManager().tryUndo();
             }
         }
 
