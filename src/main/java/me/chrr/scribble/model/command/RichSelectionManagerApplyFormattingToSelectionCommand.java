@@ -1,6 +1,7 @@
-package me.chrr.scribble.book.command;
+package me.chrr.scribble.model.command;
 
 import me.chrr.scribble.book.RichText;
+import me.chrr.scribble.model.memento.RichSelectionManagerMemento;
 import me.chrr.scribble.tool.commandmanager.Restorable;
 import me.chrr.scribble.tool.commandmanager.MementoCommand;
 import net.minecraft.util.Formatting;

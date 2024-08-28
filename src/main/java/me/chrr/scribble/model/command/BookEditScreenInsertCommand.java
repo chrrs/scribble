@@ -1,5 +1,6 @@
-package me.chrr.scribble.book.command;
+package me.chrr.scribble.model.command;
 
+import me.chrr.scribble.model.memento.BookEditScreenMemento;
 import me.chrr.scribble.tool.commandmanager.Restorable;
 import me.chrr.scribble.tool.commandmanager.MementoCommand;
 import net.minecraft.client.util.SelectionManager;

@@ -1,8 +1,8 @@
 package me.chrr.scribble.book;
 
 import me.chrr.scribble.Scribble;
-import me.chrr.scribble.book.command.RichSelectionManagerApplyFormattingToSelectionCommand;
-import me.chrr.scribble.book.command.RichSelectionManagerMemento;
+import me.chrr.scribble.model.command.RichSelectionManagerApplyFormattingToSelectionCommand;
+import me.chrr.scribble.model.memento.RichSelectionManagerMemento;
 import me.chrr.scribble.tool.commandmanager.Command;
 import me.chrr.scribble.tool.commandmanager.CommandManager;
 import me.chrr.scribble.tool.commandmanager.Restorable;
