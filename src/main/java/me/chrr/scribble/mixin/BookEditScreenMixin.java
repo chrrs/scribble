@@ -5,14 +5,15 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.*;
-import me.chrr.scribble.model.command.BookEditScreenCutCommand;
-import me.chrr.scribble.model.command.BookEditScreenInsertCommand;
-import me.chrr.scribble.model.memento.BookEditScreenMemento;
-import me.chrr.scribble.model.command.BookEditScreenPasteCommand;
 import me.chrr.scribble.gui.ColorSwatchWidget;
 import me.chrr.scribble.gui.IconButtonWidget;
 import me.chrr.scribble.gui.ModifierButtonWidget;
 import me.chrr.scribble.model.PageData;
+import me.chrr.scribble.model.command.BookEditScreenCutCommand;
+import me.chrr.scribble.model.command.BookEditScreenDeleteCommand;
+import me.chrr.scribble.model.command.BookEditScreenInsertCommand;
+import me.chrr.scribble.model.command.BookEditScreenPasteCommand;
+import me.chrr.scribble.model.memento.BookEditScreenMemento;
 import me.chrr.scribble.tool.commandmanager.Command;
 import me.chrr.scribble.tool.commandmanager.CommandManager;
 import me.chrr.scribble.tool.commandmanager.Restorable;
@@ -609,6 +610,21 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
             } else {
                 getCurrentPageCommandManager().tryUndo();
             }
+
+            cir.setReturnValue(true);
+            cir.cancel();
+        }
+
+        if (keyCode == GLFW.GLFW_KEY_DELETE || keyCode == GLFW.GLFW_KEY_BACKSPACE) {
+            SelectionManager.SelectionType selectionType = Screen.hasControlDown()
+                    ? SelectionManager.SelectionType.WORD
+                    : SelectionManager.SelectionType.CHARACTER;
+
+            Command command = new BookEditScreenDeleteCommand(this, getRichSelectionManager(), selectionType);
+            getCurrentPageCommandManager().execute(command);
+
+            cir.setReturnValue(true);
+            cir.cancel();
         }
 
         // We inject some hotkeys for toggling formatting options.
