@@ -14,6 +14,7 @@ import java.util.Set;
  * See {@link Command}.
  */
 public record BookEditScreenMemento(
+        int pageIndex,
         int selectionStart,
         int selectionEnd,
         RichText currentPageRichText,
