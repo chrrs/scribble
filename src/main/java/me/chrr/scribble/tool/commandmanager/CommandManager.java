@@ -11,7 +11,6 @@ import java.util.Objects;
  */
 public class CommandManager {
 
-    private static final int DEFAULT_HISTORY_SIZE = 30;
     private static final int EMPTY_STACK_INDEX = -1;
 
     private final int maxHistorySize;
@@ -23,10 +22,6 @@ public class CommandManager {
     public CommandManager(int maxHistorySize) {
         this.maxHistorySize = maxHistorySize;
         this.commandStack = new LinkedList<>();
-    }
-
-    public CommandManager() {
-        this(DEFAULT_HISTORY_SIZE);
     }
 
     /**

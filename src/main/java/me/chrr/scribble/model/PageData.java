@@ -11,16 +11,22 @@ import me.chrr.scribble.tool.commandmanager.CommandManager;
  */
 public record PageData(RichText text, CommandManager manager) {
 
+    private static final int PAGE_HISTORY_SIZE = 30;
+
     public static PageData empty() {
-        return new PageData(RichText.empty(), new CommandManager());
+        return new PageData(RichText.empty(), newEmptyCommandManager());
+    }
+
+    private static CommandManager newEmptyCommandManager(){
+        return new CommandManager(PAGE_HISTORY_SIZE);
     }
 
     public PageData(RichText text) {
-        this(text, new CommandManager());
+        this(text, newEmptyCommandManager());
     }
 
     public PageData(String string) {
-        this(RichText.fromFormattedString(string), new CommandManager());
+        this(RichText.fromFormattedString(string), newEmptyCommandManager());
     }
 
     public PageData withText(RichText newText) {

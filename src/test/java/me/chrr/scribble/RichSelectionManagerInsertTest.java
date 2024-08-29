@@ -22,13 +22,15 @@ import static org.mockito.Mockito.verify;
 
 public class RichSelectionManagerInsertTest {
 
+    private static final int DEFAULT_HISTORY_SIZE = 30;
+
     private RichSelectionManager createRichSelectionManager(
             RichText initialRichText,
             Consumer<RichText> richTextSetter
     ) {
         Supplier<RichText> richTextGetter = () -> initialRichText;
 
-        CommandManager commandManager = new CommandManager();
+        CommandManager commandManager = new CommandManager(DEFAULT_HISTORY_SIZE);
         Supplier<CommandManager> commandManagerGetter = () -> commandManager;
 
         Consumer<String> stringSetter = string -> {

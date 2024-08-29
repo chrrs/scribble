@@ -9,9 +9,11 @@ import static org.mockito.Mockito.*;
 
 public class CommandManagerTest {
 
+    private static final int DEFAULT_HISTORY_SIZE = 30;
+
     @Test
     public void testIfCantUndoIfCommandHistoryIsEmpty() {
-        CommandManager commandManager = new CommandManager();
+        CommandManager commandManager = new CommandManager(DEFAULT_HISTORY_SIZE);
 
         // Assert
         assertFalse(commandManager.canUndo());
@@ -19,7 +21,7 @@ public class CommandManagerTest {
 
     @Test
     public void testThatCantRedoIfCommandHistoryIsEmpty() {
-        CommandManager commandManager = new CommandManager();
+        CommandManager commandManager = new CommandManager(DEFAULT_HISTORY_SIZE);
 
         // Assert
         assertFalse(commandManager.canRedo());
@@ -27,7 +29,7 @@ public class CommandManagerTest {
 
     @Test
     public void testIfTryUndoReturnsFalseIfCommandHistoryIsEmpty() {
-        CommandManager commandManager = new CommandManager();
+        CommandManager commandManager = new CommandManager(DEFAULT_HISTORY_SIZE);
 
         // Assert
         assertFalse(commandManager.tryUndo());
@@ -35,7 +37,7 @@ public class CommandManagerTest {
 
     @Test
     public void testIfTryRedoReturnsFalseIfCommandHistoryIsEmpty() {
-        CommandManager commandManager = new CommandManager();
+        CommandManager commandManager = new CommandManager(DEFAULT_HISTORY_SIZE);
 
         // Assert
         assertFalse(commandManager.tryRedo());
@@ -43,7 +45,7 @@ public class CommandManagerTest {
 
     @Test
     public void testIfCommandAddedToCommandHistoryWhenExecuted() {
-        CommandManager commandManager = new CommandManager();
+        CommandManager commandManager = new CommandManager(DEFAULT_HISTORY_SIZE);
         assertFalse(commandManager.canUndo(), "Unexpected commandManager state");
         Command doNothingCommand = mock();
 
@@ -56,7 +58,7 @@ public class CommandManagerTest {
 
     @Test
     public void testIfCantUndoAnymoreWhenAllCommandsWereUndo() {
-        CommandManager commandManager = new CommandManager();
+        CommandManager commandManager = new CommandManager(DEFAULT_HISTORY_SIZE);
         Command doNothingCommand = mock();
 
 
@@ -114,7 +116,7 @@ public class CommandManagerTest {
     @Test
     public void testIfUndoCalledOnlyForTheLastExecutedCommand() {
         // Arrange
-        CommandManager commandManager = new CommandManager();
+        CommandManager commandManager = new CommandManager(DEFAULT_HISTORY_SIZE);
 
         Command commandToChill = mock("commandToChill");
         commandManager.execute(commandToChill);
@@ -134,7 +136,7 @@ public class CommandManagerTest {
     @Test
     public void testIfThereAreNothingToRedoWhenNewCommandExecutedAfterUndo() {
         // Arrange
-        CommandManager commandManager = new CommandManager();
+        CommandManager commandManager = new CommandManager(DEFAULT_HISTORY_SIZE);
 
         Command commandToStay1 = mock("commandToStay1");
         commandManager.execute(commandToStay1);
