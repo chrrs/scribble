@@ -53,6 +53,9 @@ public class RichSelectionManager extends SelectionManager {
 
         this.colorGetter = colorGetter;
         this.modifiersGetter = modifiersGetter;
+
+        // notify about changes after getting initial text
+        notifyCursorFormattingChanged();
     }
 
     @Override
@@ -108,7 +111,7 @@ public class RichSelectionManager extends SelectionManager {
             int newCursorPosition = Math.min(text.getPlainText().length(), start + plaintStringToInsert.length());
             this.selectionEnd = this.selectionStart = newCursorPosition;
 
-            updateSelectionFormatting();
+            notifyCursorFormattingChanged();
         }
     }
 
@@ -131,7 +134,7 @@ public class RichSelectionManager extends SelectionManager {
         }
 
         this.textSetter.accept(text);
-        updateSelectionFormatting();
+        notifyCursorFormattingChanged();
     }
 
     @Override
@@ -183,7 +186,7 @@ public class RichSelectionManager extends SelectionManager {
         }
     }
 
-    public void updateSelectionFormatting() {
+    public void notifyCursorFormattingChanged() {
         if (this.textGetter == null) {
             // We're too early, abort.
             return;
@@ -194,27 +197,26 @@ public class RichSelectionManager extends SelectionManager {
         Pair<Formatting, Set<Formatting>> format = this.textGetter.get().getCommonFormat(start, end);
 
         Formatting color = format.getLeft();
-        Set<Formatting>  modifiers = new HashSet<>(format.getRight());
-
-        stateCallback.onCursorPositionChanged(color, modifiers);
+        Set<Formatting> modifiers = new HashSet<>(format.getRight());
+        stateCallback.onCursorFormattingChanged(color, modifiers);
     }
 
     @Override
     public void setSelection(int start, int end) {
         super.setSelection(start, end);
-        updateSelectionFormatting();
+        notifyCursorFormattingChanged();
     }
 
     @Override
     public void selectAll() {
         super.selectAll();
-        updateSelectionFormatting();
+        notifyCursorFormattingChanged();
     }
 
     @Override
     protected void updateSelectionRange(boolean shiftDown) {
         super.updateSelectionRange(shiftDown);
-        updateSelectionFormatting();
+        notifyCursorFormattingChanged();
     }
 
     public void copyWithoutFormatting() {
@@ -231,6 +233,6 @@ public class RichSelectionManager extends SelectionManager {
     }
 
     public interface StateCallback {
-        void onCursorPositionChanged(@Nullable Formatting color, Set<Formatting> modifiers);
+        void onCursorFormattingChanged(@Nullable Formatting color, Set<Formatting> modifiers);
     }
 }

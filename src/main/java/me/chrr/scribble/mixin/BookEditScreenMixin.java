@@ -62,15 +62,6 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     @Unique
     private static final Formatting DEFAULT_COLOR = Formatting.BLACK;
 
-    @Unique
-    private static final Set<Formatting> ALL_MODIFIERS = Set.of(
-            Formatting.BOLD,
-            Formatting.ITALIC,
-            Formatting.UNDERLINE,
-            Formatting.STRIKETHROUGH,
-            Formatting.OBFUSCATED
-    );
-
     //region @Shadow declarations
     @Mutable
     @Shadow
@@ -334,7 +325,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
                 this::getCurrentPageText,
                 this::setPageText,
                 (string) -> this.pages.set(this.currentPage, string),
-                this::onCursorPositionChanged,
+                this::onCursorFormattingChanged,
                 this::getRawClipboard,
                 this::setClipboard,
                 text -> text.getAsFormattedString().length() < 1024
@@ -383,7 +374,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
 
         // todo double check if this call is still necessary
         // We need to update the states of all the buttons again.
-        this.getRichSelectionManager().updateSelectionFormatting();
+        this.getRichSelectionManager().notifyCursorFormattingChanged();
     }
 
     @Inject(method = "updateButtons", at = @At(value = "HEAD"))
@@ -423,7 +414,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     }
 
     @Unique
-    private void onCursorPositionChanged(@Nullable Formatting color, Set<Formatting> modifiers) {
+    private void onCursorFormattingChanged(@Nullable Formatting color, Set<Formatting> modifiers) {
         this.activeColor = color != null ? color : DEFAULT_COLOR;
         this.activeModifiers = modifiers;
 

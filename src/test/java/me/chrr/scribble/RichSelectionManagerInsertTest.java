@@ -2,13 +2,13 @@ package me.chrr.scribble;
 
 import me.chrr.scribble.book.RichSelectionManager;
 import me.chrr.scribble.book.RichText;
-import me.chrr.scribble.tool.commandmanager.CommandManager;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -22,21 +22,21 @@ import static org.mockito.Mockito.verify;
 
 public class RichSelectionManagerInsertTest {
 
-    private static final int DEFAULT_HISTORY_SIZE = 30;
-
     private RichSelectionManager createRichSelectionManager(
             RichText initialRichText,
             Consumer<RichText> richTextSetter
     ) {
-        Supplier<RichText> richTextGetter = () -> initialRichText;
 
-        CommandManager commandManager = new CommandManager(DEFAULT_HISTORY_SIZE);
-        Supplier<CommandManager> commandManagerGetter = () -> commandManager;
+        Supplier<RichText> richTextGetter = () -> initialRichText;
 
         Consumer<String> stringSetter = string -> {
         };
 
-        RichSelectionManager.StateCallback stateCallback = (color, modifiers) -> {
+        AtomicReference<Formatting> activeColorRef = new AtomicReference<>(Formatting.BLACK);
+        AtomicReference<Set<Formatting>> activeModifiersRef = new AtomicReference<>(Set.of());
+        RichSelectionManager.StateCallback onCursorFormattingChanged = (color, modifiers) -> {
+            activeColorRef.set(color);
+            activeModifiersRef.set(modifiers);
         };
 
         Supplier<String> clipboardGetter = () -> "";
@@ -73,18 +73,19 @@ public class RichSelectionManagerInsertTest {
                 richTextGetter,
                 richTextSetter,
                 stringSetter,
-                stateCallback,
+                onCursorFormattingChanged,
                 clipboardGetter,
                 clipboardSetter,
                 textFilter,
-                commandManagerGetter
+                activeColorRef::get,
+                activeModifiersRef::get
         );
     }
 
     private void moveSelection(RichSelectionManager richSelectionManager, int offset) {
         richSelectionManager.selectionStart = offset;
         richSelectionManager.selectionEnd = offset;
-        richSelectionManager.updateSelectionFormatting();
+        richSelectionManager.notifyCursorFormattingChanged();
     }
 
     @Test
