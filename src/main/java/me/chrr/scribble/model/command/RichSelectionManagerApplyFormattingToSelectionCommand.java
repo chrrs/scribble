@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@Deprecated
 public class RichSelectionManagerApplyFormattingToSelectionCommand extends MementoCommand<RichSelectionManagerMemento> {
 
     private final Supplier<RichText> textGetter;

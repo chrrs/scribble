@@ -4,6 +4,7 @@ import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.tool.commandmanager.Command;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
 import net.minecraft.util.Formatting;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
@@ -16,8 +17,6 @@ import java.util.Set;
 public record BookEditScreenMemento(
         int selectionStart,
         int selectionEnd,
-        RichText currentPageRichText,
-        @Nullable Formatting color,
-        Set<Formatting> modifiers
+        RichText currentPageRichText
 ) {
 }

@@ -31,6 +31,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.*;
@@ -42,10 +43,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Set;
+import java.util.*;
 
 @Mixin(BookEditScreen.class)
 public abstract class BookEditScreenMixin extends Screen implements Restorable<BookEditScreenMemento> {
@@ -60,6 +58,9 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
             Formatting.DARK_BLUE, Formatting.BLUE,
             Formatting.DARK_PURPLE, Formatting.LIGHT_PURPLE,
     };
+
+    @Unique
+    private static final Formatting DEFAULT_COLOR = Formatting.BLACK;
 
     @Unique
     private static final Set<Formatting> ALL_MODIFIERS = Set.of(
@@ -124,6 +125,13 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
      */
     @Unique
     private final List<PageData> pageDataList = new ArrayList<>();
+
+    @Unique
+    @NotNull
+    private Formatting activeColor = DEFAULT_COLOR;
+
+    @Unique
+    private Set<Formatting> activeModifiers = new HashSet<>();
 
     @Unique
     private ModifierButtonWidget boldButton;
@@ -250,27 +258,28 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
             y += (height - 192) / 3;
         }
 
+
         // Modifier buttons
         // They're all toggled off by default, this is fixed in #initScreen.
         boldButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.bold"),
-                (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.BOLD, toggled),
+                (toggled) -> toggleActiveModifier(Formatting.BOLD, toggled),
                 x, y, 0, 0, 22, 19, false));
         italicButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.italic"),
-                (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.ITALIC, toggled),
+                (toggled) -> toggleActiveModifier(Formatting.ITALIC, toggled),
                 x, y + 19, 0, 19, 22, 17, false));
         underlineButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.underline"),
-                (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.UNDERLINE, toggled),
+                (toggled) -> toggleActiveModifier(Formatting.UNDERLINE, toggled),
                 x, y + 36, 0, 36, 22, 17, false));
         strikethroughButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.strikethrough"),
-                (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.STRIKETHROUGH, toggled),
+                (toggled) -> toggleActiveModifier(Formatting.STRIKETHROUGH, toggled),
                 x, y + 53, 0, 53, 22, 17, false));
         obfuscatedButton = addDrawableChild(new ModifierButtonWidget(
                 Text.translatable("text.scribble.modifier.obfuscated"),
-                (toggled) -> this.getRichSelectionManager().toggleModifier(Formatting.OBFUSCATED, toggled),
+                (toggled) -> toggleActiveModifier(Formatting.OBFUSCATED, toggled),
                 x, y + 70, 0, 70, 22, 18, false));
 
         // Color swatches
@@ -283,10 +292,8 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
 
             ColorSwatchWidget widget = addDrawableChild(new ColorSwatchWidget(
                     Text.translatable("text.scribble.color." + color.getName()), color,
-                    () -> {
-                        this.getRichSelectionManager().setColor(color);
-                        this.setSwatchColor(color);
-                    }, x + 3 + dx, y + 95 + dy, 8, 8
+                    () -> changeActiveColor(color),
+                    x + 3 + dx, y + 95 + dy, 8, 8
             ));
 
             colorSwatches.add(widget);
@@ -327,19 +334,54 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
                 this::getCurrentPageText,
                 this::setPageText,
                 (string) -> this.pages.set(this.currentPage, string),
-                this::updateState,
+                this::onCursorPositionChanged,
                 this::getRawClipboard,
                 this::setClipboard,
                 text -> text.getAsFormattedString().length() < 1024
                         && this.textRenderer.getWrappedLinesHeight(text, 114) <= 128,
-                this::getCurrentPageCommandManager
+
+                this::getActiveColor,
+                this::getActiveModifiers
         );
+    }
+
+    @Unique
+    @NotNull
+    private Formatting getActiveColor() {
+        return activeColor;
+    }
+
+    @Unique
+    private void changeActiveColor(@Nullable Formatting color) {
+        this.activeColor = color != null ? color : DEFAULT_COLOR;
+        updateFormattingButtons();
+
+        getRichSelectionManager().applyColorForSelection(color);
+    }
+
+    @Unique
+    private Set<Formatting> getActiveModifiers() {
+        return activeModifiers;
+    }
+
+    @Unique
+    public void toggleActiveModifier(Formatting modifier, boolean toggled) {
+        if (toggled) {
+            activeModifiers.add(modifier);
+        } else {
+            activeModifiers.remove(modifier);
+        }
+        updateFormattingButtons();
+
+        // todo replace with manager.applyModifiersForSelection(activeModifiers) call
+        getRichSelectionManager().toggleModifierForSelection(modifier, toggled);
     }
 
     @Inject(method = "init", at = @At(value = "HEAD"))
     private void initScreen(CallbackInfo ci) {
         initButtons();
 
+        // todo double check if this call is still necessary
         // We need to update the states of all the buttons again.
         this.getRichSelectionManager().updateSelectionFormatting();
     }
@@ -364,13 +406,13 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     }
 
     @Unique
-    private void updateState(@Nullable Formatting color, Set<Formatting> modifiers) {
-        boldButton.toggled = modifiers.contains(Formatting.BOLD);
-        italicButton.toggled = modifiers.contains(Formatting.ITALIC);
-        underlineButton.toggled = modifiers.contains(Formatting.UNDERLINE);
-        strikethroughButton.toggled = modifiers.contains(Formatting.STRIKETHROUGH);
-        obfuscatedButton.toggled = modifiers.contains(Formatting.OBFUSCATED);
-        setSwatchColor(color);
+    private void updateFormattingButtons() {
+        boldButton.toggled = activeModifiers.contains(Formatting.BOLD);
+        italicButton.toggled = activeModifiers.contains(Formatting.ITALIC);
+        underlineButton.toggled = activeModifiers.contains(Formatting.UNDERLINE);
+        strikethroughButton.toggled = activeModifiers.contains(Formatting.STRIKETHROUGH);
+        obfuscatedButton.toggled = activeModifiers.contains(Formatting.OBFUSCATED);
+        setSwatchColor(activeColor);
     }
 
     @Unique
@@ -378,6 +420,14 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         for (ColorSwatchWidget swatch : colorSwatches) {
             swatch.setToggled(swatch.getColor() == color);
         }
+    }
+
+    @Unique
+    private void onCursorPositionChanged(@Nullable Formatting color, Set<Formatting> modifiers) {
+        this.activeColor = color != null ? color : DEFAULT_COLOR;
+        this.activeModifiers = modifiers;
+
+        updateFormattingButtons();
     }
 
     /**
@@ -650,9 +700,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
 
     @ModifyArg(method = "drawCursor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawText(Lnet/minecraft/client/font/TextRenderer;Ljava/lang/String;IIIZ)I"), index = 4)
     private int modifyEndCursorColor(int constant) {
-        Formatting color = this.getRichSelectionManager().getColor();
-        return color == null || color.getColorValue() == null
-                ? constant : color.getColorValue();
+        return activeColor.getColorValue() == null ? constant : activeColor.getColorValue();
     }
 
     @ModifyArg(method = "drawCursor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;fill(IIIII)V"), index = 4)
@@ -771,29 +819,18 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         return new BookEditScreenMemento(
                 selectionManager.selectionStart,
                 selectionManager.selectionEnd,
-                getCurrentPageText(),
-                selectionManager.getColor(),
-                selectionManager.getModifiers()
+                getCurrentPageText()
         );
     }
 
     @Override
     public void scribble$restore(BookEditScreenMemento memento) {
-        RichSelectionManager selectionManager = this.getRichSelectionManager();
-        selectionManager.selectionStart = memento.selectionStart();
-        selectionManager.selectionEnd = memento.selectionEnd();
         setPageText(memento.currentPageRichText());
 
-        // set color value from memento
-        selectionManager.setColor(memento.color());
+        RichSelectionManager selectionManager = this.getRichSelectionManager();
+        selectionManager.setSelection(memento.selectionStart(), memento.selectionEnd());
 
-        // set modifiers value from memento
-        ALL_MODIFIERS.forEach(modifier -> {
-            boolean isActive = memento.modifiers().contains(modifier);
-            selectionManager.toggleModifier(modifier, isActive);
-        });
-
-        // update color and modifiers on the UI
-        updateState(memento.color(), memento.modifiers());
+        // the activeColor and activeModifiers are restored by selection/cursor position
+        // so we don't need to restore it manually from memento
     }
 }

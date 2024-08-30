@@ -1,11 +1,6 @@
 package me.chrr.scribble.book;
 
 import me.chrr.scribble.Scribble;
-import me.chrr.scribble.model.command.RichSelectionManagerApplyFormattingToSelectionCommand;
-import me.chrr.scribble.model.memento.RichSelectionManagerMemento;
-import me.chrr.scribble.tool.commandmanager.Command;
-import me.chrr.scribble.tool.commandmanager.CommandManager;
-import me.chrr.scribble.tool.commandmanager.Restorable;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Pair;
@@ -13,25 +8,20 @@ import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public class RichSelectionManager extends SelectionManager implements Restorable<RichSelectionManagerMemento> {
-
-    public static final Formatting DEFAULT_COLOR = Formatting.BLACK;
+public class RichSelectionManager extends SelectionManager {
 
     private final Supplier<RichText> textGetter;
     private final Consumer<RichText> textSetter;
     private final Predicate<RichText> textFilter;
     private final StateCallback stateCallback;
-    private final Supplier<CommandManager> commandManagerGetter;
 
-    @Nullable
-    private Formatting color = DEFAULT_COLOR;
-    private Set<Formatting> modifiers = new HashSet<>();
+    private final Supplier<Formatting> colorGetter;
+    private final Supplier<Set<Formatting>> modifiersGetter;
 
     public RichSelectionManager(
             Supplier<RichText> textGetter,
@@ -41,7 +31,9 @@ public class RichSelectionManager extends SelectionManager implements Restorable
             Supplier<String> clipboardGetter,
             Consumer<String> clipboardSetter,
             Predicate<RichText> textFilter,
-            Supplier<CommandManager> commandManagerGetter
+
+            Supplier<Formatting> colorGetter,
+            Supplier<Set<Formatting>> modifiersGetter
     ) {
         super(
                 () -> textGetter.get().getPlainText(),
@@ -59,11 +51,8 @@ public class RichSelectionManager extends SelectionManager implements Restorable
             stringSetter.accept(text.getAsFormattedString());
         };
 
-        this.commandManagerGetter = commandManagerGetter;
-    }
-
-    private Formatting getSelectedColor() {
-        return Optional.ofNullable(this.color).orElse(DEFAULT_COLOR);
+        this.colorGetter = colorGetter;
+        this.modifiersGetter = modifiersGetter;
     }
 
     @Override
@@ -100,7 +89,7 @@ public class RichSelectionManager extends SelectionManager implements Restorable
         } else {
             // We strip any leftover RESET tags from the string.
             string = string.replaceAll(Formatting.RESET.toString(), "");
-            insertion = new RichText(string, getSelectedColor(), modifiers);
+            insertion = new RichText(string, colorGetter.get(), modifiersGetter.get());
         }
 
         // If no text is selected, we can just insert instead of replace.
@@ -167,11 +156,11 @@ public class RichSelectionManager extends SelectionManager implements Restorable
         this.insert(this.clipboardGetter.get());
     }
 
-    public void setColor(Formatting color) {
+    public void applyColorForSelection(Formatting color) {
         this.applyFormatting(color, Set.of(), Set.of());
     }
 
-    public void toggleModifier(Formatting modifier, boolean toggled) {
+    public void toggleModifierForSelection(Formatting modifier, boolean toggled) {
         if (toggled) {
             this.applyFormatting(null, Set.of(modifier), Set.of());
         } else {
@@ -185,25 +174,12 @@ public class RichSelectionManager extends SelectionManager implements Restorable
             Set<Formatting> removeModifiers
     ) {
         if (isSelecting()) {
-            Command command = new RichSelectionManagerApplyFormattingToSelectionCommand(
-                    this,
-                    textGetter,
-                    textSetter,
-                    selectionStart,
-                    selectionEnd,
-                    newColor,
-                    addModifiers,
-                    removeModifiers
-            );
+            int start = Math.min(this.selectionStart, this.selectionEnd);
+            int end = Math.max(this.selectionStart, this.selectionEnd);
 
-            commandManagerGetter.get().execute(command);
-        } else {
-            if (newColor != null) {
-                this.color = newColor;
-            }
-
-            this.modifiers.addAll(addModifiers);
-            this.modifiers.removeAll(removeModifiers);
+            RichText text = this.textGetter.get()
+                    .applyFormatting(start, end, newColor, addModifiers, removeModifiers);
+            this.textSetter.accept(text);
         }
     }
 
@@ -217,10 +193,10 @@ public class RichSelectionManager extends SelectionManager implements Restorable
         int end = Math.max(this.selectionStart, this.selectionEnd);
         Pair<Formatting, Set<Formatting>> format = this.textGetter.get().getCommonFormat(start, end);
 
-        this.color = format.getLeft();
-        this.modifiers = new HashSet<>(format.getRight());
+        Formatting color = format.getLeft();
+        Set<Formatting>  modifiers = new HashSet<>(format.getRight());
 
-        this.stateCallback.update(this.color, this.modifiers);
+        stateCallback.onCursorPositionChanged(color, modifiers);
     }
 
     @Override
@@ -241,15 +217,6 @@ public class RichSelectionManager extends SelectionManager implements Restorable
         updateSelectionFormatting();
     }
 
-    @Nullable
-    public Formatting getColor() {
-        return color;
-    }
-
-    public Set<Formatting> getModifiers() {
-        return modifiers;
-    }
-
     public void copyWithoutFormatting() {
         this.clipboardSetter.accept(Formatting.strip(this.getSelectedFormattedText()));
     }
@@ -263,28 +230,7 @@ public class RichSelectionManager extends SelectionManager implements Restorable
         this.insert(Formatting.strip(this.clipboardGetter.get()));
     }
 
-    @Override
-    public RichSelectionManagerMemento scribble$createMemento() {
-        return new RichSelectionManagerMemento(
-                selectionStart,
-                selectionEnd,
-                textGetter.get(),
-                getColor(),
-                getModifiers()
-        );
-    }
-
-    @Override
-    public void scribble$restore(RichSelectionManagerMemento memento) {
-        selectionStart = memento.selectionStart();
-        selectionEnd = memento.selectionEnd();
-        textSetter.accept(memento.richText());
-        color = memento.color();
-        modifiers = memento.modifiers();
-        updateSelectionFormatting();
-    }
-
     public interface StateCallback {
-        void update(@Nullable Formatting color, Set<Formatting> modifiers);
+        void onCursorPositionChanged(@Nullable Formatting color, Set<Formatting> modifiers);
     }
 }
