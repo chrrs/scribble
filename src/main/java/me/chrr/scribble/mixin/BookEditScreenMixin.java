@@ -9,10 +9,7 @@ import me.chrr.scribble.gui.ColorSwatchWidget;
 import me.chrr.scribble.gui.IconButtonWidget;
 import me.chrr.scribble.gui.ModifierButtonWidget;
 import me.chrr.scribble.model.PageData;
-import me.chrr.scribble.model.command.BookEditScreenCutCommand;
-import me.chrr.scribble.model.command.BookEditScreenDeleteCommand;
-import me.chrr.scribble.model.command.BookEditScreenInsertCommand;
-import me.chrr.scribble.model.command.BookEditScreenPasteCommand;
+import me.chrr.scribble.model.command.*;
 import me.chrr.scribble.model.memento.BookEditScreenMemento;
 import me.chrr.scribble.tool.commandmanager.Command;
 import me.chrr.scribble.tool.commandmanager.CommandManager;
@@ -125,27 +122,36 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     private Set<Formatting> activeModifiers = new HashSet<>();
 
     @Unique
+    @Nullable
     private ModifierButtonWidget boldButton;
     @Unique
+    @Nullable
     private ModifierButtonWidget italicButton;
     @Unique
+    @Nullable
     private ModifierButtonWidget underlineButton;
     @Unique
+    @Nullable
     private ModifierButtonWidget strikethroughButton;
     @Unique
+    @Nullable
     private ModifierButtonWidget obfuscatedButton;
 
     @Unique
-    private List<ColorSwatchWidget> colorSwatches;
+    private List<@Nullable ColorSwatchWidget> colorSwatches = List.of();
 
     @Unique
+    @Nullable
     private IconButtonWidget deletePageButton;
     @Unique
+    @Nullable
     private IconButtonWidget insertPageButton;
 
     @Unique
+    @Nullable
     private IconButtonWidget saveBookButton;
     @Unique
+    @Nullable
     private IconButtonWidget loadBookButton;
 
     // Dummy constructor to match super class. The mixin derives from
@@ -343,11 +349,21 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     }
 
     @Unique
-    private void changeActiveColor(@Nullable Formatting color) {
-        this.activeColor = color != null ? color : DEFAULT_COLOR;
-        updateFormattingButtons();
+    private void changeActiveColor(@NotNull Formatting color) {
+        if (this.activeColor == color) {
+            return;
+        }
 
-        getRichSelectionManager().applyColorForSelection(color);
+        Command command = new BookEditScreenChangeColorForSelectionCommand(
+                this,
+                getRichSelectionManager(),
+                color,
+                newColor -> {
+                    activeColor = newColor;
+                    invalidateFormattingButtons();
+                }
+        );
+        getCurrentPageCommandManager().execute(command);
     }
 
     @Unique
@@ -362,7 +378,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         } else {
             activeModifiers.remove(modifier);
         }
-        updateFormattingButtons();
+        invalidateFormattingButtons();
 
         // todo replace with manager.applyModifiersForSelection(activeModifiers) call
         getRichSelectionManager().toggleModifierForSelection(modifier, toggled);
@@ -379,37 +395,41 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
 
     @Inject(method = "updateButtons", at = @At(value = "HEAD"))
     private void updateButtons(CallbackInfo ci) {
-        this.boldButton.visible = !this.signing;
-        this.italicButton.visible = !this.signing;
-        this.underlineButton.visible = !this.signing;
-        this.strikethroughButton.visible = !this.signing;
-        this.obfuscatedButton.visible = !this.signing;
+        Optional.ofNullable(boldButton).ifPresent(button -> button.visible = !this.signing);
+        Optional.ofNullable(italicButton).ifPresent(button -> button.visible = !this.signing);
+        Optional.ofNullable(underlineButton).ifPresent(button -> button.visible = !this.signing);
+        Optional.ofNullable(strikethroughButton).ifPresent(button -> button.visible = !this.signing);
+        Optional.ofNullable(obfuscatedButton).ifPresent(button -> button.visible = !this.signing);
 
         for (ColorSwatchWidget swatch : colorSwatches) {
-            swatch.visible = !this.signing;
+            if (swatch != null) {
+                swatch.visible = !this.signing;
+            }
         }
 
-        this.deletePageButton.visible = !this.signing && this.pageDataList.size() > 1;
-        this.insertPageButton.visible = !this.signing;
+        Optional.ofNullable(deletePageButton).ifPresent(button -> button.visible = !this.signing && this.pageDataList.size() > 1);
+        Optional.ofNullable(insertPageButton).ifPresent(button -> button.visible = !this.signing);
 
-        this.saveBookButton.visible = !this.signing;
-        this.loadBookButton.visible = !this.signing;
+        Optional.ofNullable(saveBookButton).ifPresent(button -> button.visible = !this.signing);
+        Optional.ofNullable(loadBookButton).ifPresent(button -> button.visible = !this.signing);
     }
 
     @Unique
-    private void updateFormattingButtons() {
-        boldButton.toggled = activeModifiers.contains(Formatting.BOLD);
-        italicButton.toggled = activeModifiers.contains(Formatting.ITALIC);
-        underlineButton.toggled = activeModifiers.contains(Formatting.UNDERLINE);
-        strikethroughButton.toggled = activeModifiers.contains(Formatting.STRIKETHROUGH);
-        obfuscatedButton.toggled = activeModifiers.contains(Formatting.OBFUSCATED);
+    private void invalidateFormattingButtons() {
+        Optional.ofNullable(boldButton).ifPresent(button -> button.toggled = activeModifiers.contains(Formatting.BOLD));
+        Optional.ofNullable(italicButton).ifPresent(button -> button.toggled = activeModifiers.contains(Formatting.ITALIC));
+        Optional.ofNullable(underlineButton).ifPresent(button -> button.toggled = activeModifiers.contains(Formatting.UNDERLINE));
+        Optional.ofNullable(strikethroughButton).ifPresent(button -> button.toggled = activeModifiers.contains(Formatting.STRIKETHROUGH));
+        Optional.ofNullable(obfuscatedButton).ifPresent(button -> button.toggled = activeModifiers.contains(Formatting.OBFUSCATED));
         setSwatchColor(activeColor);
     }
 
     @Unique
     private void setSwatchColor(Formatting color) {
         for (ColorSwatchWidget swatch : colorSwatches) {
-            swatch.setToggled(swatch.getColor() == color);
+            if (swatch != null) {
+                swatch.setToggled(swatch.getColor() == color);
+            }
         }
     }
 
@@ -418,7 +438,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         this.activeColor = color != null ? color : DEFAULT_COLOR;
         this.activeModifiers = modifiers;
 
-        updateFormattingButtons();
+        invalidateFormattingButtons();
     }
 
     /**
@@ -671,15 +691,15 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         // We inject some hotkeys for toggling formatting options.
         if (hasControlDown() && !hasShiftDown() && !hasAltDown()) {
             if (keyCode == GLFW.GLFW_KEY_B) {
-                this.boldButton.toggle();
+                Optional.ofNullable(boldButton).ifPresent(ModifierButtonWidget::toggle);
             } else if (keyCode == GLFW.GLFW_KEY_I) {
-                this.italicButton.toggle();
+                Optional.ofNullable(italicButton).ifPresent(ModifierButtonWidget::toggle);
             } else if (keyCode == GLFW.GLFW_KEY_U) {
-                this.underlineButton.toggle();
+                Optional.ofNullable(underlineButton).ifPresent(ModifierButtonWidget::toggle);
             } else if (keyCode == GLFW.GLFW_KEY_MINUS) {
-                this.strikethroughButton.toggle();
+                Optional.ofNullable(strikethroughButton).ifPresent(ModifierButtonWidget::toggle);
             } else if (keyCode == GLFW.GLFW_KEY_K) {
-                this.obfuscatedButton.toggle();
+                Optional.ofNullable(obfuscatedButton).ifPresent(ModifierButtonWidget::toggle);
             } else {
                 return;
             }
@@ -810,7 +830,9 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         return new BookEditScreenMemento(
                 selectionManager.selectionStart,
                 selectionManager.selectionEnd,
-                getCurrentPageText()
+                getCurrentPageText(),
+                getActiveColor(),
+                getActiveModifiers()
         );
     }
 
@@ -821,7 +843,10 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         RichSelectionManager selectionManager = this.getRichSelectionManager();
         selectionManager.setSelection(memento.selectionStart(), memento.selectionEnd());
 
-        // the activeColor and activeModifiers are restored by selection/cursor position
-        // so we don't need to restore it manually from memento
+        activeColor = memento.color();
+        activeModifiers = memento.modifiers();
+
+        // update color and modifiers on the UI
+        invalidateFormattingButtons();
     }
 }
