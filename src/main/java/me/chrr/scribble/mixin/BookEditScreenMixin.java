@@ -8,11 +8,11 @@ import me.chrr.scribble.book.*;
 import me.chrr.scribble.gui.ColorSwatchWidget;
 import me.chrr.scribble.gui.IconButtonWidget;
 import me.chrr.scribble.gui.ModifierButtonWidget;
-import me.chrr.scribble.model.command.*;
 import me.chrr.scribble.model.BookEditScreenMemento;
+import me.chrr.scribble.model.command.*;
+import me.chrr.scribble.tool.Restorable;
 import me.chrr.scribble.tool.commandmanager.Command;
 import me.chrr.scribble.tool.commandmanager.CommandManager;
-import me.chrr.scribble.tool.Restorable;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
@@ -494,13 +494,13 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
 
     @Unique
     private void deletePage() {
-        this.richPages.remove(this.currentPage);
-        this.pages.remove(this.currentPage);
-        this.dirty = true;
-
-        this.currentPage = Math.min(this.currentPage, this.richPages.size() - 1);
-        this.updateButtons();
-        this.changePage();
+        Command command = new BookEditScreenDeletePageCommand(richPages, pages, currentPage, (currentPageIndex) -> {
+            this.dirty = true;
+            this.currentPage = currentPageIndex;
+            this.updateButtons();
+            this.changePage();
+        });
+        getCommandManager().execute(command);
     }
 
     @Unique
