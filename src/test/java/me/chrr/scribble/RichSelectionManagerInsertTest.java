@@ -82,10 +82,8 @@ public class RichSelectionManagerInsertTest {
         );
     }
 
-    private void moveSelection(RichSelectionManager richSelectionManager, int offset) {
-        richSelectionManager.selectionStart = offset;
-        richSelectionManager.selectionEnd = offset;
-        richSelectionManager.notifyCursorFormattingChanged();
+    private void setSelection(RichSelectionManager richSelectionManager, int position) {
+        richSelectionManager.setSelection(position, position);
     }
 
     @Test
@@ -100,7 +98,7 @@ public class RichSelectionManagerInsertTest {
         RichSelectionManager selectionManager = createRichSelectionManager(richText, richTextSetter);
 
         // insert position
-        moveSelection(selectionManager, 0);
+        setSelection(selectionManager, 0);
 
 
         // Action
@@ -130,7 +128,7 @@ public class RichSelectionManagerInsertTest {
 
         // insert position
         int middleOfTheFirstSegmentOffset = originSegments.getFirst().text().length() / 2;
-        moveSelection(selectionManager, middleOfTheFirstSegmentOffset);
+        setSelection(selectionManager, middleOfTheFirstSegmentOffset);
 
 
         // Action
@@ -164,7 +162,7 @@ public class RichSelectionManagerInsertTest {
 
         // insert text at the end of the first / at the start of second segment
         int endOfTheFirstSegmentOffset = originSegments.getFirst().text().length();
-        moveSelection(selectionManager, endOfTheFirstSegmentOffset);
+        setSelection(selectionManager, endOfTheFirstSegmentOffset);
 
 
         // Action
@@ -189,7 +187,7 @@ public class RichSelectionManagerInsertTest {
         Consumer<RichText> richTextSetter = mock();
         RichSelectionManager selectionManager = createRichSelectionManager(richText, richTextSetter);
 
-        moveSelection(selectionManager, richText.getLength());
+        setSelection(selectionManager, richText.getLength());
 
 
         // Action
@@ -218,7 +216,7 @@ public class RichSelectionManagerInsertTest {
         RichSelectionManager selectionManager = createRichSelectionManager(richText, richTextSetter);
 
         int middleOfTheFirstSegmentOffset = originSegments.getFirst().text().length() / 2;
-        moveSelection(selectionManager, middleOfTheFirstSegmentOffset);
+        setSelection(selectionManager, middleOfTheFirstSegmentOffset);
 
         // Action
         selectionManager.insert(stringToInsert);
@@ -254,7 +252,7 @@ public class RichSelectionManagerInsertTest {
         RichSelectionManager selectionManager = createRichSelectionManager(richText, richTextSetter);
 
         int middleOfTheFirstSegmentOffset = originSegments.getFirst().text().length() / 2;
-        moveSelection(selectionManager, middleOfTheFirstSegmentOffset);
+        setSelection(selectionManager, middleOfTheFirstSegmentOffset);
 
         // Action
         selectionManager.insert(stringToInsert);
@@ -296,7 +294,7 @@ public class RichSelectionManagerInsertTest {
         Consumer<RichText> richTextSetter = mock();
         RichSelectionManager selectionManager = createRichSelectionManager(richText, richTextSetter);
 
-        moveSelection(selectionManager, 0);
+        setSelection(selectionManager, 0);
 
         // Action
         selectionManager.insert(formattedString);
@@ -344,7 +342,7 @@ public class RichSelectionManagerInsertTest {
         Consumer<RichText> richTextSetter = mock();
         RichSelectionManager selectionManager = createRichSelectionManager(richText, richTextSetter);
 
-        moveSelection(selectionManager, originSegments.getFirst().text().length() / 2);
+        setSelection(selectionManager, originSegments.getFirst().text().length() / 2);
 
 
         // Action
@@ -402,7 +400,7 @@ public class RichSelectionManagerInsertTest {
         Consumer<RichText> richTextSetter = mock();
         RichSelectionManager selectionManager = createRichSelectionManager(richText, richTextSetter);
 
-        moveSelection(selectionManager, originSegments.get(2).text().length() / 2);
+        setSelection(selectionManager, originSegments.get(2).text().length() / 2);
 
 
         // Action
@@ -460,7 +458,7 @@ public class RichSelectionManagerInsertTest {
         Consumer<RichText> richTextSetter = mock();
         RichSelectionManager selectionManager = createRichSelectionManager(richText, richTextSetter);
 
-        moveSelection(selectionManager, richText.getLength());
+        setSelection(selectionManager, richText.getLength());
 
 
         // Action

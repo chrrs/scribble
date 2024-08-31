@@ -186,15 +186,16 @@ public class RichSelectionManager extends SelectionManager {
         }
     }
 
-    public void notifyCursorFormattingChanged() {
+    private void notifyCursorFormattingChanged() {
         if (this.textGetter == null) {
             // We're too early, abort.
+            // Can happen when calling the method from the constructor of supper
             return;
         }
 
         int start = Math.min(this.selectionStart, this.selectionEnd);
         int end = Math.max(this.selectionStart, this.selectionEnd);
-        Pair<Formatting, Set<Formatting>> format = this.textGetter.get().getCommonFormat(start, end);
+        Pair<@Nullable Formatting, Set<Formatting>> format = this.textGetter.get().getCommonFormat(start, end);
 
         Formatting color = format.getLeft();
         Set<Formatting> modifiers = new HashSet<>(format.getRight());
@@ -233,6 +234,14 @@ public class RichSelectionManager extends SelectionManager {
     }
 
     public interface StateCallback {
+        /**
+         * Called when the cursor position or selection range changes,
+         * which may result in a different text color or modifiers being applied at the new cursor position.
+         *
+         * @param color     The formatting color at the new cursor position,
+         *                  or null if multiple are colors applied to the selected range.
+         * @param modifiers The set of formatting modifiers applied at the new cursor position/to selected range.
+         */
         void onCursorFormattingChanged(@Nullable Formatting color, Set<Formatting> modifiers);
     }
 }

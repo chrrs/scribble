@@ -257,27 +257,26 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
 
 
         // Modifier buttons
-        // They're all toggled off by default, this is fixed in #initScreen.
-        boldButton = addDrawableChild(new ModifierButtonWidget(
-                Text.translatable("text.scribble.modifier.bold"),
-                (toggled) -> toggleActiveModifier(Formatting.BOLD, toggled),
-                x, y, 0, 0, 22, 19, false));
-        italicButton = addDrawableChild(new ModifierButtonWidget(
-                Text.translatable("text.scribble.modifier.italic"),
-                (toggled) -> toggleActiveModifier(Formatting.ITALIC, toggled),
-                x, y + 19, 0, 19, 22, 17, false));
-        underlineButton = addDrawableChild(new ModifierButtonWidget(
-                Text.translatable("text.scribble.modifier.underline"),
-                (toggled) -> toggleActiveModifier(Formatting.UNDERLINE, toggled),
-                x, y + 36, 0, 36, 22, 17, false));
-        strikethroughButton = addDrawableChild(new ModifierButtonWidget(
-                Text.translatable("text.scribble.modifier.strikethrough"),
-                (toggled) -> toggleActiveModifier(Formatting.STRIKETHROUGH, toggled),
-                x, y + 53, 0, 53, 22, 17, false));
-        obfuscatedButton = addDrawableChild(new ModifierButtonWidget(
-                Text.translatable("text.scribble.modifier.obfuscated"),
-                (toggled) -> toggleActiveModifier(Formatting.OBFUSCATED, toggled),
-                x, y + 70, 0, 70, 22, 18, false));
+        boldButton = addModifierButton(
+                Formatting.BOLD,
+                Text.translatable("text.scribble.modifier.bold"), x, y, 0, 0, 22, 19
+        );
+        italicButton = addModifierButton(
+                Formatting.ITALIC,
+                Text.translatable("text.scribble.modifier.italic"), x, y + 19, 0, 19, 22, 17
+        );
+        underlineButton = addModifierButton(
+                Formatting.UNDERLINE,
+                Text.translatable("text.scribble.modifier.underline"), x, y + 36, 0, 36, 22, 17
+        );
+        strikethroughButton = addModifierButton(
+                Formatting.STRIKETHROUGH,
+                Text.translatable("text.scribble.modifier.strikethrough"), x, y + 53, 0, 53, 22, 17
+        );
+        obfuscatedButton = addModifierButton(
+                Formatting.OBFUSCATED,
+                Text.translatable("text.scribble.modifier.obfuscated"), x, y + 70, 0, 70, 22, 18
+        );
 
         // Color swatches
         colorSwatches = new ArrayList<>(COLORS.length);
@@ -287,12 +286,14 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
             int dx = (i % 2) * 8;
             int dy = (i / 2) * 8;
 
-            ColorSwatchWidget widget = addDrawableChild(new ColorSwatchWidget(
+            ColorSwatchWidget swatch = new ColorSwatchWidget(
                     Text.translatable("text.scribble.color." + color.getName()), color,
                     () -> changeActiveColor(color),
                     x + 3 + dx, y + 95 + dy, 8, 8
-            ));
+            );
+            swatch.setToggled(activeColor == color);
 
+            ColorSwatchWidget widget = addDrawableChild(swatch);
             colorSwatches.add(widget);
         }
 
@@ -317,6 +318,18 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
                 Text.translatable("text.scribble.action.load_book_from_file"),
                 () -> this.confirmOverwrite(() -> FileChooser.chooseBook(false, this::loadFrom)),
                 fx, y + 18 + 2, 44, 109, 18, 18));
+    }
+
+    @Unique
+    private ModifierButtonWidget addModifierButton(Formatting modifier, Text tooltip,
+                                                   int x, int y, int u, int v, int width, int height) {
+        ModifierButtonWidget button = new ModifierButtonWidget(
+                tooltip,
+                (toggled) -> toggleActiveModifier(modifier, toggled),
+                x, y, u, v, width, height,
+                activeModifiers.contains(modifier)
+        );
+        return addDrawableChild(button);
     }
 
     @Inject(method = "<init>", at = @At(value = "TAIL"))
@@ -387,10 +400,6 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
     @Inject(method = "init", at = @At(value = "HEAD"))
     private void initScreen(CallbackInfo ci) {
         initButtons();
-
-        // todo double check if this call is still necessary
-        // We need to update the states of all the buttons again.
-        this.getRichSelectionManager().notifyCursorFormattingChanged();
     }
 
     @Inject(method = "updateButtons", at = @At(value = "HEAD"))
