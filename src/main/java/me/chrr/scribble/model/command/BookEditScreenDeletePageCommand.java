@@ -11,50 +11,41 @@ public class BookEditScreenDeletePageCommand implements Command {
 
     private final List<RichText> richPages;
     private final List<String> pages;
-    private final int pageIndexToDelete;
-    private final PagesChangedCallback callback;
+    private final int index;
+
+    private final PagesListener pagesListener;
 
     @Nullable
     private RichText pageContentToDelete;
 
-    public BookEditScreenDeletePageCommand(
-            List<RichText> richPages,
-            List<String> pages,
-            int pageIndexToDelete,
-            PagesChangedCallback callback
-    ) {
+    public BookEditScreenDeletePageCommand(List<RichText> richPages, List<String> pages, int index, PagesListener pagesListener) {
         this.richPages = richPages;
         this.pages = pages;
-        this.pageIndexToDelete = pageIndexToDelete;
-        this.callback = callback;
+        this.index = index;
+        this.pagesListener = pagesListener;
     }
 
     @Override
     public void execute() {
-        pageContentToDelete = richPages.get(pageIndexToDelete);
+        pageContentToDelete = richPages.get(index);
 
-        richPages.remove(pageIndexToDelete);
-        pages.remove(pageIndexToDelete);
+        richPages.remove(index);
+        pages.remove(index);
 
-        int newPageIndex = Math.min(pageIndexToDelete, richPages.size() - 1);
-        callback.onPagesChanged(newPageIndex);
+        pagesListener.scribble$onPageRemoved(index);
     }
 
     @Override
     public boolean rollback() {
         if (pageContentToDelete != null) {
-            richPages.add(pageIndexToDelete, pageContentToDelete);
-            pages.add(pageIndexToDelete, pageContentToDelete.getAsFormattedString());
-            callback.onPagesChanged(pageIndexToDelete);
+            richPages.add(index, pageContentToDelete);
+            pages.add(index, pageContentToDelete.getAsFormattedString());
+            pagesListener.scribble$onPageAdded(index);
             return true;
 
         } else {
             Scribble.LOGGER.error("Unable to rollback DeletePageCommand, deletedPage is null");
             return false;
         }
-    }
-
-    public interface PagesChangedCallback {
-        void onPagesChanged(int currentPageIndex);
     }
 }

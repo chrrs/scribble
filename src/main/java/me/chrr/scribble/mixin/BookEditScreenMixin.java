@@ -42,10 +42,14 @@ import java.nio.file.Path;
 import java.util.*;
 
 @Mixin(BookEditScreen.class)
-public abstract class BookEditScreenMixin extends Screen implements Restorable<BookEditScreenMemento> {
+public abstract class BookEditScreenMixin extends Screen
+        implements PagesListener, Restorable<BookEditScreenMemento> {
 
     @Unique
     private static final int BOOK_EDIT_HISTORY_SIZE = 30;
+
+    @Unique
+    private static final int MAX_PAGES_NUMBER = 100;
 
     @Unique
     private static final Formatting[] COLORS = new Formatting[]{
@@ -382,15 +386,17 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
 
         for (ColorSwatchWidget swatch : colorSwatches) {
             if (swatch != null) {
-                swatch.visible = !this.signing;
+                swatch.visible = !signing;
             }
         }
 
-        Optional.ofNullable(deletePageButton).ifPresent(button -> button.visible = !this.signing && this.richPages.size() > 1);
-        Optional.ofNullable(insertPageButton).ifPresent(button -> button.visible = !this.signing);
+        Optional.ofNullable(deletePageButton).ifPresent(button -> button.visible = !signing && richPages.size() > 1);
+        Optional.ofNullable(insertPageButton).ifPresent(button ->
+                button.visible = !signing && richPages.size() < MAX_PAGES_NUMBER
+        );
 
-        Optional.ofNullable(saveBookButton).ifPresent(button -> button.visible = !this.signing);
-        Optional.ofNullable(loadBookButton).ifPresent(button -> button.visible = !this.signing);
+        Optional.ofNullable(saveBookButton).ifPresent(button -> button.visible = !signing);
+        Optional.ofNullable(loadBookButton).ifPresent(button -> button.visible = !signing);
     }
 
     @Unique
@@ -469,6 +475,7 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
 
             this.richPages.clear();
             this.pages.clear();
+            getCommandManager().clear();
 
             // Loading an empty book file would set the total amount of pages to 0.
             // We work around this by just inserting a new empty page.
@@ -494,24 +501,15 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
 
     @Unique
     private void deletePage() {
-        Command command = new BookEditScreenDeletePageCommand(richPages, pages, currentPage, (currentPageIndex) -> {
-            this.dirty = true;
-            this.currentPage = currentPageIndex;
-            this.updateButtons();
-            this.changePage();
-        });
+        Command command = new BookEditScreenDeletePageCommand(richPages, pages, currentPage, this);
         getCommandManager().execute(command);
     }
 
     @Unique
     private void insertPage() {
-        if (this.richPages.size() < 100) {
-            this.richPages.add(this.currentPage, RichText.empty());
-            this.pages.add(this.currentPage, "");
-            this.dirty = true;
-
-            this.updateButtons();
-            this.changePage();
+        if (this.richPages.size() < MAX_PAGES_NUMBER) {
+            Command command = new BookEditScreenInsertPageCommand(richPages, pages, currentPage, this);
+            getCommandManager().execute(command);
         }
     }
 
@@ -585,9 +583,38 @@ public abstract class BookEditScreenMixin extends Screen implements Restorable<B
         }
     }
 
-    @Inject(method = "appendNewPage", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z"))
+    @Inject(
+            method = "appendNewPage",
+            at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z"),
+            cancellable = true
+    )
     private void appendNewPage(CallbackInfo ci) {
-        richPages.add(RichText.empty());
+        Command command = new BookEditScreenInsertPageCommand(richPages, pages, richPages.size(), this);
+        getCommandManager().execute(command);
+        ci.cancel();
+    }
+
+    @Override
+    public void scribble$onPageAdded(int pageAddedIndex) {
+        currentPage = pageAddedIndex;
+        dirty = true;
+        updateButtons();
+        changePage();
+    }
+
+    @Override
+    public void scribble$onPageRemoved(int pageRemovedIndex) {
+        if (pageRemovedIndex < currentPage) {
+            // a page before opened was removed
+            // move the index to the left by 1 to keep the same page opened
+            currentPage = Math.max(0, pageRemovedIndex - 1);
+        } else if (currentPage >= richPages.size()) {
+            // the last page was opened before removing
+            currentPage = Math.max(0, richPages.size() - 1);
+        }
+        dirty = true;
+        updateButtons();
+        changePage();
     }
 
     /**

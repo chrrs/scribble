@@ -78,6 +78,7 @@ public class CommandManager {
     public boolean tryUndo() {
         if (hasCommandsToUndo()) {
             boolean wasRolledBack = commandStack.get(lastExecutedCommandIndex).rollback();
+            // ToDo what to do when rollback failed? try to rollback previous command?
             if (wasRolledBack) {
                 lastExecutedCommandIndex--;
             }
