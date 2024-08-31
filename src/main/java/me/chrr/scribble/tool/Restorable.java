@@ -1,4 +1,4 @@
-package me.chrr.scribble.tool.commandmanager;
+package me.chrr.scribble.tool;
 
 /**
  * Interface for creating and restoring memento-based snapshots of an object's state.

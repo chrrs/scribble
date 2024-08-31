@@ -1,9 +1,9 @@
 package me.chrr.scribble.model.command;
 
 import me.chrr.scribble.book.RichSelectionManager;
-import me.chrr.scribble.model.memento.BookEditScreenMemento;
+import me.chrr.scribble.model.BookEditScreenMemento;
+import me.chrr.scribble.tool.Restorable;
 import me.chrr.scribble.tool.commandmanager.MementoCommand;
-import me.chrr.scribble.tool.commandmanager.Restorable;
 import net.minecraft.util.Formatting;
 
 import java.util.function.Consumer;
@@ -27,7 +27,7 @@ public class BookEditScreenChangeColorForSelectionCommand extends MementoCommand
     }
 
     @Override
-    public void doo() {
+    public void doAction() {
         activeColorConsumer.accept(color);
         selectionManager.applyColorForSelection(color);
     }

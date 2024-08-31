@@ -1,15 +1,16 @@
 package me.chrr.scribble.tool.commandmanager;
 
+import me.chrr.scribble.tool.Restorable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Class for commands that support undo/redo functionality.
+ * Class for commands that implements undo/redo functionality using memento state.
  *
  * <p>This class encapsulates the logic for creating a memento before command execution
  * and restoring the state from the memento when the command is undone.</p>
  *
- * @param <T> The type of the memento used to capture the state of the restorable object.
+ * @param <T> The type of the memento used to capture the state of the {@link Restorable} object.
  */
 public abstract class MementoCommand<T> implements Command {
 
@@ -17,13 +18,8 @@ public abstract class MementoCommand<T> implements Command {
     private final Restorable<T> restorable;
 
     @Nullable
-    private T memento;
+    private T originalMemento;
 
-    /**
-     * Constructs a new RestorableCommand instance.
-     *
-     * @param restorable The restorable object to be managed by this command.
-     */
     protected MementoCommand(@NotNull Restorable<T> restorable) {
         this.restorable = restorable;
     }
@@ -31,8 +27,7 @@ public abstract class MementoCommand<T> implements Command {
     /**
      * Executes the command.
      * <p>
-     * If the command is being executed for the first time,
-     * it creates and stores a memento of the original state.
+     * If the command is being executed for the first time, it creates and stores a memento of the original state.
      * <p>
      * If the command is being executed again (e.g., as part of a redo operation),
      * it restores the state from the previously saved memento to ensure
@@ -40,32 +35,32 @@ public abstract class MementoCommand<T> implements Command {
      */
     @Override
     public void execute() {
-        if (memento == null) {
+        if (originalMemento == null) {
             // Create a memento of the current state if this is the first execution
-            memento = restorable.scribble$createMemento();
+            originalMemento = restorable.scribble$createMemento();
         } else {
-            // Restore the first/original state from the saved memento for redo operations
-            restorable.scribble$restore(memento);
+            // Restore the first/original state from the saved memento for rollback operations
+            restorable.scribble$restore(originalMemento);
         }
-        doo();
+        doAction();
     }
 
     /**
      * Does the command action.
      */
-    public abstract void doo();
+    public abstract void doAction();
 
     /**
-     * Undoes the command by restoring the state from the previously created memento.
+     * Rolls back the command by restoring the state from the previously created memento.
      * <p>
      * Do nothing if nothing to undo.
      *
-     * @return true if the state that was stored before the last execution was restore, otherwise false
+     * @return true if the original state was restore, otherwise false
      */
     @Override
-    public boolean undo() {
-        if (memento != null) {
-            restorable.scribble$restore(memento);
+    public boolean rollback() {
+        if (originalMemento != null) {
+            restorable.scribble$restore(originalMemento);
             return true;
         } else {
             return false;

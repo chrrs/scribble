@@ -1,5 +1,7 @@
-package me.chrr.scribble.tool.commandmanager;
+package me.chrr.scribble;
 
+import me.chrr.scribble.tool.Restorable;
+import me.chrr.scribble.tool.commandmanager.MementoCommand;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -15,7 +17,7 @@ public class MementoCommandTest {
         }
 
         @Override
-        public void doo() {
+        public void doAction() {
             // do nothing
         }
     }
@@ -36,7 +38,7 @@ public class MementoCommandTest {
     }
 
     @Test
-    public void testIfRestoreStateWithCreatedMementoCalledOnUndoWhenExecuteWasCalledBefore() {
+    public void testIfRestoreStateWithCreatedMementoCalledOnRollbackWhenExecuteWasCalledBefore() {
         // Arrange
         String mementoState = "STATE";
         Restorable<String> restorableObject = mock();
@@ -47,7 +49,7 @@ public class MementoCommandTest {
         command.execute();
 
         // Action
-        command.undo();
+        command.rollback();
 
         // Verify
         verify(restorableObject, times(1))
@@ -55,7 +57,7 @@ public class MementoCommandTest {
     }
 
     @Test
-    public void testIfRestoreStateWithCreatedMementoNotCalledOnUndoWhenExecuteWasNeverCalledBefore() {
+    public void testIfRestoreStateWithCreatedMementoNotCalledOnRollbackWhenExecuteWasNeverCalledBefore() {
         // Arrange
         String mementoState = "STATE";
         Restorable<String> restorableObject = mock();
@@ -64,14 +66,14 @@ public class MementoCommandTest {
         StringMementoCommand command = new StringMementoCommand(restorableObject);
 
         // Action
-        command.undo();
+        command.rollback();
 
         // Verify
         verify(restorableObject, never());
     }
 
     @Test
-    public void testIfUndoReturnsTrueWhenExecuteWasCalledBefore() {
+    public void testIfRollbackReturnsTrueWhenExecuteWasCalledBefore() {
         // Arrange
         String mementoState = "STATE";
         Restorable<String> restorableObject = mock();
@@ -82,14 +84,14 @@ public class MementoCommandTest {
         command.execute();
 
         // Action
-        boolean undoResult = command.undo();
+        boolean undoResult = command.rollback();
 
         // Verify
         assertTrue(undoResult);
     }
 
     @Test
-    public void testIfUndoReturnsFalseWhenExecuteWasNeverCalledBefore() {
+    public void testIfRollbackReturnsFalseWhenExecuteWasNeverCalledBefore() {
         // Arrange
         String mementoState = "STATE";
         Restorable<String> restorableObject = mock();
@@ -98,7 +100,7 @@ public class MementoCommandTest {
         StringMementoCommand command = new StringMementoCommand(restorableObject);
 
         // Action
-        boolean undoResult = command.undo();
+        boolean undoResult = command.rollback();
 
         // Verify
         assertFalse(undoResult);
@@ -148,6 +150,6 @@ public class MementoCommandTest {
         command.execute();
 
         // Verify
-        verify(command, times(1)).doo();
+        verify(command, times(1)).doAction();
     }
 }

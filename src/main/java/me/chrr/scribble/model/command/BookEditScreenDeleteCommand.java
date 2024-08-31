@@ -1,9 +1,9 @@
 package me.chrr.scribble.model.command;
 
 import me.chrr.scribble.book.RichSelectionManager;
-import me.chrr.scribble.model.memento.BookEditScreenMemento;
+import me.chrr.scribble.model.BookEditScreenMemento;
 import me.chrr.scribble.tool.commandmanager.MementoCommand;
-import me.chrr.scribble.tool.commandmanager.Restorable;
+import me.chrr.scribble.tool.Restorable;
 import net.minecraft.client.util.SelectionManager;
 
 public class BookEditScreenDeleteCommand extends MementoCommand<BookEditScreenMemento> {
@@ -22,7 +22,7 @@ public class BookEditScreenDeleteCommand extends MementoCommand<BookEditScreenMe
     }
 
     @Override
-    public void doo() {
+    public void doAction() {
         selectionManager.delete(-1, selectionType);
     }
 }

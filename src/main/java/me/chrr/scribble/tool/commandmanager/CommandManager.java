@@ -3,7 +3,6 @@ package me.chrr.scribble.tool.commandmanager;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedList;
-import java.util.Objects;
 
 /**
  * Manages the execution of commands and maintains a history stack to provide undo/redo functionality.
@@ -77,10 +76,12 @@ public class CommandManager {
      * @return True if the undo operation was successful, false otherwise.
      */
     public boolean tryUndo() {
-        if (canUndo()) {
-            Objects.requireNonNull(commandStack.get(lastExecutedCommandIndex), "Check the canUndo() logic.").undo();
-            lastExecutedCommandIndex--;
-            return true;
+        if (hasCommandsToUndo()) {
+            boolean wasRolledBack = commandStack.get(lastExecutedCommandIndex).rollback();
+            if (wasRolledBack) {
+                lastExecutedCommandIndex--;
+            }
+            return wasRolledBack;
         }
         return false;
     }
@@ -90,7 +91,7 @@ public class CommandManager {
      *
      * @return True if an undo operation is possible, false otherwise.
      */
-    public boolean canUndo() {
+    public boolean hasCommandsToUndo() {
         if (commandStack.isEmpty()) {
             lastExecutedCommandIndex = EMPTY_STACK_INDEX;
             return false;
@@ -105,16 +106,16 @@ public class CommandManager {
      * @return True if the redo operation was successful, false otherwise.
      */
     public boolean tryRedo() {
-        if (canRedo()) {
+        if (hasCommandsToRedo()) {
             lastExecutedCommandIndex++;
-            Objects.requireNonNull(commandStack.get(lastExecutedCommandIndex), "Check the canRedo() logic.").execute();
+            commandStack.get(lastExecutedCommandIndex).execute();
             return true;
         } else {
             return false;
         }
     }
 
-    public boolean canRedo() {
+    public boolean hasCommandsToRedo() {
         int lastAvailableIndexInStack = commandStack.size() - 1;
         return lastExecutedCommandIndex < lastAvailableIndexInStack;
     }

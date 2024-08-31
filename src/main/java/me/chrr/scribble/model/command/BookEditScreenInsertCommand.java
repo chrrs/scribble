@@ -1,7 +1,7 @@
 package me.chrr.scribble.model.command;
 
-import me.chrr.scribble.model.memento.BookEditScreenMemento;
-import me.chrr.scribble.tool.commandmanager.Restorable;
+import me.chrr.scribble.model.BookEditScreenMemento;
+import me.chrr.scribble.tool.Restorable;
 import me.chrr.scribble.tool.commandmanager.MementoCommand;
 import net.minecraft.client.util.SelectionManager;
 
@@ -21,7 +21,7 @@ public class BookEditScreenInsertCommand extends MementoCommand<BookEditScreenMe
     }
 
     @Override
-    public void doo() {
+    public void doAction() {
         selectionManager.insert(character);
     }
 }

@@ -1,5 +1,7 @@
-package me.chrr.scribble.tool.commandmanager;
+package me.chrr.scribble;
 
+import me.chrr.scribble.tool.commandmanager.Command;
+import me.chrr.scribble.tool.commandmanager.CommandManager;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 
@@ -11,12 +13,18 @@ public class CommandManagerTest {
 
     private static final int DEFAULT_HISTORY_SIZE = 30;
 
+    private static Command newMockedCommandWithSuccessRollback(String name) {
+        Command command = mock(name);
+        when(command.rollback()).thenReturn(true);
+        return command;
+    }
+
     @Test
     public void testIfCantUndoIfCommandHistoryIsEmpty() {
         CommandManager commandManager = new CommandManager(DEFAULT_HISTORY_SIZE);
 
         // Assert
-        assertFalse(commandManager.canUndo());
+        assertFalse(commandManager.hasCommandsToUndo());
     }
 
     @Test
@@ -24,7 +32,7 @@ public class CommandManagerTest {
         CommandManager commandManager = new CommandManager(DEFAULT_HISTORY_SIZE);
 
         // Assert
-        assertFalse(commandManager.canRedo());
+        assertFalse(commandManager.hasCommandsToRedo());
     }
 
     @Test
@@ -46,21 +54,50 @@ public class CommandManagerTest {
     @Test
     public void testIfCommandAddedToCommandHistoryWhenExecuted() {
         CommandManager commandManager = new CommandManager(DEFAULT_HISTORY_SIZE);
-        assertFalse(commandManager.canUndo(), "Unexpected commandManager state");
+        assertFalse(commandManager.hasCommandsToUndo(), "Unexpected commandManager state");
         Command doNothingCommand = mock();
 
         // Action
         commandManager.execute(doNothingCommand);
 
         // Assert
-        assertTrue(commandManager.canUndo());
+        assertTrue(commandManager.hasCommandsToUndo());
     }
+
+    @Test
+    public void testIfCommandRollbackCalledToOnUndo() {
+        Command doNothingCommand = mock();
+        CommandManager commandManager = new CommandManager(DEFAULT_HISTORY_SIZE);
+        commandManager.execute(doNothingCommand);
+
+        // Action
+        commandManager.tryUndo();
+
+        // Assert
+        verify(doNothingCommand, times(1)).rollback();
+    }
+
+    @Test
+    public void testIfCommandExecuteCalledToOnRedo() {
+        Command doNothingCommand = newMockedCommandWithSuccessRollback("");
+        CommandManager commandManager = new CommandManager(DEFAULT_HISTORY_SIZE);
+        commandManager.execute(doNothingCommand);
+        commandManager.tryUndo();
+
+        // Action
+        commandManager.tryRedo();
+
+        // Assert
+        // first when it was added to command manager
+        // second - for redo call
+        verify(doNothingCommand, times(2)).execute();
+    }
+
 
     @Test
     public void testIfCantUndoAnymoreWhenAllCommandsWereUndo() {
         CommandManager commandManager = new CommandManager(DEFAULT_HISTORY_SIZE);
-        Command doNothingCommand = mock();
-
+        Command doNothingCommand = newMockedCommandWithSuccessRollback("");
 
         // Action
         commandManager.execute(doNothingCommand);
@@ -71,7 +108,7 @@ public class CommandManagerTest {
         assertFalse(commandManager.tryUndo());
 
         // command's undo should be called only once - on .tryUndo() call
-        verify(doNothingCommand, times(1)).undo();
+        verify(doNothingCommand, times(1)).rollback();
     }
 
     @Test
@@ -80,18 +117,18 @@ public class CommandManagerTest {
         CommandManager commandManager = new CommandManager(3);
 
         // execute 3 commands to fill up the stack
-        Command commandToBeDroppedFirst = mock("commandToBeDroppedFirst");
+        Command commandToBeDroppedFirst = newMockedCommandWithSuccessRollback("commandToBeDroppedFirst");
         commandManager.execute(commandToBeDroppedFirst);
 
-        Command commandThatWillStay1 = mock("commandThatWillStay1");
+        Command commandThatWillStay1 = newMockedCommandWithSuccessRollback("commandThatWillStay1");
         commandManager.execute(commandThatWillStay1);
 
-        Command commandThatWillStay2 = mock("commandThatWillStay2");
+        Command commandThatWillStay2 = newMockedCommandWithSuccessRollback("commandThatWillStay2");
         commandManager.execute(commandThatWillStay2);
 
 
         // Action
-        Command commandThatWillReachTheStackLimit = mock("commandThatWillReachTheStackLimit");
+        Command commandThatWillReachTheStackLimit = newMockedCommandWithSuccessRollback("commandThatWillReachTheStackLimit");
         commandManager.execute(commandThatWillReachTheStackLimit);
         // call undo for all commands in stack
         assertTrue(commandManager.tryUndo());
@@ -101,16 +138,16 @@ public class CommandManagerTest {
 
         // Assert
         // ensure command stack is empty
-        assertFalse(commandManager.canUndo());
+        assertFalse(commandManager.hasCommandsToUndo());
 
         // undo - should not be called for the first added command
-        verify(commandToBeDroppedFirst, never()).undo();
+        verify(commandToBeDroppedFirst, never()).rollback();
 
         // ... and should be called for the reset
         InOrder inOrder = inOrder(commandThatWillStay2, commandThatWillStay1);
-        inOrder.verify(commandThatWillStay2, times(1)).undo();
-        inOrder.verify(commandThatWillStay1, times(1)).undo();
-        verify(commandThatWillReachTheStackLimit, times(1)).undo();
+        inOrder.verify(commandThatWillStay2, times(1)).rollback();
+        inOrder.verify(commandThatWillStay1, times(1)).rollback();
+        verify(commandThatWillReachTheStackLimit, times(1)).rollback();
     }
 
     @Test
@@ -128,9 +165,9 @@ public class CommandManagerTest {
         commandManager.tryUndo();
 
         // Assert
-        verify(commandToUndo, times(1)).undo();
-        verify(commandToChill, never()).undo();
-        assertTrue(commandManager.canUndo()); // ensure it's still possible to undo commandToChill
+        verify(commandToUndo, times(1)).rollback();
+        verify(commandToChill, never()).rollback();
+        assertTrue(commandManager.hasCommandsToUndo()); // ensure it's still possible to undo commandToChill
     }
 
     @Test
@@ -138,16 +175,16 @@ public class CommandManagerTest {
         // Arrange
         CommandManager commandManager = new CommandManager(DEFAULT_HISTORY_SIZE);
 
-        Command commandToStay1 = mock("commandToStay1");
+        Command commandToStay1 = newMockedCommandWithSuccessRollback("commandToStay1");
         commandManager.execute(commandToStay1);
 
-        Command commandToStay2 = mock("commandToStay2");
+        Command commandToStay2 = newMockedCommandWithSuccessRollback("commandToStay2");
         commandManager.execute(commandToStay2);
 
-        Command commandToBeRemoved1 = mock("commandToBeRemoved1");
+        Command commandToBeRemoved1 = newMockedCommandWithSuccessRollback("commandToBeRemoved1");
         commandManager.execute(commandToBeRemoved1);
 
-        Command commandToBeRemoved2 = mock("commandToBeRemoved2");
+        Command commandToBeRemoved2 = newMockedCommandWithSuccessRollback("commandToBeRemoved2");
         commandManager.execute(commandToBeRemoved2);
 
         // Action
@@ -159,17 +196,17 @@ public class CommandManagerTest {
 
 
         // Assert
-        verify(commandToStay1, never()).undo();
-        verify(commandToStay2, never()).undo();
+        verify(commandToStay1, never()).rollback();
+        verify(commandToStay2, never()).rollback();
 
         InOrder inOrder = inOrder(commandToBeRemoved2, commandToBeRemoved1);
-        inOrder.verify(commandToBeRemoved2).undo();
-        inOrder.verify(commandToBeRemoved1).undo();
+        inOrder.verify(commandToBeRemoved2).rollback();
+        inOrder.verify(commandToBeRemoved1).rollback();
 
-        verify(commandToBeRemoved2, times(1)).undo();
-        verify(commandToBeRemoved1, times(1)).undo();
+        verify(commandToBeRemoved2, times(1)).rollback();
+        verify(commandToBeRemoved1, times(1)).rollback();
 
-        assertFalse(commandManager.canRedo());
+        assertFalse(commandManager.hasCommandsToRedo());
     }
 
     @Test
