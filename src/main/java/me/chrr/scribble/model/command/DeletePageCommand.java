@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class BookEditScreenDeletePageCommand implements Command {
+public class DeletePageCommand implements Command {
 
     private final List<RichText> richPages;
     private final List<String> pages;
@@ -18,7 +18,7 @@ public class BookEditScreenDeletePageCommand implements Command {
     @Nullable
     private RichText pageContentToDelete;
 
-    public BookEditScreenDeletePageCommand(List<RichText> richPages, List<String> pages, int index, PagesListener pagesListener) {
+    public DeletePageCommand(List<RichText> richPages, List<String> pages, int index, PagesListener pagesListener) {
         this.richPages = richPages;
         this.pages = pages;
         this.index = index;

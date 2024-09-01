@@ -5,7 +5,7 @@ import me.chrr.scribble.tool.commandmanager.Command;
 
 import java.util.List;
 
-public class BookEditScreenInsertPageCommand implements Command {
+public class InsertPageCommand implements Command {
 
     private final List<RichText> richPages;
     private final List<String> pages;
@@ -13,7 +13,7 @@ public class BookEditScreenInsertPageCommand implements Command {
 
     private final PagesListener pagesListener;
 
-    public BookEditScreenInsertPageCommand(List<RichText> richPages, List<String> pages, int index, PagesListener pagesListener) {
+    public InsertPageCommand(List<RichText> richPages, List<String> pages, int index, PagesListener pagesListener) {
         this.richPages = richPages;
         this.pages = pages;
         this.index = index;

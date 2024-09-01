@@ -341,15 +341,11 @@ public abstract class BookEditScreenMixin extends Screen
             return;
         }
 
-        Command command = new BookEditScreenChangeColorForSelectionCommand(
-                this,
-                getRichSelectionManager(),
-                color,
-                newColor -> {
-                    activeColor = newColor;
-                    invalidateFormattingButtons();
-                }
-        );
+        Command command = new ActionCommand<>(this, () -> {
+            activeColor = color;
+            invalidateFormattingButtons();
+            getRichSelectionManager().applyColorForSelection(color);
+        });
         getCommandManager().execute(command);
     }
 
@@ -501,14 +497,14 @@ public abstract class BookEditScreenMixin extends Screen
 
     @Unique
     private void deletePage() {
-        Command command = new BookEditScreenDeletePageCommand(richPages, pages, currentPage, this);
+        Command command = new DeletePageCommand(richPages, pages, currentPage, this);
         getCommandManager().execute(command);
     }
 
     @Unique
     private void insertPage() {
         if (this.richPages.size() < MAX_PAGES_NUMBER) {
-            Command command = new BookEditScreenInsertPageCommand(richPages, pages, currentPage, this);
+            Command command = new InsertPageCommand(richPages, pages, currentPage, this);
             getCommandManager().execute(command);
         }
     }
@@ -583,13 +579,9 @@ public abstract class BookEditScreenMixin extends Screen
         }
     }
 
-    @Inject(
-            method = "appendNewPage",
-            at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z"),
-            cancellable = true
-    )
+    @Inject(method = "appendNewPage", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z"), cancellable = true)
     private void appendNewPage(CallbackInfo ci) {
-        Command command = new BookEditScreenInsertPageCommand(richPages, pages, richPages.size(), this);
+        Command command = new InsertPageCommand(richPages, pages, richPages.size(), this);
         getCommandManager().execute(command);
         ci.cancel();
     }
@@ -626,18 +618,10 @@ public abstract class BookEditScreenMixin extends Screen
         Scribble.LOGGER.warn("setPageContent() was called, but ignored.");
     }
 
-    @Inject(
-            method = "charTyped",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/util/SelectionManager;insert(Ljava/lang/String;)V",
-                    ordinal = 0,
-                    shift = At.Shift.BEFORE
-            ),
-            cancellable = true
-    )
+    @Inject(method = "charTyped", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/SelectionManager;insert(Ljava/lang/String;)V"), cancellable = true)
     private void charTypedEditMode(char chr, int modifiers, CallbackInfoReturnable<Boolean> cir) {
-        Command command = new BookEditScreenInsertCommand(this, this.currentPageSelectionManager, chr);
+        // FixMe typing when stringFilter returns false
+        Command command = new InsertTextCommand<>(this, currentPageSelectionManager, Character.toString(chr));
         getCommandManager().execute(command);
         cir.setReturnValue(true);
         cir.cancel();
@@ -645,22 +629,39 @@ public abstract class BookEditScreenMixin extends Screen
 
     @Inject(method = "keyPressedEditMode", at = @At(value = "HEAD"), cancellable = true)
     private void keyPressedEditMode(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
-        // Override default cut/paste (with and without formatting) shortcuts behavior with command pattern
-        if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_X) {
-            Command command = new BookEditScreenCutCommand(this, getRichSelectionManager(), hasShiftDown());
-            getCommandManager().execute(command);
+        // Override copy-without-formatting shortcut
+        if (hasControlDown() && hasShiftDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_C) {
+            getRichSelectionManager().copyWithoutFormatting();
             cir.setReturnValue(true);
             cir.cancel();
-        } else if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_V) {
-            Command command = new BookEditScreenPasteCommand(this, getRichSelectionManager(), hasShiftDown());
-            getCommandManager().execute(command);
-            cir.setReturnValue(true);
-            cir.cancel();
+            return;
         }
 
-        // Copy without formatting when SHIFT is held down.
-        if (hasControlDown() && hasShiftDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_C) {
-            this.getRichSelectionManager().copyWithoutFormatting();
+        // Override CUT and CUT-without-formatting shortcut
+        if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_X) {
+            Command command = new ActionCommand<>(this, () -> {
+                if (hasShiftDown()) {
+                    getRichSelectionManager().cutWithoutFormatting();
+                } else {
+                    getRichSelectionManager().cut();
+                }
+            });
+            getCommandManager().execute(command);
+            cir.setReturnValue(true);
+            cir.cancel();
+            return;
+        }
+
+        // Override PASTE and PASTE-without-formatting shortcut
+        if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_V) {
+            // ToDo try to find more elegant way how to implement PASTE command
+            //  which won't use internal selectionManager.paste/pasteWithoutFormatting() implementation
+            String textToPaste = hasShiftDown() ? Formatting.strip(getRawClipboard()) : getRawClipboard();
+            Command command = new InsertTextCommand<>(this, getRichSelectionManager(), textToPaste);
+            getCommandManager().execute(command);
+            cir.setReturnValue(true);
+            cir.cancel();
+            return;
         }
 
         // Inject hotkeys for Undo and Redo
@@ -673,18 +674,22 @@ public abstract class BookEditScreenMixin extends Screen
 
             cir.setReturnValue(true);
             cir.cancel();
+            return;
         }
 
+        // Override DELETE action
         if (keyCode == GLFW.GLFW_KEY_DELETE || keyCode == GLFW.GLFW_KEY_BACKSPACE) {
             SelectionManager.SelectionType selectionType = Screen.hasControlDown()
                     ? SelectionManager.SelectionType.WORD
                     : SelectionManager.SelectionType.CHARACTER;
 
-            Command command = new BookEditScreenDeleteCommand(this, getRichSelectionManager(), selectionType);
+            Command command = new ActionCommand<>(this,
+                    () -> getRichSelectionManager().delete(-1, selectionType));
             getCommandManager().execute(command);
 
             cir.setReturnValue(true);
             cir.cancel();
+            return;
         }
 
         // We inject some hotkeys for toggling formatting options.
