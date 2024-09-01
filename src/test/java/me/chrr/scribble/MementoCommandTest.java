@@ -69,7 +69,7 @@ public class MementoCommandTest {
         command.rollback();
 
         // Verify
-        verify(restorableObject, never());
+        verify(restorableObject, never()).scribble$restore(any());
     }
 
     @Test
