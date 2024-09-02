@@ -21,11 +21,12 @@ public class InsertPageCommand implements Command {
     }
 
     @Override
-    public void execute() {
+    public boolean execute() {
         richPages.add(index, RichText.empty());
         pages.add(index, "");
 
         pagesListener.scribble$onPageAdded(index);
+        return true;
     }
 
     @Override

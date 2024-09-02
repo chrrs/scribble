@@ -35,6 +35,8 @@ public class CommandManager {
     /**
      * Executes the given command and clears any commands that were previously undone.
      * If the history stack exceeds the maximum size, the oldest command is removed.
+     * <p>
+     * The command won't be added to the history stack if it executed with result value false
      *
      * @param command The command to execute.
      */
@@ -48,7 +50,7 @@ public class CommandManager {
         // execute D - will drop all commands that were above currentIndex(above A)
         dropAllAboveCurrentIndex();
 
-        if (commandStack.size() >= maxHistorySize) {
+        if (commandStack.size() >= maxHistorySize && maxHistorySize > 0) {
             // size limit was reached
             // drop a command from the bottom of the stack
             commandStack.pollFirst();
@@ -56,9 +58,11 @@ public class CommandManager {
             lastExecutedCommandIndex--;
         }
 
-        commandStack.add(command);
-        command.execute();
-        lastExecutedCommandIndex++;
+        boolean affectedState = command.execute();
+        if (affectedState && maxHistorySize > 0) {
+            commandStack.add(command);
+            lastExecutedCommandIndex++;
+        }
     }
 
     /**
@@ -71,18 +75,21 @@ public class CommandManager {
     }
 
     /**
-     * Attempts to undo the last executed command.
+     * Attempts to undo the last executed commands,
+     * until one of commands undo is successful or has nothing to undo.
      *
      * @return True if the undo operation was successful, false otherwise.
      */
     public boolean tryUndo() {
         if (hasCommandsToUndo()) {
             boolean wasRolledBack = commandStack.get(lastExecutedCommandIndex).rollback();
-            // ToDo what to do when rollback failed? try to rollback previous command?
-            if (wasRolledBack) {
-                lastExecutedCommandIndex--;
+            lastExecutedCommandIndex--;
+
+            if (!wasRolledBack) {
+                // rolling back until the rollback is successful
+                return tryUndo();
             }
-            return wasRolledBack;
+            return true;
         }
         return false;
     }

@@ -26,13 +26,14 @@ public class DeletePageCommand implements Command {
     }
 
     @Override
-    public void execute() {
+    public boolean execute() {
         pageContentToDelete = richPages.get(index);
 
         richPages.remove(index);
         pages.remove(index);
 
         pagesListener.scribble$onPageRemoved(index);
+        return true;
     }
 
     @Override

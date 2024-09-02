@@ -620,7 +620,6 @@ public abstract class BookEditScreenMixin extends Screen
 
     @Inject(method = "charTyped", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/SelectionManager;insert(Ljava/lang/String;)V"), cancellable = true)
     private void charTypedEditMode(char chr, int modifiers, CallbackInfoReturnable<Boolean> cir) {
-        // FixMe typing when stringFilter returns false
         Command command = new InsertTextCommand<>(this, currentPageSelectionManager, Character.toString(chr));
         getCommandManager().execute(command);
         cir.setReturnValue(true);

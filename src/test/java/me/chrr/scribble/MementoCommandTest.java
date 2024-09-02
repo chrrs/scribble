@@ -4,8 +4,7 @@ import me.chrr.scribble.tool.Restorable;
 import me.chrr.scribble.tool.commandmanager.MementoCommand;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class MementoCommandTest {
@@ -23,71 +22,119 @@ public class MementoCommandTest {
     }
 
     @Test
-    public void testIfCreatesMementoOnExecute() {
+    public void testIfExecuteCreatesMemento() {
         // Arrange
-        String mementoState = "STATE";
-        Restorable<String> restorableObject = mock();
-        when(restorableObject.scribble$createMemento()).thenReturn(mementoState);
-        StringMementoCommand command = new StringMementoCommand(restorableObject);
+        String memento = "STATE";
+        Restorable<String> restorable = mock();
+        when(restorable.scribble$createMemento()).thenReturn(memento);
+        StringMementoCommand command = new StringMementoCommand(restorable);
 
         // Action
         command.execute();
 
         // Verify
-        verify(restorableObject, times(1)).scribble$createMemento();
+        assertEquals(memento, command.getOriginalMemento());
     }
 
     @Test
-    public void testIfRestoreStateWithCreatedMementoCalledOnRollbackWhenExecuteWasCalledBefore() {
+    public void testIfExecuteReturnsTrueWhenTheRestorablesStateWasEffected() {
         // Arrange
-        String mementoState = "STATE";
-        Restorable<String> restorableObject = mock();
-        when(restorableObject.scribble$createMemento()).thenReturn(mementoState);
+        Restorable<String> restorable = mock();
+        when(restorable.scribble$createMemento())
+                .thenReturn("state1") // the origin restorable state
+                .thenReturn("state2"); // pretend that command execution changed the origin state
+        StringMementoCommand command = new StringMementoCommand(restorable);
 
-        StringMementoCommand command = new StringMementoCommand(restorableObject);
-        // to create internal memento to be able to restore
+        // Action
+        boolean executeResult = command.execute();
+
+        // Verify
+        assertTrue(executeResult);
+    }
+
+    @Test
+    public void testIfExecuteReturnsTrueWhenTheRestorablesStateWasNotEffected() {
+        // Arrange
+        Restorable<String> restorable = mock();
+        when(restorable.scribble$createMemento())
+                .thenReturn("sameState") // the origin restorable state
+                .thenReturn("sameState"); // the state stays the same
+        StringMementoCommand command = new StringMementoCommand(restorable);
+
+        // Action
+        boolean executeResult = command.execute();
+
+        // Verify
+        assertFalse(executeResult);
+    }
+
+    @Test
+    public void testIfRestoreCalledOnRollbackWhenExecuteWasCalledBefore() {
+        // Arrange
+        String memento = "STATE";
+        Restorable<String> restorable = mock();
+        when(restorable.scribble$createMemento()).thenReturn(memento);
+
+        StringMementoCommand command = new StringMementoCommand(restorable);
+        // execute to create internal memento to be able to roll back
         command.execute();
 
         // Action
         command.rollback();
 
         // Verify
-        verify(restorableObject, times(1))
-                .scribble$restore(argThat(argument -> argument.equals(mementoState)));
+        verify(restorable, times(1))
+                .scribble$restore(argThat(argument -> argument.equals(memento)));
     }
 
     @Test
-    public void testIfRestoreStateWithCreatedMementoNotCalledOnRollbackWhenExecuteWasNeverCalledBefore() {
+    public void testIfRestoreNotCalledOnRollbackWhenExecuteWasNeverCalledBefore() {
         // Arrange
-        String mementoState = "STATE";
-        Restorable<String> restorableObject = mock();
-        when(restorableObject.scribble$createMemento()).thenReturn(mementoState);
+        String memento = "STATE";
+        Restorable<String> restorable = mock();
+        when(restorable.scribble$createMemento()).thenReturn(memento);
 
-        StringMementoCommand command = new StringMementoCommand(restorableObject);
+        StringMementoCommand command = new StringMementoCommand(restorable);
 
         // Action
         command.rollback();
 
         // Verify
-        verify(restorableObject, never()).scribble$restore(any());
+        verify(restorable, never()).scribble$restore(any());
     }
 
     @Test
-    public void testIfRollbackReturnsTrueWhenExecuteWasCalledBefore() {
+    public void testIfRollbackReturnsTrueWhenTheRestorablesStateWasEffected() {
         // Arrange
-        String mementoState = "STATE";
-        Restorable<String> restorableObject = mock();
-        when(restorableObject.scribble$createMemento()).thenReturn(mementoState);
-
-        StringMementoCommand command = new StringMementoCommand(restorableObject);
-        // to create internal memento to be able to restore
+        Restorable<String> restorable = mock();
+        when(restorable.scribble$createMemento())
+                .thenReturn("state1") // the origin restorable state
+                .thenReturn("state2"); // pretend that command execution changed the origin state
+        StringMementoCommand command = new StringMementoCommand(restorable);
+        // execute to create internal memento to be able to roll back
         command.execute();
 
         // Action
-        boolean undoResult = command.rollback();
+        boolean rollbackResult = command.rollback();
 
         // Verify
-        assertTrue(undoResult);
+        assertTrue(rollbackResult);
+    }
+
+    @Test
+    public void testIfRollbackReturnsFalseWhenTheRestorablesStateWasNotEffected() {
+        // Arrange
+        Restorable<String> restorable = mock();
+        when(restorable.scribble$createMemento()).thenReturn("state");
+        StringMementoCommand command = new StringMementoCommand(restorable);
+        // execute to create internal memento to be able to roll back
+        command.execute();
+
+        // Action
+        boolean rollbackResult = command.rollback();
+
+        // Verify
+        assertFalse(rollbackResult);
     }
 
     @Test
@@ -100,38 +147,38 @@ public class MementoCommandTest {
         StringMementoCommand command = new StringMementoCommand(restorableObject);
 
         // Action
-        boolean undoResult = command.rollback();
+        boolean rollbackResult = command.rollback();
 
         // Verify
-        assertFalse(undoResult);
+        assertFalse(rollbackResult);
     }
 
     @Test
     public void testIfRestoresOriginalStateOnExecuteCallWhenMementoExist() {
         // Arrange
-        String mementoState = "STATE";
-        Restorable<String> restorableObject = mock();
-        when(restorableObject.scribble$createMemento()).thenReturn(mementoState);
+        String memento = "STATE";
+        Restorable<String> restorable = mock();
+        when(restorable.scribble$createMemento()).thenReturn(memento);
 
-        StringMementoCommand command = new StringMementoCommand(restorableObject);
-        command.execute(); // to create memento
+        StringMementoCommand command = new StringMementoCommand(restorable);
+        command.execute(); // to origin create memento
 
         // Action
-        command.execute(); // to create memento
+        command.execute(); // to restore origin memento before execution
 
         // Verify
-        verify(restorableObject, times(1))
-                .scribble$restore(argThat(argument -> argument.equals(mementoState)));
+        verify(restorable, times(1))
+                .scribble$restore(argThat(argument -> argument.equals(memento)));
     }
 
     @Test
     public void testIfDoNotRestoresOriginalStateOnExecuteCallWhenMementoDoNotExist() {
         // Arrange
-        String mementoState = "STATE";
+        String memento = "STATE";
         Restorable<String> restorableObject = mock();
-        when(restorableObject.scribble$createMemento()).thenReturn(mementoState);
+        when(restorableObject.scribble$createMemento()).thenReturn(memento);
 
-        // memento should not exist after creating a command
+        // memento should not exist when command was never executed
         StringMementoCommand command = new StringMementoCommand(restorableObject);
 
         // Action
@@ -142,9 +189,11 @@ public class MementoCommandTest {
     }
 
     @Test
-    public void testIfCallsDoOnExecute() {
+    public void testIfDoActionIsCalledOnExecute() {
         // Arrange
-        StringMementoCommand command = spy(new StringMementoCommand(mock()));
+        Restorable<String> restorable = mock();
+        when(restorable.scribble$createMemento()).thenReturn("");
+        StringMementoCommand command = spy(new StringMementoCommand(restorable));
 
         // Action
         command.execute();

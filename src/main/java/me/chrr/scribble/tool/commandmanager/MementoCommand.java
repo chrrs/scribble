@@ -24,6 +24,11 @@ public abstract class MementoCommand<T> implements Command {
         this.restorable = restorable;
     }
 
+    @Nullable
+    public T getOriginalMemento() {
+        return originalMemento;
+    }
+
     /**
      * Executes the command.
      * <p>
@@ -34,7 +39,7 @@ public abstract class MementoCommand<T> implements Command {
      * that the {@link #restorable} is in the exact state it was before the original execution.
      */
     @Override
-    public void execute() {
+    public boolean execute() {
         if (originalMemento == null) {
             // Create a memento of the current state if this is the first execution
             originalMemento = restorable.scribble$createMemento();
@@ -43,6 +48,9 @@ public abstract class MementoCommand<T> implements Command {
             restorable.scribble$restore(originalMemento);
         }
         doAction();
+
+        // check if action affected on restartable state
+        return !restorable.scribble$createMemento().equals(originalMemento);
     }
 
     /**
@@ -51,17 +59,22 @@ public abstract class MementoCommand<T> implements Command {
     public abstract void doAction();
 
     /**
-     * Rolls back the command by restoring the state from the previously created memento.
+     * Reverts the command by restoring the state from the origin memento.
      * <p>
-     * Do nothing if nothing to undo.
+     * If there is no memento to restore from, this method has no effect and returns {@code false}.
+     * </p>
      *
-     * @return true if the original state was restore, otherwise false
+     * @return {@code true} if the state was successfully reverted and differs from the current state,
+     * {@code false} if there was no memento or the state was unchanged.
      */
     @Override
     public boolean rollback() {
         if (originalMemento != null) {
+            T currentState = restorable.scribble$createMemento();
             restorable.scribble$restore(originalMemento);
-            return true;
+
+            // check if action affected on restartable state
+            return !originalMemento.equals(currentState);
         } else {
             return false;
         }
