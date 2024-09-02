@@ -129,36 +129,27 @@ public abstract class BookEditScreenMixin extends Screen
     private Set<Formatting> activeModifiers = new HashSet<>();
 
     @Unique
-    @Nullable
     private ModifierButtonWidget boldButton;
     @Unique
-    @Nullable
     private ModifierButtonWidget italicButton;
     @Unique
-    @Nullable
     private ModifierButtonWidget underlineButton;
     @Unique
-    @Nullable
     private ModifierButtonWidget strikethroughButton;
     @Unique
-    @Nullable
     private ModifierButtonWidget obfuscatedButton;
 
     @Unique
-    private List<@Nullable ColorSwatchWidget> colorSwatches = List.of();
+    private List<ColorSwatchWidget> colorSwatches;
 
     @Unique
-    @Nullable
     private IconButtonWidget deletePageButton;
     @Unique
-    @Nullable
     private IconButtonWidget insertPageButton;
 
     @Unique
-    @Nullable
     private IconButtonWidget saveBookButton;
     @Unique
-    @Nullable
     private IconButtonWidget loadBookButton;
 
     // Dummy constructor to match super class. The mixin derives from
@@ -196,11 +187,6 @@ public abstract class BookEditScreenMixin extends Screen
         return this.currentPage >= 0 && this.currentPage < this.richPages.size()
                 ? this.richPages.get(this.currentPage)
                 : RichText.empty();
-    }
-
-    @Unique
-    private CommandManager getCommandManager() {
-        return commandManager;
     }
 
     /**
@@ -319,20 +305,14 @@ public abstract class BookEditScreenMixin extends Screen
                 text -> text.getAsFormattedString().length() < 1024
                         && this.textRenderer.getWrappedLinesHeight(text, 114) <= 128,
 
-                this::getActiveColor,
-                this::getActiveModifiers
+                () -> this.activeColor,
+                () -> this.activeModifiers
         );
 
         // Load the pages into richPages
         for (String page : this.pages) {
             this.richPages.add(RichText.fromFormattedString(page));
         }
-    }
-
-    @Unique
-    @NotNull
-    private Formatting getActiveColor() {
-        return activeColor;
     }
 
     @Unique
@@ -346,12 +326,7 @@ public abstract class BookEditScreenMixin extends Screen
             invalidateFormattingButtons();
             getRichSelectionManager().applyColorForSelection(color);
         });
-        getCommandManager().execute(command);
-    }
-
-    @Unique
-    private Set<Formatting> getActiveModifiers() {
-        return activeModifiers;
+        commandManager.execute(command);
     }
 
     @Unique
@@ -363,7 +338,8 @@ public abstract class BookEditScreenMixin extends Screen
         }
         invalidateFormattingButtons();
 
-        // todo replace with manager.applyModifiersForSelection(activeModifiers) call
+        // ToDo replace with manager.applyModifiersForSelection(activeModifiers) call
+        //  to have the single state of truth for activeModifiers.
         getRichSelectionManager().toggleModifierForSelection(modifier, toggled);
     }
 
@@ -471,7 +447,7 @@ public abstract class BookEditScreenMixin extends Screen
 
             this.richPages.clear();
             this.pages.clear();
-            getCommandManager().clear();
+            commandManager.clear();
 
             // Loading an empty book file would set the total amount of pages to 0.
             // We work around this by just inserting a new empty page.
@@ -498,14 +474,14 @@ public abstract class BookEditScreenMixin extends Screen
     @Unique
     private void deletePage() {
         Command command = new DeletePageCommand(richPages, pages, currentPage, this);
-        getCommandManager().execute(command);
+        commandManager.execute(command);
     }
 
     @Unique
     private void insertPage() {
         if (this.richPages.size() < MAX_PAGES_NUMBER) {
             Command command = new InsertPageCommand(richPages, pages, currentPage, this);
-            getCommandManager().execute(command);
+            commandManager.execute(command);
         }
     }
 
@@ -582,7 +558,7 @@ public abstract class BookEditScreenMixin extends Screen
     @Inject(method = "appendNewPage", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z"), cancellable = true)
     private void appendNewPage(CallbackInfo ci) {
         Command command = new InsertPageCommand(richPages, pages, richPages.size(), this);
-        getCommandManager().execute(command);
+        commandManager.execute(command);
         ci.cancel();
     }
 
@@ -621,7 +597,7 @@ public abstract class BookEditScreenMixin extends Screen
     @Inject(method = "charTyped", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/SelectionManager;insert(Ljava/lang/String;)V"), cancellable = true)
     private void charTypedEditMode(char chr, int modifiers, CallbackInfoReturnable<Boolean> cir) {
         Command command = new InsertTextCommand<>(this, currentPageSelectionManager, Character.toString(chr));
-        getCommandManager().execute(command);
+        commandManager.execute(command);
         cir.setReturnValue(true);
         cir.cancel();
     }
@@ -645,7 +621,7 @@ public abstract class BookEditScreenMixin extends Screen
                     getRichSelectionManager().cut();
                 }
             });
-            getCommandManager().execute(command);
+            commandManager.execute(command);
             cir.setReturnValue(true);
             cir.cancel();
             return;
@@ -657,7 +633,7 @@ public abstract class BookEditScreenMixin extends Screen
             //  which won't use internal selectionManager.paste/pasteWithoutFormatting() implementation
             String textToPaste = hasShiftDown() ? Formatting.strip(getRawClipboard()) : getRawClipboard();
             Command command = new InsertTextCommand<>(this, getRichSelectionManager(), textToPaste);
-            getCommandManager().execute(command);
+            commandManager.execute(command);
             cir.setReturnValue(true);
             cir.cancel();
             return;
@@ -666,9 +642,9 @@ public abstract class BookEditScreenMixin extends Screen
         // Inject hotkeys for Undo and Redo
         if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_Z) {
             if (hasShiftDown()) {
-                getCommandManager().tryRedo();
+                commandManager.tryRedo();
             } else {
-                getCommandManager().tryUndo();
+                commandManager.tryUndo();
             }
 
             cir.setReturnValue(true);
@@ -684,7 +660,7 @@ public abstract class BookEditScreenMixin extends Screen
 
             Command command = new ActionCommand<>(this,
                     () -> getRichSelectionManager().delete(-1, selectionType));
-            getCommandManager().execute(command);
+            commandManager.execute(command);
 
             cir.setReturnValue(true);
             cir.cancel();
@@ -835,8 +811,8 @@ public abstract class BookEditScreenMixin extends Screen
                 selectionManager.selectionStart,
                 selectionManager.selectionEnd,
                 getCurrentPageText(),
-                getActiveColor(),
-                getActiveModifiers()
+                activeColor,
+                activeModifiers
         );
     }
 

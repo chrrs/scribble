@@ -189,7 +189,7 @@ public class RichSelectionManager extends SelectionManager {
     private void notifyCursorFormattingChanged() {
         if (this.textGetter == null) {
             // We're too early, abort.
-            // Can happen when calling the method from the constructor of supper
+            // Can happen when the methods is called from the supper constructor
             return;
         }
 
