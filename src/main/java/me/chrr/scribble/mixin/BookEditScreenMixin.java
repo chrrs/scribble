@@ -140,7 +140,7 @@ public abstract class BookEditScreenMixin extends Screen
     private ModifierButtonWidget obfuscatedButton;
 
     @Unique
-    private List<ColorSwatchWidget> colorSwatches;
+    private List<ColorSwatchWidget> colorSwatches = List.of();
 
     @Unique
     private IconButtonWidget deletePageButton;
