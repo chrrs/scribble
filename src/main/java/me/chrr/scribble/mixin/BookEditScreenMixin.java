@@ -331,16 +331,19 @@ public abstract class BookEditScreenMixin extends Screen
 
     @Unique
     public void toggleActiveModifier(Formatting modifier, boolean toggled) {
-        if (toggled) {
-            activeModifiers.add(modifier);
-        } else {
-            activeModifiers.remove(modifier);
-        }
-        invalidateFormattingButtons();
+        Command command = new ActionCommand<>(this, () -> {
+            if (toggled) {
+                activeModifiers.add(modifier);
+            } else {
+                activeModifiers.remove(modifier);
+            }
+            invalidateFormattingButtons();
 
-        // ToDo replace with manager.applyModifiersForSelection(activeModifiers) call
-        //  to have the single state of truth for activeModifiers.
-        getRichSelectionManager().toggleModifierForSelection(modifier, toggled);
+            // ToDo replace with manager.applyModifiersForSelection(activeModifiers) call
+            //  to have the single state of truth for activeModifiers.
+            getRichSelectionManager().toggleModifierForSelection(modifier, toggled);
+        });
+        commandManager.execute(command);
     }
 
     @Inject(method = "init", at = @At(value = "HEAD"))
@@ -812,7 +815,7 @@ public abstract class BookEditScreenMixin extends Screen
                 selectionManager.selectionEnd,
                 getCurrentPageText(),
                 activeColor,
-                activeModifiers
+                Set.copyOf(activeModifiers)
         );
     }
 
@@ -831,7 +834,7 @@ public abstract class BookEditScreenMixin extends Screen
         selectionManager.setSelection(memento.selectionStart(), memento.selectionEnd());
 
         activeColor = memento.color();
-        activeModifiers = memento.modifiers();
+        activeModifiers = new HashSet<>(memento.modifiers()); // to be sure it's mutable
         invalidateFormattingButtons();
     }
 }
