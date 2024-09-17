@@ -101,7 +101,6 @@ public class CommandManager {
      */
     public boolean hasCommandsToUndo() {
         if (commandStack.isEmpty()) {
-            lastExecutedCommandIndex = EMPTY_STACK_INDEX;
             return false;
         } else {
             return lastExecutedCommandIndex >= 0;
