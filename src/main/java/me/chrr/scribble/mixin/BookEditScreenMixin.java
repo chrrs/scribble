@@ -323,15 +323,20 @@ public abstract class BookEditScreenMixin extends Screen
     }
 
     @Unique
-    private void changeActiveColor(@NotNull Formatting color) {
-        if (this.activeColor == color) {
+    private void changeActiveColor(@NotNull Formatting newColor) {
+        @Nullable Formatting cursorColor = getRichSelectionManager().getCursorFormatting().getLeft();
+        if (newColor == activeColor && newColor == cursorColor) {
+            // Apply color for selection only if(or):
+            // - new color is different
+            // - cursor color is not undefined (multiple colors text selected e.g.)
+            // Otherwise - ignore
             return;
         }
 
         Command command = new ActionCommand<>(this, () -> {
-            activeColor = color;
+            activeColor = newColor;
             invalidateFormattingButtons();
-            getRichSelectionManager().applyColorForSelection(color);
+            getRichSelectionManager().applyColorForSelection(newColor);
         });
         commandManager.execute(command);
     }

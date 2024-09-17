@@ -182,19 +182,27 @@ public class RichSelectionManager extends SelectionManager {
     }
 
     private void notifyCursorFormattingChanged() {
-        if (this.textGetter == null) {
-            // We're too early, abort.
-            // Can happen when the methods is called from the supper constructor
+        if (stateCallback == null) {
+            // Can happen when the method is called from the supper constructor
             return;
         }
 
-        int start = Math.min(this.selectionStart, this.selectionEnd);
-        int end = Math.max(this.selectionStart, this.selectionEnd);
-        Pair<@Nullable Formatting, Set<Formatting>> format = this.textGetter.get().getCommonFormat(start, end);
+        Pair<@Nullable Formatting, Set<Formatting>> format = getCursorFormatting();
 
         Formatting color = format.getLeft();
         Set<Formatting> modifiers = new HashSet<>(format.getRight());
         stateCallback.onCursorFormattingChanged(color, modifiers);
+    }
+
+    public Pair<@Nullable Formatting, Set<Formatting>> getCursorFormatting() {
+        if (textGetter == null) {
+            // Can happen when the method is called from the supper constructor
+            return new Pair<>(null, Set.of());
+        }
+
+        int start = Math.min(this.selectionStart, this.selectionEnd);
+        int end = Math.max(this.selectionStart, this.selectionEnd);
+        return this.textGetter.get().getCommonFormat(start, end);
     }
 
     @Override
