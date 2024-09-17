@@ -29,9 +29,6 @@ public class RichSelectionManagerInsertTest {
 
         Supplier<RichText> richTextGetter = () -> initialRichText;
 
-        Consumer<String> stringSetter = string -> {
-        };
-
         AtomicReference<Formatting> activeColorRef = new AtomicReference<>(Formatting.BLACK);
         AtomicReference<Set<Formatting>> activeModifiersRef = new AtomicReference<>(Set.of());
         RichSelectionManager.StateCallback onCursorFormattingChanged = (color, modifiers) -> {
@@ -72,7 +69,6 @@ public class RichSelectionManagerInsertTest {
         return new RichSelectionManager(
                 richTextGetter,
                 richTextSetter,
-                stringSetter,
                 onCursorFormattingChanged,
                 clipboardGetter,
                 clipboardSetter,

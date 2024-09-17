@@ -198,9 +198,15 @@ public abstract class BookEditScreenMixin extends Screen
     private void setPageText(RichText newText) {
         if (this.currentPage >= 0 && this.currentPage < this.richPages.size()) {
             this.richPages.set(this.currentPage, newText);
-            this.dirty = true;
-            this.invalidatePageContent();
         }
+
+        // also update original page list to keep it in sync with richPages
+        if (this.currentPage >= 0 && this.currentPage < this.pages.size()) {
+            this.pages.set(this.currentPage, newText.getAsFormattedString());
+        }
+
+        this.dirty = true;
+        this.invalidatePageContent();
     }
 
     @Unique
@@ -300,7 +306,6 @@ public abstract class BookEditScreenMixin extends Screen
         currentPageSelectionManager = new RichSelectionManager(
                 this::getCurrentPageText,
                 this::setPageText,
-                (string) -> this.pages.set(this.currentPage, string),
                 this::onCursorFormattingChanged,
                 this::getRawClipboard,
                 this::setClipboard,

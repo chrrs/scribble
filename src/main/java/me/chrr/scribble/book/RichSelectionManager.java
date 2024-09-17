@@ -26,7 +26,6 @@ public class RichSelectionManager extends SelectionManager {
     public RichSelectionManager(
             Supplier<RichText> textGetter,
             Consumer<RichText> textSetter,
-            Consumer<String> stringSetter,
             StateCallback stateCallback,
             Supplier<String> clipboardGetter,
             Consumer<String> clipboardSetter,
@@ -43,13 +42,9 @@ public class RichSelectionManager extends SelectionManager {
         );
 
         this.textGetter = textGetter;
+        this.textSetter = textSetter;
         this.textFilter = textFilter;
         this.stateCallback = stateCallback;
-
-        this.textSetter = (text) -> {
-            textSetter.accept(text);
-            stringSetter.accept(text.getAsFormattedString());
-        };
 
         this.colorGetter = colorGetter;
         this.modifiersGetter = modifiersGetter;
