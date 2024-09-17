@@ -397,9 +397,7 @@ public abstract class BookEditScreenMixin extends Screen
     @Unique
     private void setSwatchColor(Formatting color) {
         for (ColorSwatchWidget swatch : colorSwatches) {
-            if (swatch != null) {
-                swatch.setToggled(swatch.getColor() == color);
-            }
+            swatch.setToggled(swatch.getColor() == color);
         }
     }
 
