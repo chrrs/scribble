@@ -126,6 +126,7 @@ public abstract class BookEditScreenMixin extends Screen
     private Formatting activeColor = DEFAULT_COLOR;
 
     @Unique
+    @NotNull
     private Set<Formatting> activeModifiers = new HashSet<>();
 
     @Unique
@@ -140,6 +141,7 @@ public abstract class BookEditScreenMixin extends Screen
     private ModifierButtonWidget obfuscatedButton;
 
     @Unique
+    @NotNull
     private List<ColorSwatchWidget> colorSwatches = List.of();
 
     @Unique
@@ -352,7 +354,7 @@ public abstract class BookEditScreenMixin extends Screen
     }
 
     @Inject(method = "updateButtons", at = @At(value = "HEAD"))
-    private void updateButtons(CallbackInfo ci) {
+    private void invalidateControlButtons(CallbackInfo ci) {
         Optional.ofNullable(boldButton).ifPresent(button -> button.visible = !this.signing);
         Optional.ofNullable(italicButton).ifPresent(button -> button.visible = !this.signing);
         Optional.ofNullable(underlineButton).ifPresent(button -> button.visible = !this.signing);
@@ -360,9 +362,7 @@ public abstract class BookEditScreenMixin extends Screen
         Optional.ofNullable(obfuscatedButton).ifPresent(button -> button.visible = !this.signing);
 
         for (ColorSwatchWidget swatch : colorSwatches) {
-            if (swatch != null) {
-                swatch.visible = !signing;
-            }
+            swatch.visible = !signing;
         }
 
         Optional.ofNullable(deletePageButton).ifPresent(button -> button.visible = !signing && richPages.size() > 1);
