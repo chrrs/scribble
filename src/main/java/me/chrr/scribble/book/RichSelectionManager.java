@@ -143,7 +143,7 @@ public class RichSelectionManager extends SelectionManager {
         this.delete(0);
     }
 
-    private String getSelectedFormattedText() {
+    public String getSelectedFormattedText() {
         int i = Math.min(this.selectionStart, this.selectionEnd);
         int j = Math.max(this.selectionStart, this.selectionEnd);
         return textGetter.get().subText(i, j).getAsFormattedString();
@@ -225,15 +225,6 @@ public class RichSelectionManager extends SelectionManager {
 
     public void copyWithoutFormatting() {
         this.clipboardSetter.accept(Formatting.strip(this.getSelectedFormattedText()));
-    }
-
-    public void cutWithoutFormatting() {
-        this.clipboardSetter.accept(Formatting.strip(this.getSelectedFormattedText()));
-        this.delete(0);
-    }
-
-    public void pasteWithoutFormatting() {
-        this.insert(Formatting.strip(this.clipboardGetter.get()));
     }
 
     public interface StateCallback {

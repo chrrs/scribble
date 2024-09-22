@@ -625,14 +625,16 @@ public abstract class BookEditScreenMixin extends Screen
 
         // Override CUT and CUT-without-formatting shortcut
         if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_X) {
-            Command command = new ActionCommand<>(this, () -> {
-                if (hasShiftDown()) {
-                    getRichSelectionManager().cutWithoutFormatting();
-                } else {
-                    getRichSelectionManager().cut();
-                }
-            });
+            // Do not use SelectionManager internal CUT implementation to have more flexibility.
+            // Put selected text into the clipboard
+            String selectedFormattedText = getRichSelectionManager().getSelectedFormattedText();
+            String textToCut = hasShiftDown() ? Formatting.strip(selectedFormattedText) : selectedFormattedText;
+            setClipboard(textToCut);
+
+            // Delete selected text
+            Command command = new DeleteTextCommand<>(this, getRichSelectionManager());
             commandManager.execute(command);
+
             cir.setReturnValue(true);
             cir.cancel();
             return;
@@ -640,11 +642,14 @@ public abstract class BookEditScreenMixin extends Screen
 
         // Override PASTE and PASTE-without-formatting shortcut
         if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_V) {
-            // ToDo try to find more elegant way how to implement PASTE command
-            //  which won't use internal selectionManager.paste/pasteWithoutFormatting() implementation
+            // Do not use SelectionManager internal PASTE implementation to have more flexibility.
+            // Fetch a text from the clipboard
             String textToPaste = hasShiftDown() ? Formatting.strip(getRawClipboard()) : getRawClipboard();
+
+            // Paste the text
             Command command = new InsertTextCommand<>(this, getRichSelectionManager(), textToPaste);
             commandManager.execute(command);
+
             cir.setReturnValue(true);
             cir.cancel();
             return;
@@ -669,8 +674,7 @@ public abstract class BookEditScreenMixin extends Screen
                     ? SelectionManager.SelectionType.WORD
                     : SelectionManager.SelectionType.CHARACTER;
 
-            Command command = new ActionCommand<>(this,
-                    () -> getRichSelectionManager().delete(-1, selectionType));
+            Command command = new DeleteTextCommand<>(this, getRichSelectionManager(), -1, selectionType);
             commandManager.execute(command);
 
             cir.setReturnValue(true);
