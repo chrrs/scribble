@@ -9,17 +9,19 @@ import java.util.List;
 
 public class DeletePageCommand implements Command {
 
-    private final List<RichText> richPages;
-    private final List<String> pages;
+    private final List<RichText> pages;
     private final int index;
 
     private final PagesListener pagesListener;
 
     @Nullable
-    private RichText pageContentToDelete;
+    private RichText deletedPage;
 
-    public DeletePageCommand(List<RichText> richPages, List<String> pages, int index, PagesListener pagesListener) {
-        this.richPages = richPages;
+    public DeletePageCommand(List<RichText> pages, int index, PagesListener pagesListener) {
+        if (index < 0 || index >= pages.size()) {
+            throw new IllegalArgumentException("Delete page index is out of pages range");
+        }
+
         this.pages = pages;
         this.index = index;
         this.pagesListener = pagesListener;
@@ -27,20 +29,16 @@ public class DeletePageCommand implements Command {
 
     @Override
     public boolean execute() {
-        pageContentToDelete = richPages.get(index);
-
-        richPages.remove(index);
+        deletedPage = pages.get(index);
         pages.remove(index);
-
         pagesListener.scribble$onPageRemoved(index);
         return true;
     }
 
     @Override
     public boolean rollback() {
-        if (pageContentToDelete != null) {
-            richPages.add(index, pageContentToDelete);
-            pages.add(index, pageContentToDelete.getAsFormattedString());
+        if (deletedPage != null) {
+            pages.add(index, deletedPage);
             pagesListener.scribble$onPageAdded(index);
             return true;
 

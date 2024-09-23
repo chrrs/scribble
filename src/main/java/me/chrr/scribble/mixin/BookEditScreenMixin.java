@@ -484,14 +484,14 @@ public abstract class BookEditScreenMixin extends Screen
 
     @Unique
     private void deletePage() {
-        Command command = new DeletePageCommand(richPages, pages, currentPage, this);
+        Command command = new DeletePageCommand(richPages, currentPage, this);
         commandManager.execute(command);
     }
 
     @Unique
     private void insertPage() {
         if (this.richPages.size() < MAX_PAGES_NUMBER) {
-            Command command = new InsertPageCommand(richPages, pages, currentPage, this);
+            Command command = new InsertPageCommand(richPages, currentPage, this);
             commandManager.execute(command);
         }
     }
@@ -568,13 +568,16 @@ public abstract class BookEditScreenMixin extends Screen
 
     @Inject(method = "appendNewPage", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z"), cancellable = true)
     private void appendNewPage(CallbackInfo ci) {
-        Command command = new InsertPageCommand(richPages, pages, richPages.size(), this);
+        Command command = new InsertPageCommand(richPages, richPages.size(), this);
         commandManager.execute(command);
         ci.cancel();
     }
 
     @Override
     public void scribble$onPageAdded(int pageAddedIndex) {
+        // sync with plain text(native) page list
+        pages.add(pageAddedIndex, richPages.get(pageAddedIndex).getAsFormattedString());
+
         currentPage = pageAddedIndex;
         dirty = true;
         updateButtons();
@@ -583,6 +586,9 @@ public abstract class BookEditScreenMixin extends Screen
 
     @Override
     public void scribble$onPageRemoved(int pageRemovedIndex) {
+        // sync with plain text(native) page list
+        pages.remove(pageRemovedIndex);
+
         if (pageRemovedIndex < currentPage) {
             // a page before opened was removed
             // move the index to the left by 1 to keep the same page opened

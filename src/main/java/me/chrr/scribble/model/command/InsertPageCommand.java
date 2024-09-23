@@ -7,14 +7,16 @@ import java.util.List;
 
 public class InsertPageCommand implements Command {
 
-    private final List<RichText> richPages;
-    private final List<String> pages;
+    private final List<RichText> pages;
     private final int index;
 
     private final PagesListener pagesListener;
 
-    public InsertPageCommand(List<RichText> richPages, List<String> pages, int index, PagesListener pagesListener) {
-        this.richPages = richPages;
+    public InsertPageCommand(List<RichText> pages, int index, PagesListener pagesListener) {
+        if (index < 0 || index > pages.size()) {
+            throw new IllegalArgumentException("Insert page index is out of pages range");
+        }
+
         this.pages = pages;
         this.index = index;
         this.pagesListener = pagesListener;
@@ -22,18 +24,14 @@ public class InsertPageCommand implements Command {
 
     @Override
     public boolean execute() {
-        richPages.add(index, RichText.empty());
-        pages.add(index, "");
-
+        pages.add(index, RichText.empty());
         pagesListener.scribble$onPageAdded(index);
         return true;
     }
 
     @Override
     public boolean rollback() {
-        richPages.remove(index);
         pages.remove(index);
-
         pagesListener.scribble$onPageRemoved(index);
         return true;
     }
