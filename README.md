@@ -11,7 +11,7 @@ Read more about it on [Modrinth](https://modrinth.com/mod/scribble) or [CurseFor
 
 ## Project Structure
 
-Camerapture supports multiple Minecraft versions using [Stonecutter](https://stonecutter.kikugie.dev/).
+Scribble supports multiple Minecraft versions using [Stonecutter](https://stonecutter.kikugie.dev/).
 The easiest way to interact with this is by using an IDE such as IntelliJ. To switch between versions,
 use the Gradle tasks under the `stonecutter` category. Make sure to switch back to 1.21 to commit changes.
 
