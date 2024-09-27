@@ -122,7 +122,7 @@ public abstract class BookEditScreenMixin extends Screen
     private final CommandManager commandManager = new CommandManager(BOOK_EDIT_HISTORY_SIZE);
 
     @Unique
-    @NotNull
+    @Nullable
     private Formatting activeColor = DEFAULT_COLOR;
 
     @Unique
@@ -324,8 +324,7 @@ public abstract class BookEditScreenMixin extends Screen
 
     @Unique
     private void changeActiveColor(@NotNull Formatting newColor) {
-        @Nullable Formatting cursorColor = getRichSelectionManager().getCursorFormatting().getLeft();
-        if (newColor == activeColor && newColor == cursorColor) {
+        if (newColor == activeColor) {
             // Apply color for selection only if(or):
             // - new color is different
             // - cursor color is not undefined (multiple colors text selected e.g.)
@@ -403,7 +402,7 @@ public abstract class BookEditScreenMixin extends Screen
 
     @Unique
     private void onCursorFormattingChanged(@Nullable Formatting color, Set<Formatting> modifiers) {
-        this.activeColor = color != null ? color : DEFAULT_COLOR;
+        this.activeColor = color;
         this.activeModifiers = modifiers;
 
         invalidateFormattingButtons();
@@ -711,7 +710,7 @@ public abstract class BookEditScreenMixin extends Screen
 
     @ModifyArg(method = "drawCursor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawText(Lnet/minecraft/client/font/TextRenderer;Ljava/lang/String;IIIZ)I"), index = 4)
     private int modifyEndCursorColor(int constant) {
-        return activeColor.getColorValue() == null ? constant : activeColor.getColorValue();
+        return activeColor == null || activeColor.getColorValue() == null ? constant : activeColor.getColorValue();
     }
 
     @ModifyArg(method = "drawCursor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;fill(IIIII)V"), index = 4)
