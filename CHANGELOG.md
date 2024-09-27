@@ -1,3 +1,10 @@
+## 1.3.0
+
+- Allow for copying and pasting while keeping the formatting codes.
+- Add the ability to undo and redo when pressing Ctrl-Z / Ctrl-Shift-Z.
+
+Thanks to @wiskiw for the contributions!
+
 ## 1.2.2
 
 - Add support for 1.21.1.
