@@ -3,6 +3,7 @@ package me.chrr.scribble.mixin;
 import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import me.chrr.scribble.KeyboardUtil;
 import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.*;
 import me.chrr.scribble.gui.ColorSwatchWidget;
@@ -620,7 +621,7 @@ public abstract class BookEditScreenMixin extends Screen
     @Inject(method = "keyPressedEditMode", at = @At(value = "HEAD"), cancellable = true)
     private void keyPressedEditMode(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
         // Override copy-without-formatting shortcut
-        if (hasControlDown() && hasShiftDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_C) {
+        if (Screen.isCopy(keyCode)) {
             getRichSelectionManager().copyWithoutFormatting();
             cir.setReturnValue(true);
             cir.cancel();
@@ -628,7 +629,7 @@ public abstract class BookEditScreenMixin extends Screen
         }
 
         // Override CUT and CUT-without-formatting shortcut
-        if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_X) {
+        if (Screen.isCut(keyCode)) {
             // Do not use SelectionManager internal CUT implementation to have more flexibility.
             // Put selected text into the clipboard
             String selectedFormattedText = getRichSelectionManager().getSelectedFormattedText();
@@ -645,7 +646,7 @@ public abstract class BookEditScreenMixin extends Screen
         }
 
         // Override PASTE and PASTE-without-formatting shortcut
-        if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_V) {
+        if (Screen.isPaste(keyCode)) {
             // Do not use SelectionManager internal PASTE implementation to have more flexibility.
             // Fetch a text from the clipboard
             String textToPaste = hasShiftDown() ? Formatting.strip(getRawClipboard()) : getRawClipboard();
@@ -659,14 +660,17 @@ public abstract class BookEditScreenMixin extends Screen
             return;
         }
 
-        // Inject hotkeys for Undo and Redo
-        if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_Z) {
-            if (hasShiftDown()) {
-                commandManager.tryRedo();
-            } else {
-                commandManager.tryUndo();
-            }
+        // Undo on Ctrl-Z
+        if (!hasShiftDown() && hasControlDown() && !hasAltDown() && KeyboardUtil.isKey(keyCode, "Z")) {
+            commandManager.tryUndo();
+            cir.setReturnValue(true);
+            cir.cancel();
+            return;
+        }
 
+        // Redo on Ctrl-Shift-Z and Ctrl-Y
+        if (hasControlDown() && !hasAltDown() && ((hasShiftDown() && KeyboardUtil.isKey(keyCode, "Z")) || (!hasShiftDown() && KeyboardUtil.isKey(keyCode, "Y")))) {
+            commandManager.tryRedo();
             cir.setReturnValue(true);
             cir.cancel();
             return;
