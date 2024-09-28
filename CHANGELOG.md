@@ -1,3 +1,9 @@
+## 1.3.1
+
+- Fix crash when typing when multiple colors are selected.
+- Respect keyboard layout for undo and redo.
+- Properly delete after cursor when pressing 'delete'.
+
 ## 1.3.0
 
 - Allow for copying and pasting while keeping the formatting codes.
