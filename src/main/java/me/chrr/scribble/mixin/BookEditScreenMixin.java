@@ -311,8 +311,7 @@ public abstract class BookEditScreenMixin extends Screen
                 this::setClipboard,
                 text -> text.getAsFormattedString().length() < 1024
                         && this.textRenderer.getWrappedLinesHeight(text, 114) <= 128,
-
-                () -> this.activeColor,
+                () -> Optional.ofNullable(this.activeColor).orElse(DEFAULT_COLOR),
                 () -> this.activeModifiers
         );
 
