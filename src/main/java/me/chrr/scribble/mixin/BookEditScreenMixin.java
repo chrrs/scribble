@@ -621,7 +621,7 @@ public abstract class BookEditScreenMixin extends Screen
     @Inject(method = "keyPressedEditMode", at = @At(value = "HEAD"), cancellable = true)
     private void keyPressedEditMode(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
         // Override copy-without-formatting shortcut
-        if (Screen.isCopy(keyCode)) {
+        if (hasControlDown() && hasShiftDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_C) {
             getRichSelectionManager().copyWithoutFormatting();
             cir.setReturnValue(true);
             cir.cancel();
@@ -629,7 +629,7 @@ public abstract class BookEditScreenMixin extends Screen
         }
 
         // Override CUT and CUT-without-formatting shortcut
-        if (Screen.isCut(keyCode)) {
+        if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_X) {
             // Do not use SelectionManager internal CUT implementation to have more flexibility.
             // Put selected text into the clipboard
             String selectedFormattedText = getRichSelectionManager().getSelectedFormattedText();
@@ -646,7 +646,7 @@ public abstract class BookEditScreenMixin extends Screen
         }
 
         // Override PASTE and PASTE-without-formatting shortcut
-        if (Screen.isPaste(keyCode)) {
+        if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_V) {
             // Do not use SelectionManager internal PASTE implementation to have more flexibility.
             // Fetch a text from the clipboard
             String textToPaste = hasShiftDown() ? Formatting.strip(getRawClipboard()) : getRawClipboard();
