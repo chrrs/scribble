@@ -682,7 +682,8 @@ public abstract class BookEditScreenMixin extends Screen
                     ? SelectionManager.SelectionType.WORD
                     : SelectionManager.SelectionType.CHARACTER;
 
-            Command command = new DeleteTextCommand<>(this, getRichSelectionManager(), -1, selectionType);
+            int offset = keyCode == GLFW.GLFW_KEY_DELETE ? 1 : -1;
+            Command command = new DeleteTextCommand<>(this, getRichSelectionManager(), offset, selectionType);
             commandManager.execute(command);
 
             cir.setReturnValue(true);
