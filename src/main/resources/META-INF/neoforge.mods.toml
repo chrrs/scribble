@@ -1,0 +1,20 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+issueTrackerURL = "https://github.com/chrrs/scribble/issues"
+license = "MIT"
+
+[[mods]]
+modId = "scribble"
+version = "${modVersion}"
+displayName = "Scribble"
+description = "Expertly edit your books with rich formatting options, page utilities and more!"
+authors = "chrrrs"
+logoFile = "assets/scribble/icon.png"
+
+[[mixins]]
+config = "scribble.mixins.json"
+
+[[dependencies.scribble]]
+modId = "minecraft"
+mandatory = true
+versionRange = "${minecraftDependency}"

@@ -3,6 +3,8 @@ import dev.kikugie.stonecutter.StonecutterSettings
 pluginManagement {
     repositories {
         maven("https://maven.fabricmc.net/")
+        maven("https://maven.architectury.dev")
+        maven("https://maven.neoforged.net/releases/")
         maven("https://maven.kikugie.dev/releases")
         gradlePluginPortal()
     }
@@ -14,8 +16,14 @@ plugins {
 
 extensions.configure<StonecutterSettings> {
     shared {
-        versions("1.20.1", "1.20.4", "1.20.6", "1.21")
-        vcsVersion = "1.21"
+        fun add(version: String, vararg loaders: String) =
+            loaders.forEach { vers("$version-$it", version) }
+
+        add("1.20.1", "fabric", "forge")
+        add("1.20.4", "fabric", "neoforge")
+        add("1.20.6", "fabric", "neoforge")
+        add("1.21", "fabric", "neoforge")
+        vcsVersion = "1.21-fabric"
     }
 
     kotlinController = true

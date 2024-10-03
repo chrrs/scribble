@@ -1,7 +1,6 @@
 package me.chrr.scribble.book;
 
 import me.chrr.scribble.Scribble;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.Language;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
@@ -61,7 +60,13 @@ public class FileChooser {
     }
 
     public static Path createAndGetBookDirectory() {
-        Path gameDir = FabricLoader.getInstance().getGameDir();
+        //? if fabric {
+        Path gameDir = net.fabricmc.loader.api.FabricLoader.getInstance().getGameDir();
+        //?} elif neoforge {
+        /*Path gameDir = net.neoforged.fml.loading.FMLPaths.GAMEDIR.get();
+         *///?} elif forge
+        /*Path gameDir = net.minecraftforge.fml.loading.FMLPaths.GAMEDIR.get();*/
+
         Path booksDir = gameDir.resolve("books");
 
         try {
