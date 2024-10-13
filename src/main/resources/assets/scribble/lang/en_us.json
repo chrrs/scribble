@@ -1,4 +1,5 @@
 {
+    "config.scribble.title": "Scribble Config",
     "text.scribble.action.delete_page": "Delete page",
     "text.scribble.action.insert_new_page": "Insert new page",
     "text.scribble.action.save_book_to_file": "Save book to file...",

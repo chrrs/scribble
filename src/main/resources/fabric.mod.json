@@ -25,6 +25,9 @@
     "entrypoints": {
         "client": [
             "me.chrr.scribble.Scribble"
+        ],
+        "modmenu": [
+            "me.chrr.scribble.compat.ModMenuCompat"
         ]
     },
     "depends": {
