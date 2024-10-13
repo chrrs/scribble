@@ -612,7 +612,7 @@ public abstract class BookEditScreenMixin extends Screen
 
     @Inject(method = "charTyped", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/SelectionManager;insert(Ljava/lang/String;)V"), cancellable = true)
     private void charTypedEditMode(char chr, int modifiers, CallbackInfoReturnable<Boolean> cir) {
-        Command command = new InsertTextCommand<>(this, currentPageSelectionManager, Character.toString(chr));
+        Command command = new ActionCommand<>(this, () -> this.getRichSelectionManager().insert(chr));
         commandManager.execute(command);
         cir.setReturnValue(true);
         cir.cancel();
@@ -631,7 +631,7 @@ public abstract class BookEditScreenMixin extends Screen
 
             // Delete the selected text if we're cutting.
             if (keyCode == GLFW.GLFW_KEY_X) {
-                Command command = new DeleteTextCommand<>(this, getRichSelectionManager());
+                Command command = new ActionCommand<>(this, () -> this.getRichSelectionManager().delete(0));
                 commandManager.execute(command);
             }
 
@@ -642,12 +642,11 @@ public abstract class BookEditScreenMixin extends Screen
 
         // Override PASTE and PASTE-without-formatting shortcut
         if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_V) {
-            // Do not use SelectionManager internal PASTE implementation to have more flexibility.
-            // Fetch a text from the clipboard
+            // Get the text from the clipboard with or without formatting.
             String textToPaste = hasShiftDown() ? Formatting.strip(getRawClipboard()) : getRawClipboard();
 
-            // Paste the text
-            Command command = new InsertTextCommand<>(this, getRichSelectionManager(), textToPaste);
+            // Paste the text onto the page.
+            Command command = new ActionCommand<>(this, () -> this.getRichSelectionManager().insert(textToPaste));
             commandManager.execute(command);
 
             cir.setReturnValue(true);
@@ -677,8 +676,9 @@ public abstract class BookEditScreenMixin extends Screen
                     ? SelectionManager.SelectionType.WORD
                     : SelectionManager.SelectionType.CHARACTER;
 
+            // Delete after the cursor when holding DELETE, otherwise before.
             int offset = keyCode == GLFW.GLFW_KEY_DELETE ? 1 : -1;
-            Command command = new DeleteTextCommand<>(this, getRichSelectionManager(), offset, selectionType);
+            Command command = new ActionCommand<>(this, () -> this.getRichSelectionManager().delete(offset, selectionType));
             commandManager.execute(command);
 
             cir.setReturnValue(true);
