@@ -549,7 +549,7 @@ public abstract class BookEditScreenMixin extends Screen
 
     // We cancel any drags outside the width of the book interface.
     // This needs to be here, because in this GUI no buttons can ever be focused.
-    @Inject(method = "mouseDragged", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/BookEditScreen;getPageContent()Lnet/minecraft/client/gui/screen/ingame/BookEditScreen$PageContent;", shift = At.Shift.BEFORE), cancellable = true)
+    @Inject(method = "mouseDragged", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/BookEditScreen;getPageContent()Lnet/minecraft/client/gui/screen/ingame/BookEditScreen$PageContent;"), cancellable = true)
     private void mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY, CallbackInfoReturnable<Boolean> cir) {
         if (mouseX < (this.width - 152) / 2.0 || mouseX > (this.width + 152) / 2.0) {
             cir.setReturnValue(true);
