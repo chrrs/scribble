@@ -48,9 +48,6 @@ public class RichSelectionManager extends SelectionManager {
 
         this.colorGetter = colorGetter;
         this.modifiersGetter = modifiersGetter;
-
-        // notify about changes after getting initial text
-        notifyCursorFormattingChanged();
     }
 
     @Override

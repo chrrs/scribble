@@ -43,9 +43,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 @Mixin(BookEditScreen.class)
-public abstract class BookEditScreenMixin extends Screen
-        implements PagesListener, Restorable<BookEditScreenMemento> {
-
+public abstract class BookEditScreenMixin extends Screen implements PagesListener, Restorable<BookEditScreenMemento> {
     @Unique
     private static final int BOOK_EDIT_HISTORY_SIZE = 30;
 
@@ -227,24 +225,24 @@ public abstract class BookEditScreenMixin extends Screen
 
         // Modifier buttons
         boldButton = addModifierButton(
-                Formatting.BOLD,
-                Text.translatable("text.scribble.modifier.bold"), x, y, 0, 0, 22, 19
+                Formatting.BOLD, Text.translatable("text.scribble.modifier.bold"),
+                x, y, 0, 0, 22, 19
         );
         italicButton = addModifierButton(
-                Formatting.ITALIC,
-                Text.translatable("text.scribble.modifier.italic"), x, y + 19, 0, 19, 22, 17
+                Formatting.ITALIC, Text.translatable("text.scribble.modifier.italic"),
+                x, y + 19, 0, 19, 22, 17
         );
         underlineButton = addModifierButton(
-                Formatting.UNDERLINE,
-                Text.translatable("text.scribble.modifier.underline"), x, y + 36, 0, 36, 22, 17
+                Formatting.UNDERLINE, Text.translatable("text.scribble.modifier.underline"),
+                x, y + 36, 0, 36, 22, 17
         );
         strikethroughButton = addModifierButton(
-                Formatting.STRIKETHROUGH,
-                Text.translatable("text.scribble.modifier.strikethrough"), x, y + 53, 0, 53, 22, 17
+                Formatting.STRIKETHROUGH, Text.translatable("text.scribble.modifier.strikethrough"),
+                x, y + 53, 0, 53, 22, 17
         );
         obfuscatedButton = addModifierButton(
-                Formatting.OBFUSCATED,
-                Text.translatable("text.scribble.modifier.obfuscated"), x, y + 70, 0, 70, 22, 18
+                Formatting.OBFUSCATED, Text.translatable("text.scribble.modifier.obfuscated"),
+                x, y + 70, 0, 70, 22, 18
         );
 
         // Color swatches
@@ -290,14 +288,14 @@ public abstract class BookEditScreenMixin extends Screen
     }
 
     @Unique
-    private ModifierButtonWidget addModifierButton(Formatting modifier, Text tooltip,
-                                                   int x, int y, int u, int v, int width, int height) {
+    private ModifierButtonWidget addModifierButton(Formatting modifier, Text tooltip, int x, int y, int u, int v, int width, int height) {
         ModifierButtonWidget button = new ModifierButtonWidget(
                 tooltip,
                 (toggled) -> toggleActiveModifier(modifier, toggled),
                 x, y, u, v, width, height,
                 activeModifiers.contains(modifier)
         );
+
         return addDrawableChild(button);
     }
 
@@ -348,10 +346,8 @@ public abstract class BookEditScreenMixin extends Screen
             } else {
                 activeModifiers.remove(modifier);
             }
-            invalidateFormattingButtons();
 
-            // ToDo replace with manager.applyModifiersForSelection(activeModifiers) call
-            //  to have the single state of truth for activeModifiers.
+            invalidateFormattingButtons();
             getRichSelectionManager().toggleModifierForSelection(modifier, toggled);
         });
         commandManager.execute(command);
@@ -596,6 +592,7 @@ public abstract class BookEditScreenMixin extends Screen
             // the last page was opened before removing
             currentPage = Math.max(0, richPages.size() - 1);
         }
+
         dirty = true;
         updateButtons();
         changePage();
