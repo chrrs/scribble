@@ -182,7 +182,7 @@ public class RichSelectionManager extends SelectionManager {
         }
     }
 
-    private void notifyCursorFormattingChanged() {
+    public void notifyCursorFormattingChanged() {
         if (stateCallback == null) {
             // Can happen when the method is called from the supper constructor
             return;

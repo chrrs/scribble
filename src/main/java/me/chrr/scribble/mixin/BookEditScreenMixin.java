@@ -318,6 +318,9 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
         for (String page : this.pages) {
             this.richPages.add(RichText.fromFormattedString(page));
         }
+
+        // After loading the pages, we update cursor formatting.
+        getRichSelectionManager().notifyCursorFormattingChanged();
     }
 
     @Unique
