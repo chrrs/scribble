@@ -620,25 +620,20 @@ public abstract class BookEditScreenMixin extends Screen
 
     @Inject(method = "keyPressedEditMode", at = @At(value = "HEAD"), cancellable = true)
     private void keyPressedEditMode(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
-        // Override copy-without-formatting shortcut
-        if (hasControlDown() && hasShiftDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_C) {
-            getRichSelectionManager().copyWithoutFormatting();
-            cir.setReturnValue(true);
-            cir.cancel();
-            return;
-        }
+        // Override COPY and CUT shortcuts
+        if (hasControlDown() && !hasAltDown() && (keyCode == GLFW.GLFW_KEY_C || keyCode == GLFW.GLFW_KEY_X)) {
+            // Copy formatting when the config option is set and the SHIFT key is not held down.
+            boolean shouldCopyFormatting = Scribble.CONFIG_MANAGER.getConfig().copyFormattingCodes && !hasShiftDown();
 
-        // Override CUT and CUT-without-formatting shortcut
-        if (hasControlDown() && !hasAltDown() && keyCode == GLFW.GLFW_KEY_X) {
-            // Do not use SelectionManager internal CUT implementation to have more flexibility.
-            // Put selected text into the clipboard
-            String selectedFormattedText = getRichSelectionManager().getSelectedFormattedText();
-            String textToCut = hasShiftDown() ? Formatting.strip(selectedFormattedText) : selectedFormattedText;
-            setClipboard(textToCut);
+            // Put the selected text on the clipboard with or without formatting.
+            String selectedText = getRichSelectionManager().getSelectedFormattedText();
+            setClipboard(shouldCopyFormatting ? selectedText : Formatting.strip(selectedText));
 
-            // Delete selected text
-            Command command = new DeleteTextCommand<>(this, getRichSelectionManager());
-            commandManager.execute(command);
+            // Delete the selected text if we're cutting.
+            if (keyCode == GLFW.GLFW_KEY_X) {
+                Command command = new DeleteTextCommand<>(this, getRichSelectionManager());
+                commandManager.execute(command);
+            }
 
             cir.setReturnValue(true);
             cir.cancel();

@@ -8,6 +8,9 @@ public class Config {
     @SerializedName("version")
     public int version = VERSION;
 
+    @SerializedName("copy_formatting_codes")
+    public boolean copyFormattingCodes = true;
+
     public void upgrade() {
         this.version = VERSION;
     }

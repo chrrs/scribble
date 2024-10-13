@@ -1,5 +1,7 @@
 {
     "config.scribble.title": "Scribble Config",
+    "config.scribble.option.copy_formatting_codes": "Copy formatting codes",
+    "config.scribble.description.copy_formatting_codes": "This option can be temporarily disabled by\npressing SHIFT while copying or pasting text.",
     "text.scribble.action.delete_page": "Delete page",
     "text.scribble.action.insert_new_page": "Insert new page",
     "text.scribble.action.save_book_to_file": "Save book to file...",
