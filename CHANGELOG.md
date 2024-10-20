@@ -1,3 +1,9 @@
+## 1.3.2
+
+- Add a configuration option to copy without formatting by default.
+- Fix mixin crash when Amendments is installed.
+- Smaller bug fixes.
+
 ## 1.3.1
 
 - Fix crash when typing when multiple colors are selected.
