@@ -602,11 +602,17 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     }
 
     /**
+     * NOTE: This method is marked public, while the original method is private. Some mods
+     * will try to access-modify `setPageContent` to be public, and thus crash the
+     * game. While this will still produce incompatibilities, we at least try to
+     * not crash.
+     *
      * @reason This method should not be called, as it is replaced by {@link #setPageText}.
      * @author chrrrs
      */
     @Overwrite
-    private void setPageContent(String newContent) {
+    @SuppressWarnings("visibility")
+    public void setPageContent(String newContent) {
         Scribble.LOGGER.warn("setPageContent() was called, but ignored.");
     }
 
