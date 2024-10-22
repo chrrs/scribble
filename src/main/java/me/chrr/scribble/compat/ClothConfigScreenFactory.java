@@ -41,6 +41,14 @@ public class ClothConfigScreenFactory {
                 .setSaveConsumer((value) -> config.copyFormattingCodes = value)
                 .build());
 
+        category.addEntry(entryBuilder.startBooleanToggle(
+                        Text.translatable("config.scribble.option.center_book_gui"),
+                        config.centerBookGui
+                )
+                .setDefaultValue(false)
+                .setSaveConsumer((value) -> config.centerBookGui = value)
+                .build());
+
         return builder.build();
     }
 }
