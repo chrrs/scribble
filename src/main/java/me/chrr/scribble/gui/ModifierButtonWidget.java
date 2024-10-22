@@ -10,6 +10,9 @@ import net.minecraft.util.Identifier;
 
 import java.util.function.Consumer;
 
+//? if >=1.21.2
+import net.minecraft.client.render.RenderLayer;
+
 /**
  * A toggle-able button that's used in the book edit screen for toggling
  * text modifiers. It always uses `gui/scribble_widgets.png` as texture.
@@ -36,8 +39,21 @@ public class ModifierButtonWidget extends ClickableWidget {
     @Override
     //$ renderWidget
     protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+        context.getMatrices().push();
+
+        // If the button is hovered or focussed, we want it to be in front, so we shift the Z.
+        if (this.isSelected()) {
+            context.getMatrices().translate(0, 0, 1);
+        }
+
         int u = this.u + (this.isSelected() ? 22 : 0) + (this.toggled ? 44 : 0);
-        context.drawTexture(WIDGETS_TEXTURE, getX(), getY(), this.isSelected() ? 1 : 0, u, v, width, height + 1, 128, 128);
+
+        //? if <1.21.2 {
+        /*context.drawTexture(WIDGETS_TEXTURE, getX(), getY(), u, v, width, height + 1, 128, 128);
+         *///? else
+        context.drawTexture(RenderLayer::getGuiTextured, WIDGETS_TEXTURE, getX(), getY(), u, v, width, height + 1, 128, 128);
+
+        context.getMatrices().pop();
     }
 
     @Override

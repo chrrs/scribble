@@ -8,6 +8,9 @@ import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
+//? if >=1.21.2
+import net.minecraft.client.render.RenderLayer;
+
 public class IconButtonWidget extends ClickableWidget {
     private static final Identifier WIDGETS_TEXTURE = Scribble.id("textures/gui/scribble_widgets.png");
 
@@ -29,7 +32,11 @@ public class IconButtonWidget extends ClickableWidget {
     //$ renderWidget
     protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
         int u = isSelected() ? this.u + this.width : this.u;
-        context.drawTexture(WIDGETS_TEXTURE, getX(), getY(), u, this.v, this.width, this.height, 128, 128);
+
+        //? if <1.21.2 {
+        /*context.drawTexture(WIDGETS_TEXTURE, getX(), getY(), u, this.v, this.width, this.height, 128, 128);
+         *///? else
+        context.drawTexture(RenderLayer::getGuiTextured, WIDGETS_TEXTURE, getX(), getY(), u, this.v, this.width, this.height, 128, 128);
     }
 
     @Override
