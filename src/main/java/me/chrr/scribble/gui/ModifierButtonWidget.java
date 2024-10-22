@@ -48,10 +48,10 @@ public class ModifierButtonWidget extends ClickableWidget {
 
         int u = this.u + (this.isSelected() ? 22 : 0) + (this.toggled ? 44 : 0);
 
-        //? if <1.21.2 {
-        /*context.drawTexture(WIDGETS_TEXTURE, getX(), getY(), u, v, width, height + 1, 128, 128);
-         *///? else
+        //? if >=1.21.2 {
         context.drawTexture(RenderLayer::getGuiTextured, WIDGETS_TEXTURE, getX(), getY(), u, v, width, height + 1, 128, 128);
+         //?} else
+        /*context.drawTexture(WIDGETS_TEXTURE, getX(), getY(), u, v, width, height + 1, 128, 128);*/
 
         context.getMatrices().pop();
     }

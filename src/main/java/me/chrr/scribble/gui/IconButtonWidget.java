@@ -33,10 +33,10 @@ public class IconButtonWidget extends ClickableWidget {
     protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
         int u = isSelected() ? this.u + this.width : this.u;
 
-        //? if <1.21.2 {
-        /*context.drawTexture(WIDGETS_TEXTURE, getX(), getY(), u, this.v, this.width, this.height, 128, 128);
-         *///? else
+        //? if >=1.21.2 {
         context.drawTexture(RenderLayer::getGuiTextured, WIDGETS_TEXTURE, getX(), getY(), u, this.v, this.width, this.height, 128, 128);
+         //?} else
+        /*context.drawTexture(WIDGETS_TEXTURE, getX(), getY(), u, this.v, this.width, this.height, 128, 128);*/
     }
 
     @Override

@@ -20,7 +20,6 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.client.util.math.Rect2i;
-import net.minecraft.component.type.WritableBookContentComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Style;
@@ -42,6 +41,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.nio.file.Path;
 import java.util.*;
+
+//? if >=1.21.2
+import net.minecraft.component.type.WritableBookContentComponent;
 
 @Mixin(BookEditScreen.class)
 public abstract class BookEditScreenMixin extends Screen implements PagesListener, Restorable<BookEditScreenMemento> {
@@ -303,7 +305,7 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     @Inject(method = "<init>", at = @At(value = "TAIL"))
     //? if <1.21.2 {
     /*public void init(PlayerEntity player, ItemStack stack, Hand hand, CallbackInfo ci) {
-     *///? else
+     *///?} else
     public void init(PlayerEntity player, ItemStack stack, Hand hand, WritableBookContentComponent writableBookContent, CallbackInfo ci) {
         // Replace the selection manager with our own
         currentPageSelectionManager = new RichSelectionManager(
