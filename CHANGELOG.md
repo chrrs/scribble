@@ -1,3 +1,8 @@
+## 1.3.3
+
+- Update to 1.21.2.
+- Drop support for 1.20.3 to 1.20.6.
+
 ## 1.3.2
 
 - Add a configuration option to copy without formatting by default.
