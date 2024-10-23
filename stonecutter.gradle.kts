@@ -2,7 +2,7 @@ plugins {
     id("dev.kikugie.stonecutter")
 }
 
-stonecutter active "1.21.2" /* [SC] DO NOT EDIT */
+stonecutter active "1.21.3" /* [SC] DO NOT EDIT */
 
 // Read the versions from CHISELED_VERSIONS, and only build / publish those versions.
 // If it's blank, we build / publish all available versions.
