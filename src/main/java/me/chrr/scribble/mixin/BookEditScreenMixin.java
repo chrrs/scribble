@@ -15,9 +15,14 @@ import me.chrr.scribble.tool.Restorable;
 import me.chrr.scribble.tool.commandmanager.Command;
 import me.chrr.scribble.tool.commandmanager.CommandManager;
 import net.minecraft.client.font.TextHandler;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.Drawable;
+import net.minecraft.client.gui.Element;
+import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
+import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.client.util.math.Rect2i;
 import net.minecraft.entity.player.PlayerEntity;
@@ -218,13 +223,14 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     }
 
     @Unique
+    private int getYOffset() {
+        return Scribble.CONFIG_MANAGER.getConfig().centerBookGui ? (height - 192) / 3 : 0;
+    }
+
+    @Unique
     private void initButtons() {
         int x = this.width / 2 + 78;
-        int y = 12;
-
-        if (Scribble.shouldCenter) {
-            y += (height - 192) / 3;
-        }
+        int y = getYOffset() + 12;
 
         // Modifier buttons
         boldButton = addModifierButton(
@@ -498,6 +504,51 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
             Command command = new InsertPageCommand(richPages, currentPage, this);
             commandManager.execute(command);
         }
+    }
+
+    // If we need to center the GUI, we shift the Y of the texture draw call down.
+    //? if >=1.21.2 {
+    @ModifyArg(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Ljava/util/function/Function;Lnet/minecraft/util/Identifier;IIFFIIII)V"), index = 3)
+    //?} else
+    /*@ModifyArg(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V"), index = 2)*/
+    public int overrideBackgroundY(int y) {
+        return getYOffset() + y;
+    }
+
+    // If we need to center the GUI, we shift the Y of the button dimensions down.
+    @Redirect(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/BookEditScreen;addDrawableChild(Lnet/minecraft/client/gui/Element;)Lnet/minecraft/client/gui/Element;"))
+    public <T extends Element & Drawable & Selectable> T overrideButtonY(BookEditScreen screen, T element) {
+        if (element instanceof Widget widget) {
+            widget.setY(widget.getY() + getYOffset());
+        }
+
+        return addDrawableChild(element);
+    }
+
+    // If we need to center the GUI, we shift any mouse clicks down.
+    @ModifyArg(method = "mouseClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/BookEditScreen;screenPositionToAbsolutePosition(Lnet/minecraft/client/gui/screen/ingame/BookEditScreen$Position;)Lnet/minecraft/client/gui/screen/ingame/BookEditScreen$Position;"))
+    public BookEditScreen.Position shiftMouseClicks(BookEditScreen.Position position) {
+        return new BookEditScreen.Position(position.x, position.y - getYOffset());
+    }
+
+    // If we need to center the GUI, we shift any mouse drags down.
+    @ModifyArg(method = "mouseDragged", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/BookEditScreen;screenPositionToAbsolutePosition(Lnet/minecraft/client/gui/screen/ingame/BookEditScreen$Position;)Lnet/minecraft/client/gui/screen/ingame/BookEditScreen$Position;"))
+    public BookEditScreen.Position shiftMouseDrags(BookEditScreen.Position position) {
+        return new BookEditScreen.Position(position.x, position.y - getYOffset());
+    }
+
+    // When rendering, we translate the matrices of the draw context to draw the text further down if needed.
+    // Note that this happens after the parent screen render, so only the text in the book is shifted.
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;render(Lnet/minecraft/client/gui/DrawContext;IIF)V", shift = At.Shift.AFTER))
+    public void translateRender(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        context.getMatrices().push();
+        context.getMatrices().translate(0f, getYOffset(), 0f);
+    }
+
+    // At the end of rendering, we need to pop those matrices we pushed.
+    @Inject(method = "render", at = @At(value = "RETURN"))
+    public void popRender(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        context.getMatrices().pop();
     }
 
     /**
