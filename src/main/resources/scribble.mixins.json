@@ -5,7 +5,9 @@
     "compatibilityLevel": "JAVA_17",
     "client": [
         "BookEditScreenMixin",
-        "KeyboardMixin"
+        "BookScreenMixin",
+        "KeyboardMixin",
+        "LecternScreenMixin"
     ],
     "injectors": {
         "defaultRequire": 1

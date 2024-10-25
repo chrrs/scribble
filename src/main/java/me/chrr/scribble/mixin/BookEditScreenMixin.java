@@ -161,13 +161,10 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     @Unique
     private IconButtonWidget loadBookButton;
 
-    // Dummy constructor to match super class. The mixin derives from
-    // `Screen` so we don't have to shadow as many methods.
-    // This should never be called.
-    protected BookEditScreenMixin(Text title) {
-        super(title);
+    // Dummy constructor to match super class.
+    private BookEditScreenMixin() {
+        super(null);
     }
-
 
     @Unique
     private String getRawClipboard() {
@@ -223,14 +220,9 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     }
 
     @Unique
-    private int getYOffset() {
-        return Scribble.CONFIG_MANAGER.getConfig().centerBookGui ? (height - 192) / 3 : 0;
-    }
-
-    @Unique
     private void initButtons() {
         int x = this.width / 2 + 78;
-        int y = getYOffset() + 12;
+        int y = Scribble.getBookScreenYOffset(height) + 12;
 
         // Modifier buttons
         boldButton = addModifierButton(
@@ -511,15 +503,15 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     @ModifyArg(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Ljava/util/function/Function;Lnet/minecraft/util/Identifier;IIFFIIII)V"), index = 3)
     //?} else
     /*@ModifyArg(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V"), index = 2)*/
-    public int overrideBackgroundY(int y) {
-        return getYOffset() + y;
+    public int shiftBackgroundY(int y) {
+        return Scribble.getBookScreenYOffset(height) + y;
     }
 
     // If we need to center the GUI, we shift the Y of the button dimensions down.
     @Redirect(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/BookEditScreen;addDrawableChild(Lnet/minecraft/client/gui/Element;)Lnet/minecraft/client/gui/Element;"))
-    public <T extends Element & Drawable & Selectable> T overrideButtonY(BookEditScreen screen, T element) {
+    public <T extends Element & Drawable & Selectable> T shiftButtonY(BookEditScreen screen, T element) {
         if (element instanceof Widget widget) {
-            widget.setY(widget.getY() + getYOffset());
+            widget.setY(widget.getY() + Scribble.getBookScreenYOffset(height));
         }
 
         return addDrawableChild(element);
@@ -528,13 +520,13 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     // If we need to center the GUI, we shift any mouse clicks down.
     @ModifyArg(method = "mouseClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/BookEditScreen;screenPositionToAbsolutePosition(Lnet/minecraft/client/gui/screen/ingame/BookEditScreen$Position;)Lnet/minecraft/client/gui/screen/ingame/BookEditScreen$Position;"))
     public BookEditScreen.Position shiftMouseClicks(BookEditScreen.Position position) {
-        return new BookEditScreen.Position(position.x, position.y - getYOffset());
+        return new BookEditScreen.Position(position.x, position.y - Scribble.getBookScreenYOffset(height));
     }
 
     // If we need to center the GUI, we shift any mouse drags down.
     @ModifyArg(method = "mouseDragged", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/BookEditScreen;screenPositionToAbsolutePosition(Lnet/minecraft/client/gui/screen/ingame/BookEditScreen$Position;)Lnet/minecraft/client/gui/screen/ingame/BookEditScreen$Position;"))
     public BookEditScreen.Position shiftMouseDrags(BookEditScreen.Position position) {
-        return new BookEditScreen.Position(position.x, position.y - getYOffset());
+        return new BookEditScreen.Position(position.x, position.y - Scribble.getBookScreenYOffset(height));
     }
 
     // When rendering, we translate the matrices of the draw context to draw the text further down if needed.
@@ -542,7 +534,7 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;render(Lnet/minecraft/client/gui/DrawContext;IIF)V", shift = At.Shift.AFTER))
     public void translateRender(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         context.getMatrices().push();
-        context.getMatrices().translate(0f, getYOffset(), 0f);
+        context.getMatrices().translate(0f, Scribble.getBookScreenYOffset(height), 0f);
     }
 
     // At the end of rendering, we need to pop those matrices we pushed.

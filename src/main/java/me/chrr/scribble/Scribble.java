@@ -23,6 +23,10 @@ public class Scribble implements ClientModInitializer {
         }
     }
 
+    public static int getBookScreenYOffset(int screenHeight) {
+        return Scribble.CONFIG_MANAGER.getConfig().centerBookGui ? (screenHeight - 192) / 3 : 0;
+    }
+
     public static Identifier id(String path) {
         //? if >=1.21 {
         return Identifier.of(MOD_ID, path);
