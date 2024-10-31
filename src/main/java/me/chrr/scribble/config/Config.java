@@ -12,7 +12,7 @@ public class Config {
     public boolean copyFormattingCodes = true;
 
     @SerializedName("center_book_gui")
-    public boolean centerBookGui = false;
+    public boolean centerBookGui = true;
 
     public void upgrade() {
         this.version = VERSION;

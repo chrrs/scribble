@@ -45,7 +45,7 @@ public class ClothConfigScreenFactory {
                         Text.translatable("config.scribble.option.center_book_gui"),
                         config.centerBookGui
                 )
-                .setDefaultValue(false)
+                .setDefaultValue(true)
                 .setSaveConsumer((value) -> config.centerBookGui = value)
                 .build());
 
