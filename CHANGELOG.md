@@ -1,3 +1,7 @@
+## 1.4.0
+
+- Add a config option to center book editing / reading GUI's vertically.
+
 ## 1.3.4
 
 - Update to 1.21.3.
