@@ -11,6 +11,9 @@ public class Config {
     @SerializedName("copy_formatting_codes")
     public boolean copyFormattingCodes = true;
 
+    @SerializedName("center_book_gui")
+    public boolean centerBookGui = true;
+
     public void upgrade() {
         this.version = VERSION;
     }

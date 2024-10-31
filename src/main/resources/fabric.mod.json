@@ -34,5 +34,8 @@
         "minecraft": "${minecraftDependency}",
         "fabricloader": ">=0.14",
         "fabric-resource-loader-v0": "*"
+    },
+    "breaks": {
+        "fixbookgui": "*"
     }
 }

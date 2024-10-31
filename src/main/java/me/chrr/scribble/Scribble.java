@@ -2,7 +2,6 @@ package me.chrr.scribble;
 
 import me.chrr.scribble.config.ConfigManager;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,8 +14,6 @@ public class Scribble implements ClientModInitializer {
 
     public static final ConfigManager CONFIG_MANAGER = new ConfigManager();
 
-    public static boolean shouldCenter = false;
-
     @Override
     public void onInitializeClient() {
         try {
@@ -24,11 +21,10 @@ public class Scribble implements ClientModInitializer {
         } catch (IOException e) {
             LOGGER.error("failed to load config", e);
         }
+    }
 
-        if (FabricLoader.getInstance().isModLoaded("fixbookgui")) {
-            LOGGER.info("FixBookGUI is centering the book screen, adapting...");
-            Scribble.shouldCenter = true;
-        }
+    public static int getBookScreenYOffset(int screenHeight) {
+        return Scribble.CONFIG_MANAGER.getConfig().centerBookGui ? (screenHeight - 192) / 3 : 0;
     }
 
     public static Identifier id(String path) {
