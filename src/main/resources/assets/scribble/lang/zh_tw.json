@@ -5,7 +5,7 @@
     "config.scribble.option.center_book_gui": "將書籍 GUI 垂直置中",
     "text.scribble.action.delete_page": "刪除頁面",
     "text.scribble.action.insert_new_page": "插入新頁面",
-    "text.scribble.action.save_book_to_file": "將書籍儲存到檔案...",
+    "text.scribble.action.save_book_to_file": "將書的內容儲存到檔案...",
     "text.scribble.action.load_book_from_file": "從檔案載入書籍...",
     "text.scribble.overwrite_warning.title": "確定要覆蓋這本書嗎？",
     "text.scribble.overwrite_warning.description": "目前的內容將永遠遺失！（很長一段時間！）",
