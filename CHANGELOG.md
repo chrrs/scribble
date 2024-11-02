@@ -1,3 +1,8 @@
+## 1.4.1-beta
+
+- Add support for Forge and NeoForge.
+- Add Traditional Chinese translations. (Thanks to @yichifauzi for contributing!)
+
 ## 1.4.0
 
 - Add a config option to center book editing / reading GUI's vertically.
