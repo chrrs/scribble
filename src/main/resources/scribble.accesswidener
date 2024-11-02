@@ -6,6 +6,7 @@ accessible class net/minecraft/client/gui/screen/ingame/BookEditScreen$Line
 
 accessible field net/minecraft/client/gui/screen/ingame/BookEditScreen$PageContent lines [Lnet/minecraft/client/gui/screen/ingame/BookEditScreen$Line;
 accessible field net/minecraft/client/gui/screen/ingame/BookEditScreen$PageContent lineStarts [I
+extendable class net/minecraft/client/gui/screen/ingame/BookEditScreen$PageContent
 
 accessible method net/minecraft/client/gui/screen/ingame/BookEditScreen$Position <init> (II)V
 

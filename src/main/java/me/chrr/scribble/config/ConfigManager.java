@@ -2,7 +2,6 @@ package me.chrr.scribble.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,6 +31,11 @@ public class ConfigManager {
     }
 
     private Path getConfigPath() {
-        return FabricLoader.getInstance().getConfigDir().resolve("scribble.json");
+        //? if fabric {
+        return net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir().resolve("scribble.json");
+         //?} else if neoforge {
+        /*return net.neoforged.fml.loading.FMLPaths.CONFIGDIR.get().resolve("Scribble.json");
+         *///?} else
+        /*return net.minecraftforge.fml.loading.FMLPaths.CONFIGDIR.get().resolve("config.json");*/
     }
 }
