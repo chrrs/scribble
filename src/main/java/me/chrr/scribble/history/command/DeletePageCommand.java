@@ -1,8 +1,7 @@
-package me.chrr.scribble.model.command;
+package me.chrr.scribble.history.command;
 
 import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.RichText;
-import me.chrr.scribble.tool.commandmanager.Command;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;

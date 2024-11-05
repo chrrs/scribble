@@ -1,4 +1,4 @@
-package me.chrr.scribble.tool.commandmanager;
+package me.chrr.scribble.history.command;
 
 /**
  * The interface for operation that can be executed and rolled back.

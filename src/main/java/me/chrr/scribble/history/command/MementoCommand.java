@@ -1,6 +1,6 @@
-package me.chrr.scribble.tool.commandmanager;
+package me.chrr.scribble.history.command;
 
-import me.chrr.scribble.tool.Restorable;
+import me.chrr.scribble.history.Restorable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

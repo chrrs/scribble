@@ -1,5 +1,6 @@
-package me.chrr.scribble.tool.commandmanager;
+package me.chrr.scribble.history;
 
+import me.chrr.scribble.history.command.Command;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedList;
