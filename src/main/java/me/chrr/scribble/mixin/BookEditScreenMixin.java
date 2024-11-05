@@ -622,11 +622,13 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
         }
     }
 
-    @Inject(method = "appendNewPage", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z"), cancellable = true)
-    private void appendNewPage(CallbackInfo ci) {
+    @Redirect(method = "appendNewPage", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z"))
+    private boolean appendNewPage(List<String> page, Object empty) {
+        // FIXME: It feels slightly confusing that we pass in richPages here, but at the same time
+        //        use PagesListener to add plain-text pages. It makes it hard to follow.
         Command command = new InsertPageCommand(richPages, richPages.size(), this);
         commandManager.execute(command);
-        ci.cancel();
+        return true;
     }
 
     @Override
@@ -674,12 +676,13 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
         Scribble.LOGGER.warn("setPageContent() was called, but ignored.");
     }
 
-    @Inject(method = "charTyped", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/SelectionManager;insert(Ljava/lang/String;)V"), cancellable = true)
-    private void charTypedEditMode(char chr, int modifiers, CallbackInfoReturnable<Boolean> cir) {
-        Command command = new ActionCommand<>(this, () -> this.getRichSelectionManager().insert(chr));
+    // NOTE: There are two "insert" calls in the original method. One is editing the book title, which
+    //       takes a char, the other one is editing the page, which takes a String. We're targeting the
+    //       second one.
+    @Redirect(method = "charTyped", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/SelectionManager;insert(Ljava/lang/String;)V"))
+    private void charTypedEditMode(SelectionManager instance, String string) {
+        Command command = new ActionCommand<>(this, () -> this.getRichSelectionManager().insert(string));
         commandManager.execute(command);
-        cir.setReturnValue(true);
-        cir.cancel();
     }
 
     @Inject(method = "keyPressedEditMode", at = @At(value = "HEAD"), cancellable = true)
