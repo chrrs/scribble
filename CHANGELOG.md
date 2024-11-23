@@ -1,3 +1,9 @@
+## 1.4.2
+
+- Fix compatibility with Symbol Chat.
+- Add a config option to hide the save/load buttons.
+- Add Turkish translations. (Thanks to @MissionWAR for contributing!)
+
 ## 1.4.1-beta
 
 - Add support for Forge and NeoForge.
