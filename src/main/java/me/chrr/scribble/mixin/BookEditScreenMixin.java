@@ -382,8 +382,10 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
                 button.visible = !signing && richPages.size() < MAX_PAGES_NUMBER
         );
 
-        Optional.ofNullable(saveBookButton).ifPresent(button -> button.visible = !signing);
-        Optional.ofNullable(loadBookButton).ifPresent(button -> button.visible = !signing);
+
+        boolean showSaveLoadButtons = Scribble.CONFIG_MANAGER.getConfig().showSaveLoadButtons;
+        Optional.ofNullable(saveBookButton).ifPresent(button -> button.visible = !signing && showSaveLoadButtons);
+        Optional.ofNullable(loadBookButton).ifPresent(button -> button.visible = !signing && showSaveLoadButtons);
     }
 
     @Unique
