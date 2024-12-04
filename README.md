@@ -14,7 +14,7 @@ or [CurseForge](https://curseforge.com/minecraft/mc-mods/scribble).
 
 Scribble supports multiple Minecraft versions using [Stonecutter](https://stonecutter.kikugie.dev/).
 The easiest way to interact with this is by using an IDE such as IntelliJ. To switch between versions,
-use the Gradle tasks under the `stonecutter` category. Make sure to switch back to `1.21.3-fabric` to commit changes.
+use the Gradle tasks under the `stonecutter` category. Make sure to switch back to `1.21.4-fabric` to commit changes.
 
 ### Release checklist
 

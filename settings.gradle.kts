@@ -21,8 +21,8 @@ extensions.configure<StonecutterSettings> {
 
         add("1.20.1", "fabric", "forge")
         add("1.21", "fabric", "neoforge")
-        add("1.21.3", "fabric", "neoforge")
-        vcsVersion = "1.21.3-fabric"
+        add("1.21.4", "fabric", "neoforge")
+        vcsVersion = "1.21.4-fabric"
     }
 
     kotlinController = true
