@@ -1,3 +1,8 @@
+## 1.4.3
+
+- Update to 1.21.4.
+- Add Simplified Chinese translations. (Thanks to @junshengxie for contributing!)
+
 ## 1.4.2
 
 - Fix compatibility with Symbol Chat.
