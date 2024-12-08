@@ -443,10 +443,6 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
 
     @Unique
     private void saveTo(Path path) {
-        if (client == null) {
-            return;
-        }
-
         try {
             BookFile bookFile = new BookFile(this.player.getGameProfile().getName(), List.copyOf(richPages));
             bookFile.write(path);

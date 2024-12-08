@@ -2,12 +2,14 @@ package me.chrr.scribble.book;
 
 import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Style;
+import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -115,6 +117,74 @@ public class RichText implements StringVisitable {
         return new RichText(segments);
     }
 
+    /**
+     * Create a RichText best representing the given StringVisitable object. This
+     * operation is lossy, as not every style that JSON-based text can contain is
+     * possible to be represented as formatting codes. For RGB-colors, the closest
+     * available color is chosen. Hover events, click events and fonts are discarded.
+     *
+     * @param stringVisitable the StringVisitable to represent.
+     * @return the closest approximation of the given StringVisitable.
+     */
+    public static RichText fromStringVisitableLossy(StringVisitable stringVisitable) {
+        List<Segment> segments = new ArrayList<>();
+
+        AtomicReference<Formatting> color = new AtomicReference<>(Formatting.BLACK);
+        stringVisitable.visit((style, string) -> {
+            if (style.getColor() != null) {
+                color.set(formattingFromTextColor(style.getColor()));
+            }
+
+            Set<Formatting> modifiers = new HashSet<>();
+            if (style.isBold()) modifiers.add(Formatting.BOLD);
+            if (style.isItalic()) modifiers.add(Formatting.ITALIC);
+            if (style.isUnderlined()) modifiers.add(Formatting.UNDERLINE);
+            if (style.isObfuscated()) modifiers.add(Formatting.OBFUSCATED);
+            if (style.isStrikethrough()) modifiers.add(Formatting.STRIKETHROUGH);
+
+            segments.add(new Segment(string, color.get(), modifiers));
+            return Optional.empty();
+        }, Style.EMPTY.withFormatting(Formatting.BLACK));
+
+        return new RichText(segments);
+    }
+
+    /**
+     * Find the closest formatting code that represents the given color.
+     *
+     * @param color the TextColor to convert. This can be any RGB color.
+     * @return the formatting code best representing the given text color.
+     */
+    private static Formatting formattingFromTextColor(TextColor color) {
+        // If the color has a name, we can look it up directly.
+        Formatting byName = Formatting.byName(color.getName());
+        if (byName != null) {
+            return byName;
+        }
+
+        // Otherwise, let's find the closest matching color.
+        Formatting closest = Formatting.BLACK;
+        int distance = Integer.MAX_VALUE;
+        for (Formatting formatting : Formatting.values()) {
+            Integer colorValue = formatting.getColorValue();
+            if (colorValue == null) {
+                continue;
+            }
+
+            // Find the Euclidean distance between the two colors (without taking the square root).
+            int dr = Math.abs((colorValue >> 16 & 0xff) - (color.getRgb() >> 16 & 0xff));
+            int dg = Math.abs((colorValue >> 8 & 0xff) - (color.getRgb() >> 8 & 0xff));
+            int db = Math.abs((colorValue & 0xff) - (color.getRgb() & 0xff));
+
+            int dist = dr + dg + db;
+            if (dist < distance) {
+                closest = formatting;
+                distance = dist;
+            }
+        }
+
+        return closest;
+    }
 
     /**
      * Merges consecutive segments with the same color and modifiers attributes into a single segment.
