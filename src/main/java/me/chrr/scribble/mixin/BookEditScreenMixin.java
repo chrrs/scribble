@@ -19,6 +19,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
+import net.minecraft.client.gui.navigation.GuiNavigationPath;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
@@ -780,6 +781,13 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     @ModifyArg(method = "drawCursor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;fill(IIIII)V"), index = 4)
     private int modifyLineCursorColor(int constant) {
         return modifyEndCursorColor(constant) | 0xff000000;
+    }
+
+    // Don't switch focus when asked to switch focus. This is a workaround for
+    // MC-262268 / #30 where widgets would flash when trying to switch focus.
+    @Override
+    protected void switchFocus(GuiNavigationPath path) {
+        this.blur();
     }
 
     /**

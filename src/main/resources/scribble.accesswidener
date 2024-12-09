@@ -19,3 +19,5 @@ accessible field net/minecraft/client/util/SelectionManager clipboardGetter Ljav
 accessible field net/minecraft/client/util/SelectionManager clipboardSetter Ljava/util/function/Consumer;
 accessible method net/minecraft/client/util/SelectionManager getSelectedText (Ljava/lang/String;)Ljava/lang/String;
 extendable method net/minecraft/client/util/SelectionManager updateSelectionRange (Z)V
+
+accessible method net/minecraft/client/gui/screen/Screen blur ()V
