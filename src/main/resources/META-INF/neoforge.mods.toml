@@ -10,6 +10,7 @@ displayName = "Scribble"
 description = "Expertly edit your books with rich formatting options, page utilities and more!"
 authors = "chrrrs"
 logoFile = "assets/scribble/icon.png"
+logoBlur = false
 
 [[mixins]]
 config = "scribble.mixins.json"
