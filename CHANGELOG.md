@@ -1,3 +1,11 @@
+## 1.4.4
+
+- Update icon and banner.
+- Disallow keyboard focusing when editing books.
+- Allow saving of written books.
+- Add Russian translations. (Thanks to @FaNToMaSikkk for contributing!)
+- Add German translations. (Thanks to @J4PC for contributing!)
+
 ## 1.4.3
 
 - Update to 1.21.4.
