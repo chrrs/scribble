@@ -36,7 +36,7 @@ public class ClothConfigScreenFactory {
                         Text.translatable("config.scribble.option.copy_formatting_codes"),
                         config.copyFormattingCodes
                 )
-                .setDefaultValue(true)
+                .setDefaultValue(Config.DEFAULT.copyFormattingCodes)
                 .setTooltip(Text.translatable("config.scribble.description.copy_formatting_codes"))
                 .setSaveConsumer((value) -> config.copyFormattingCodes = value)
                 .build());
@@ -45,7 +45,7 @@ public class ClothConfigScreenFactory {
                         Text.translatable("config.scribble.option.center_book_gui"),
                         config.centerBookGui
                 )
-                .setDefaultValue(true)
+                .setDefaultValue(Config.DEFAULT.centerBookGui)
                 .setSaveConsumer((value) -> config.centerBookGui = value)
                 .build());
 
@@ -53,7 +53,7 @@ public class ClothConfigScreenFactory {
                         Text.translatable("config.scribble.option.show_save_load_buttons"),
                         config.showSaveLoadButtons
                 )
-                .setDefaultValue(true)
+                .setDefaultValue(Config.DEFAULT.showSaveLoadButtons)
                 .setSaveConsumer((value) -> config.showSaveLoadButtons = value)
                 .build());
 

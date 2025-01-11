@@ -5,10 +5,9 @@ import com.google.gson.annotations.SerializedName;
 public class Config {
 
     public static Config DEFAULT = new Config();
-    public static int VERSION = 2;
 
     @SerializedName("version")
-    public int version = VERSION;
+    public int version = 2;
 
     @SerializedName("copy_formatting_codes")
     public boolean copyFormattingCodes = true;
@@ -23,6 +22,6 @@ public class Config {
     public int editHistorySize = 32;
 
     public void upgrade() {
-        this.version = VERSION;
+        this.version = DEFAULT.version;
     }
 }
