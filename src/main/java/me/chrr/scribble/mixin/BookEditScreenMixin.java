@@ -53,8 +53,6 @@ import net.minecraft.component.type.WritableBookContentComponent;
 
 @Mixin(BookEditScreen.class)
 public abstract class BookEditScreenMixin extends Screen implements PagesListener, Restorable<BookEditScreenMemento> {
-    @Unique
-    private static final int BOOK_EDIT_HISTORY_SIZE = 30;
 
     @Unique
     private static final int MAX_PAGES_NUMBER = 100;
@@ -127,7 +125,9 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     private final List<RichText> richPages = new ArrayList<>();
 
     @Unique
-    private final CommandManager commandManager = new CommandManager(BOOK_EDIT_HISTORY_SIZE);
+    private final CommandManager commandManager = new CommandManager(
+            Scribble.CONFIG_MANAGER.getConfig().editHistorySize
+    );
 
     @Unique
     @Nullable
