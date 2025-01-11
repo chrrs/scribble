@@ -57,6 +57,16 @@ public class ClothConfigScreenFactory {
                 .setSaveConsumer((value) -> config.showSaveLoadButtons = value)
                 .build());
 
+        category.addEntry(entryBuilder.startIntSlider(
+                        Text.translatable("config.scribble.option.edit_history_size"),
+                        config.editHistorySize,
+                        8,
+                        128
+                )
+                .setDefaultValue(Config.DEFAULT.editHistorySize)
+                .setSaveConsumer((value) -> config.editHistorySize = value)
+                .build());
+
         return builder.build();
     }
 }

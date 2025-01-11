@@ -3,6 +3,8 @@ package me.chrr.scribble.config;
 import com.google.gson.annotations.SerializedName;
 
 public class Config {
+
+    public static Config DEFAULT = new Config();
     public static int VERSION = 2;
 
     @SerializedName("version")
@@ -16,6 +18,9 @@ public class Config {
 
     @SerializedName("show_save_load_buttons")
     public boolean showSaveLoadButtons = true;
+
+    @SerializedName("edit_history_size")
+    public int editHistorySize = 32;
 
     public void upgrade() {
         this.version = VERSION;
