@@ -3,7 +3,9 @@ package me.chrr.scribble.history;
 import me.chrr.scribble.history.command.Command;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Manages the execution of commands and maintains a history stack to provide undo/redo functionality.
@@ -19,6 +21,8 @@ public class CommandManager {
     // Index of the last executed command, or -1 if no commands have been executed.
     private int lastExecutedCommandIndex = EMPTY_STACK_INDEX;
 
+    private final List<Runnable> historyCallbacks = new ArrayList<>();
+
     public CommandManager(int maxHistorySize) {
         this.maxHistorySize = maxHistorySize;
         this.commandStack = new LinkedList<>();
@@ -31,6 +35,7 @@ public class CommandManager {
     public void clear() {
         lastExecutedCommandIndex = EMPTY_STACK_INDEX;
         commandStack.clear();
+        historyCallbacks.forEach(Runnable::run);
     }
 
     /**
@@ -64,6 +69,8 @@ public class CommandManager {
             commandStack.add(command);
             lastExecutedCommandIndex++;
         }
+
+        historyCallbacks.forEach(Runnable::run);
     }
 
     /**
@@ -71,8 +78,10 @@ public class CommandManager {
      */
     private void dropAllAboveCurrentIndex() {
         while (lastExecutedCommandIndex < commandStack.size() - 1) {
-            commandStack.pollLast();
+            commandStack.removeLast();
         }
+
+        historyCallbacks.forEach(Runnable::run);
     }
 
     /**
@@ -86,12 +95,15 @@ public class CommandManager {
             boolean wasRolledBack = commandStack.get(lastExecutedCommandIndex).rollback();
             lastExecutedCommandIndex--;
 
+            // Keep rolling back until we get to a valid state.
             if (!wasRolledBack) {
-                // rolling back until the rollback is successful
                 return tryUndo();
             }
+
+            historyCallbacks.forEach(Runnable::run);
             return true;
         }
+
         return false;
     }
 
@@ -117,6 +129,7 @@ public class CommandManager {
         if (hasCommandsToRedo()) {
             lastExecutedCommandIndex++;
             commandStack.get(lastExecutedCommandIndex).execute();
+            historyCallbacks.forEach(Runnable::run);
             return true;
         } else {
             return false;
@@ -126,5 +139,9 @@ public class CommandManager {
     public boolean hasCommandsToRedo() {
         int lastAvailableIndexInStack = commandStack.size() - 1;
         return lastExecutedCommandIndex < lastAvailableIndexInStack;
+    }
+
+    public void onHistoryUpdate(Runnable callback) {
+        historyCallbacks.add(callback);
     }
 }

@@ -53,7 +53,6 @@ import net.minecraft.component.type.WritableBookContentComponent;
 
 @Mixin(BookEditScreen.class)
 public abstract class BookEditScreenMixin extends Screen implements PagesListener, Restorable<BookEditScreenMemento> {
-
     @Unique
     private static final int MAX_PAGES_NUMBER = 100;
 
@@ -158,6 +157,10 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     private IconButtonWidget insertPageButton;
 
     @Unique
+    private IconButtonWidget undoButton;
+    @Unique
+    private IconButtonWidget redoButton;
+    @Unique
     private IconButtonWidget saveBookButton;
     @Unique
     private IconButtonWidget loadBookButton;
@@ -228,24 +231,19 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
         // Modifier buttons
         boldButton = addModifierButton(
                 Formatting.BOLD, Text.translatable("text.scribble.modifier.bold"),
-                x, y, 0, 0, 22, 19
-        );
+                x, y, 0, 0, 22, 19);
         italicButton = addModifierButton(
                 Formatting.ITALIC, Text.translatable("text.scribble.modifier.italic"),
-                x, y + 19, 0, 19, 22, 17
-        );
+                x, y + 19, 0, 19, 22, 17);
         underlineButton = addModifierButton(
                 Formatting.UNDERLINE, Text.translatable("text.scribble.modifier.underline"),
-                x, y + 36, 0, 36, 22, 17
-        );
+                x, y + 36, 0, 36, 22, 17);
         strikethroughButton = addModifierButton(
                 Formatting.STRIKETHROUGH, Text.translatable("text.scribble.modifier.strikethrough"),
-                x, y + 53, 0, 53, 22, 17
-        );
+                x, y + 53, 0, 53, 22, 17);
         obfuscatedButton = addModifierButton(
                 Formatting.OBFUSCATED, Text.translatable("text.scribble.modifier.obfuscated"),
-                x, y + 70, 0, 70, 22, 18
-        );
+                x, y + 70, 0, 70, 22, 18);
 
         // Color swatches
         colorSwatches = new ArrayList<>(COLORS.length);
@@ -271,33 +269,41 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
         deletePageButton = addDrawableChild(new IconButtonWidget(
                 Text.translatable("text.scribble.action.delete_page"),
                 this::deletePage,
-                px + 78, y + 148, 0, 90, 11, 12));
+                px + 78, y + 148, 0, 90, 12, 12));
         insertPageButton = addDrawableChild(new IconButtonWidget(
                 Text.translatable("text.scribble.action.insert_new_page"),
                 this::insertPage,
-                px + 94, y + 148, 22, 90, 11, 12));
+                px + 94, y + 148, 12, 90, 12, 12));
 
-        // Save / Load buttons
-        int fx = this.width / 2 - 78 - 22;
+        // Action buttons
+        int ax = this.width / 2 - 78 - 7 - 12;
+        int ay = y + 4;
+        undoButton = addDrawableChild(new IconButtonWidget(
+                Text.translatable("text.scribble.action.undo"),
+                commandManager::tryUndo,
+                ax, ay, 24, 90, 12, 12));
+        redoButton = addDrawableChild(new IconButtonWidget(
+                Text.translatable("text.scribble.action.redo"),
+                commandManager::tryRedo,
+                ax, ay + 12, 36, 90, 12, 12));
         saveBookButton = addDrawableChild(new IconButtonWidget(
                 Text.translatable("text.scribble.action.save_book_to_file"),
                 () -> FileChooser.chooseBook(true, this::saveTo),
-                fx, y, 44, 91, 18, 18));
+                ax, ay + 12 * 2 + 4, 48, 90, 12, 12));
         loadBookButton = addDrawableChild(new IconButtonWidget(
                 Text.translatable("text.scribble.action.load_book_from_file"),
                 () -> this.confirmOverwrite(() -> FileChooser.chooseBook(false, this::loadFrom)),
-                fx, y + 18 + 2, 44, 109, 18, 18));
+                ax, ay + 12 * 3 + 4, 60, 90, 12, 12));
+
+        this.invalidateHistoryButtons();
     }
 
     @Unique
     private ModifierButtonWidget addModifierButton(Formatting modifier, Text tooltip, int x, int y, int u, int v, int width, int height) {
         ModifierButtonWidget button = new ModifierButtonWidget(
-                tooltip,
-                (toggled) -> toggleActiveModifier(modifier, toggled),
+                tooltip, (toggled) -> toggleActiveModifier(modifier, toggled),
                 x, y, u, v, width, height,
-                activeModifiers.contains(modifier)
-        );
-
+                activeModifiers.contains(modifier));
         return addDrawableChild(button);
     }
 
@@ -318,6 +324,9 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
                 () -> Optional.ofNullable(this.activeColor).orElse(DEFAULT_COLOR),
                 () -> this.activeModifiers
         );
+
+        // Make sure the undo/redo buttons are disabled when appropriate.
+        this.commandManager.onHistoryUpdate(this::invalidateHistoryButtons);
 
         // Load the pages into richPages
         for (String page : this.pages) {
@@ -385,6 +394,8 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
 
 
         boolean showSaveLoadButtons = Scribble.CONFIG_MANAGER.getConfig().showSaveLoadButtons;
+        Optional.ofNullable(undoButton).ifPresent(button -> button.visible = !signing && showSaveLoadButtons);
+        Optional.ofNullable(redoButton).ifPresent(button -> button.visible = !signing && showSaveLoadButtons);
         Optional.ofNullable(saveBookButton).ifPresent(button -> button.visible = !signing && showSaveLoadButtons);
         Optional.ofNullable(loadBookButton).ifPresent(button -> button.visible = !signing && showSaveLoadButtons);
     }
@@ -397,6 +408,12 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
         Optional.ofNullable(strikethroughButton).ifPresent(button -> button.toggled = activeModifiers.contains(Formatting.STRIKETHROUGH));
         Optional.ofNullable(obfuscatedButton).ifPresent(button -> button.toggled = activeModifiers.contains(Formatting.OBFUSCATED));
         setSwatchColor(activeColor);
+    }
+
+    @Unique
+    private void invalidateHistoryButtons() {
+        Optional.ofNullable(undoButton).ifPresent(button -> button.active = commandManager.hasCommandsToUndo());
+        Optional.ofNullable(redoButton).ifPresent(button -> button.active = commandManager.hasCommandsToRedo());
     }
 
     @Unique
