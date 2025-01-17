@@ -37,8 +37,8 @@ public abstract class BookScreenMixin extends Screen {
     @Inject(method = "init", at = @At(value = "TAIL"))
     public void initButtons(CallbackInfo info) {
         if (Scribble.CONFIG_MANAGER.getConfig().showSaveLoadButtons) {
-            int x = this.width / 2 - 78 - 22;
-            int y = Scribble.getBookScreenYOffset(height) + 12;
+            int x = this.width / 2 - 78 - 7 - 12;
+            int y = Scribble.getBookScreenYOffset(height) + 12 + 4;
 
             Runnable saveBook = () -> FileChooser.chooseBook(true, (path) -> {
                 try {
@@ -62,7 +62,7 @@ public abstract class BookScreenMixin extends Screen {
 
             addDrawableChild(new IconButtonWidget(
                     Text.translatable("text.scribble.action.save_book_to_file"), saveBook,
-                    x, y, 44, 91, 18, 18));
+                    x, y, 48, 90, 12, 12));
         }
     }
 
