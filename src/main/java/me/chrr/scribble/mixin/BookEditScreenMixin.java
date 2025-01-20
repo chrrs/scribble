@@ -9,16 +9,17 @@ import me.chrr.scribble.book.*;
 import me.chrr.scribble.gui.ColorSwatchWidget;
 import me.chrr.scribble.gui.IconButtonWidget;
 import me.chrr.scribble.gui.ModifierButtonWidget;
-import me.chrr.scribble.model.BookEditScreenMemento;
-import me.chrr.scribble.model.command.*;
-import me.chrr.scribble.tool.Restorable;
-import me.chrr.scribble.tool.commandmanager.Command;
-import me.chrr.scribble.tool.commandmanager.CommandManager;
+import me.chrr.scribble.history.BookEditScreenMemento;
+import me.chrr.scribble.history.command.*;
+import me.chrr.scribble.history.Restorable;
+import me.chrr.scribble.history.command.Command;
+import me.chrr.scribble.history.CommandManager;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
+import net.minecraft.client.gui.navigation.GuiNavigationPath;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
@@ -52,8 +53,6 @@ import net.minecraft.component.type.WritableBookContentComponent;
 
 @Mixin(BookEditScreen.class)
 public abstract class BookEditScreenMixin extends Screen implements PagesListener, Restorable<BookEditScreenMemento> {
-    @Unique
-    private static final int BOOK_EDIT_HISTORY_SIZE = 30;
 
     @Unique
     private static final int MAX_PAGES_NUMBER = 100;
@@ -126,7 +125,9 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     private final List<RichText> richPages = new ArrayList<>();
 
     @Unique
-    private final CommandManager commandManager = new CommandManager(BOOK_EDIT_HISTORY_SIZE);
+    private final CommandManager commandManager = new CommandManager(
+            Scribble.CONFIG_MANAGER.getConfig().editHistorySize
+    );
 
     @Unique
     @Nullable
@@ -382,8 +383,10 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
                 button.visible = !signing && richPages.size() < MAX_PAGES_NUMBER
         );
 
-        Optional.ofNullable(saveBookButton).ifPresent(button -> button.visible = !signing);
-        Optional.ofNullable(loadBookButton).ifPresent(button -> button.visible = !signing);
+
+        boolean showSaveLoadButtons = Scribble.CONFIG_MANAGER.getConfig().showSaveLoadButtons;
+        Optional.ofNullable(saveBookButton).ifPresent(button -> button.visible = !signing && showSaveLoadButtons);
+        Optional.ofNullable(loadBookButton).ifPresent(button -> button.visible = !signing && showSaveLoadButtons);
     }
 
     @Unique
@@ -441,10 +444,6 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
 
     @Unique
     private void saveTo(Path path) {
-        if (client == null) {
-            return;
-        }
-
         try {
             BookFile bookFile = new BookFile(this.player.getGameProfile().getName(), List.copyOf(richPages));
             bookFile.write(path);
@@ -622,11 +621,13 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
         }
     }
 
-    @Inject(method = "appendNewPage", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z"), cancellable = true)
-    private void appendNewPage(CallbackInfo ci) {
+    @Redirect(method = "appendNewPage", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z"))
+    private boolean appendNewPage(List<String> page, Object empty) {
+        // FIXME: It feels slightly confusing that we pass in richPages here, but at the same time
+        //        use PagesListener to add plain-text pages. It makes it hard to follow.
         Command command = new InsertPageCommand(richPages, richPages.size(), this);
         commandManager.execute(command);
-        ci.cancel();
+        return true;
     }
 
     @Override
@@ -674,12 +675,13 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
         Scribble.LOGGER.warn("setPageContent() was called, but ignored.");
     }
 
-    @Inject(method = "charTyped", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/SelectionManager;insert(Ljava/lang/String;)V"), cancellable = true)
-    private void charTypedEditMode(char chr, int modifiers, CallbackInfoReturnable<Boolean> cir) {
-        Command command = new ActionCommand<>(this, () -> this.getRichSelectionManager().insert(chr));
+    // NOTE: There are two "insert" calls in the original method. One is editing the book title, which
+    //       takes a char, the other one is editing the page, which takes a String. We're targeting the
+    //       second one.
+    @Redirect(method = "charTyped", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/SelectionManager;insert(Ljava/lang/String;)V"))
+    private void charTypedEditMode(SelectionManager instance, String string) {
+        Command command = new ActionCommand<>(this, () -> this.getRichSelectionManager().insert(string));
         commandManager.execute(command);
-        cir.setReturnValue(true);
-        cir.cancel();
     }
 
     @Inject(method = "keyPressedEditMode", at = @At(value = "HEAD"), cancellable = true)
@@ -779,6 +781,13 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     @ModifyArg(method = "drawCursor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;fill(IIIII)V"), index = 4)
     private int modifyLineCursorColor(int constant) {
         return modifyEndCursorColor(constant) | 0xff000000;
+    }
+
+    // Don't switch focus when asked to switch focus. This is a workaround for
+    // MC-262268 / #30 where widgets would flash when trying to switch focus.
+    @Override
+    protected void switchFocus(GuiNavigationPath path) {
+        this.blur();
     }
 
     /**

@@ -1,4 +1,4 @@
-package me.chrr.scribble.model;
+package me.chrr.scribble.history;
 
 import me.chrr.scribble.book.RichText;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;

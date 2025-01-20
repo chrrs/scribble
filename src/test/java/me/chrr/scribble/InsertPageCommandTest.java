@@ -1,8 +1,8 @@
 package me.chrr.scribble;
 
 import me.chrr.scribble.book.RichText;
-import me.chrr.scribble.model.command.InsertPageCommand;
-import me.chrr.scribble.model.command.PagesListener;
+import me.chrr.scribble.history.command.InsertPageCommand;
+import me.chrr.scribble.history.command.PagesListener;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;

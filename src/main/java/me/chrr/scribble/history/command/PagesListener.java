@@ -1,4 +1,4 @@
-package me.chrr.scribble.model.command;
+package me.chrr.scribble.history.command;
 
 public interface PagesListener {
 

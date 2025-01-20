@@ -1,6 +1,10 @@
 package me.chrr.scribble.mixin;
 
 import me.chrr.scribble.Scribble;
+import me.chrr.scribble.book.BookFile;
+import me.chrr.scribble.book.FileChooser;
+import me.chrr.scribble.book.RichText;
+import me.chrr.scribble.gui.IconButtonWidget;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
@@ -8,15 +12,58 @@ import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.BookScreen;
 import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.List;
+
+//? if <1.20.5
+/*import java.util.stream.IntStream;*/
+
 @Mixin(BookScreen.class)
 public abstract class BookScreenMixin extends Screen {
+    @Shadow
+    private BookScreen.Contents contents;
+
     // Dummy constructor to match super class.
     private BookScreenMixin() {
         super(null);
+    }
+
+    // Add save book button.
+    @Inject(method = "init", at = @At(value = "TAIL"))
+    public void initButtons(CallbackInfo info) {
+        if (Scribble.CONFIG_MANAGER.getConfig().showSaveLoadButtons) {
+            int x = this.width / 2 - 78 - 22;
+            int y = Scribble.getBookScreenYOffset(height) + 12;
+
+            Runnable saveBook = () -> FileChooser.chooseBook(true, (path) -> {
+                try {
+                    //? if >=1.20.5 {
+                    List<RichText> richPages = this.contents.pages().stream()
+                            .map(RichText::fromStringVisitableLossy)
+                            .toList();
+                    //?} else {
+                    /*List<RichText> richPages = IntStream.range(0, this.contents.getPageCount())
+                            .mapToObj(this.contents::getPageUnchecked)
+                            .map(RichText::fromStringVisitableLossy)
+                            .toList();
+                    *///?}
+
+                    BookFile bookFile = new BookFile("<written book>", List.copyOf(richPages));
+                    bookFile.write(path);
+                } catch (Exception e) {
+                    Scribble.LOGGER.error("could not save book to file", e);
+                }
+            });
+
+            addDrawableChild(new IconButtonWidget(
+                    Text.translatable("text.scribble.action.save_book_to_file"), saveBook,
+                    x, y, 44, 91, 18, 18));
+        }
     }
 
     // If we need to center the GUI, we shift the Y of the texture draw call down.

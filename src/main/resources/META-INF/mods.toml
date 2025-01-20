@@ -9,7 +9,9 @@ version = "${modVersion}"
 displayName = "Scribble"
 description = "Expertly edit your books with rich formatting options, page utilities and more!"
 authors = "chrrrs"
-logoFile = "assets/scribble/icon.png"
+credits = "WiskiWiski"
+logoFile = "assets/scribble/banner.png"
+logoBlur = false
 
 [[mixins]]
 config = "scribble.mixins.json"

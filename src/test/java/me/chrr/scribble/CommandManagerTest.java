@@ -1,7 +1,7 @@
 package me.chrr.scribble;
 
-import me.chrr.scribble.tool.commandmanager.Command;
-import me.chrr.scribble.tool.commandmanager.CommandManager;
+import me.chrr.scribble.history.command.Command;
+import me.chrr.scribble.history.CommandManager;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 

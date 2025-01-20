@@ -1,7 +1,6 @@
-package me.chrr.scribble.model.command;
+package me.chrr.scribble.history.command;
 
-import me.chrr.scribble.tool.Restorable;
-import me.chrr.scribble.tool.commandmanager.MementoCommand;
+import me.chrr.scribble.history.Restorable;
 
 public class ActionCommand<T> extends MementoCommand<T> {
 

@@ -1,7 +1,7 @@
 package me.chrr.scribble;
 
-import me.chrr.scribble.tool.Restorable;
-import me.chrr.scribble.tool.commandmanager.MementoCommand;
+import me.chrr.scribble.history.Restorable;
+import me.chrr.scribble.history.command.MementoCommand;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

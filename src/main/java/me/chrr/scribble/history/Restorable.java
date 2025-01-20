@@ -1,4 +1,4 @@
-package me.chrr.scribble.tool;
+package me.chrr.scribble.history;
 
 /**
  * Interface for creating and restoring memento-based snapshots of an object's state.
