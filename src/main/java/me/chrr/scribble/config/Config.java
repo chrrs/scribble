@@ -1,27 +1,31 @@
 package me.chrr.scribble.config;
 
-import com.google.gson.annotations.SerializedName;
-
 public class Config {
-
     public static Config DEFAULT = new Config();
 
-    @SerializedName("version")
-    public int version = 2;
-
-    @SerializedName("copy_formatting_codes")
+    public int version = 3;
     public boolean copyFormattingCodes = true;
-
-    @SerializedName("center_book_gui")
     public boolean centerBookGui = true;
-
-    @SerializedName("show_save_load_buttons")
-    public boolean showSaveLoadButtons = true;
-
-    @SerializedName("edit_history_size")
+    public ShowActionButtons showActionButtons = ShowActionButtons.WHEN_EDITING;
     public int editHistorySize = 32;
 
+    @DeprecatedConfigOption
+    private boolean showSaveLoadButtons = true;
+
     public void upgrade() {
+        if (this.version < 3) {
+            // `show_save_load_buttons` was removed.
+            this.showActionButtons = this.showSaveLoadButtons
+                    ? ShowActionButtons.WHEN_EDITING
+                    : ShowActionButtons.NEVER;
+        }
+
         this.version = DEFAULT.version;
+    }
+
+    public enum ShowActionButtons {
+        ALWAYS,
+        WHEN_EDITING,
+        NEVER,
     }
 }

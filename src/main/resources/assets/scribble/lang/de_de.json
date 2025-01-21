@@ -3,7 +3,6 @@
     "config.scribble.option.copy_formatting_codes": "Formatierungscodes kopieren",
     "config.scribble.description.copy_formatting_codes": "Diese Option kann vorübergehend deaktiviert werden, indem die Umschalttaste beim Kopieren oder Einfügen von Text gedrückt wird.",
     "config.scribble.option.center_book_gui": "Buch-GUI vertikal zentrieren",
-    "config.scribble.option.show_save_load_buttons": "Speichern-/Laden-Buttons anzeigen",
     "text.scribble.action.delete_page": "Seite löschen",
     "text.scribble.action.insert_new_page": "Neue Seite einfügen",
     "text.scribble.action.save_book_to_file": "Buch in Datei speichern...",
