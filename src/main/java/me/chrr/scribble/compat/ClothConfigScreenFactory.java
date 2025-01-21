@@ -49,19 +49,19 @@ public class ClothConfigScreenFactory {
                 .setSaveConsumer((value) -> config.centerBookGui = value)
                 .build());
 
-        category.addEntry(entryBuilder.startBooleanToggle(
-                        Text.translatable("config.scribble.option.show_save_load_buttons"),
-                        config.showSaveLoadButtons
+        category.addEntry(entryBuilder.startEnumSelector(
+                        Text.translatable("config.scribble.option.show_action_buttons"),
+                        Config.ShowActionButtons.class, config.showActionButtons
                 )
-                .setDefaultValue(Config.DEFAULT.showSaveLoadButtons)
-                .setSaveConsumer((value) -> config.showSaveLoadButtons = value)
+                .setEnumNameProvider((opt) ->
+                        Text.translatable("config.scribble.option.show_action_buttons." + opt.name().toLowerCase()))
+                .setDefaultValue(Config.DEFAULT.showActionButtons)
+                .setSaveConsumer((value) -> config.showActionButtons = value)
                 .build());
 
         category.addEntry(entryBuilder.startIntSlider(
                         Text.translatable("config.scribble.option.edit_history_size"),
-                        config.editHistorySize,
-                        8,
-                        128
+                        config.editHistorySize, 8, 128
                 )
                 .setDefaultValue(Config.DEFAULT.editHistorySize)
                 .setSaveConsumer((value) -> config.editHistorySize = value)

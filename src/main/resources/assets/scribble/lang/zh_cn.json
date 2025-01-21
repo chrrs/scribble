@@ -3,7 +3,6 @@
     "config.scribble.option.copy_formatting_codes": "复制格式化代码",
     "config.scribble.description.copy_formatting_codes": "复制或粘贴文本时\n按住Shift键可暂时禁用该选项。",
     "config.scribble.option.center_book_gui": "居中书的GUI",
-    "config.scribble.option.show_save_load_buttons": "显示保存/加载按钮",
     "text.scribble.action.delete_page": "删除页面",
     "text.scribble.action.insert_new_page": "插入页面",
     "text.scribble.action.save_book_to_file": "将书的内容储存到文件夹……",

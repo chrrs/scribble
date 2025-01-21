@@ -3,7 +3,6 @@
     "config.scribble.option.copy_formatting_codes": "Копировать коды форматирования",
     "config.scribble.description.copy_formatting_codes": "Эта опция может быть временно отключена,\nнажав SHIFT при копировании или вставке текста.",
     "config.scribble.option.center_book_gui": "Выравнивать интерфейс книги по вертикали",
-    "config.scribble.option.show_save_load_buttons": "Показывать кнопки сохранения/загрузки",
     "config.scribble.option.edit_history_size": "Размер истории редактирования",
     "text.scribble.action.delete_page": "Удалить страницу",
     "text.scribble.action.insert_new_page": "Вставить новую страницу",

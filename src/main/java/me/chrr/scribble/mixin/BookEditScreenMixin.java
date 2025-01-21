@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import me.chrr.scribble.KeyboardUtil;
 import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.*;
+import me.chrr.scribble.config.Config;
 import me.chrr.scribble.gui.ColorSwatchWidget;
 import me.chrr.scribble.gui.IconButtonWidget;
 import me.chrr.scribble.gui.ModifierButtonWidget;
@@ -393,7 +394,7 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
         );
 
 
-        boolean showSaveLoadButtons = Scribble.CONFIG_MANAGER.getConfig().showSaveLoadButtons;
+        boolean showSaveLoadButtons = Scribble.CONFIG_MANAGER.getConfig().showActionButtons != Config.ShowActionButtons.NEVER;
         Optional.ofNullable(undoButton).ifPresent(button -> button.visible = !signing && showSaveLoadButtons);
         Optional.ofNullable(redoButton).ifPresent(button -> button.visible = !signing && showSaveLoadButtons);
         Optional.ofNullable(saveBookButton).ifPresent(button -> button.visible = !signing && showSaveLoadButtons);

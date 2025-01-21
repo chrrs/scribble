@@ -4,6 +4,7 @@ import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.BookFile;
 import me.chrr.scribble.book.FileChooser;
 import me.chrr.scribble.book.RichText;
+import me.chrr.scribble.config.Config;
 import me.chrr.scribble.gui.IconButtonWidget;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
@@ -36,7 +37,7 @@ public abstract class BookScreenMixin extends Screen {
     // Add save book button.
     @Inject(method = "init", at = @At(value = "TAIL"))
     public void initButtons(CallbackInfo info) {
-        if (Scribble.CONFIG_MANAGER.getConfig().showSaveLoadButtons) {
+        if (Scribble.CONFIG_MANAGER.getConfig().showActionButtons == Config.ShowActionButtons.ALWAYS) {
             int x = this.width / 2 - 78 - 7 - 12;
             int y = Scribble.getBookScreenYOffset(height) + 12 + 4;
 
