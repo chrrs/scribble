@@ -3,6 +3,8 @@
     "config.scribble.option.copy_formatting_codes": "Biçimlendirme kodlarını kopyala",
     "config.scribble.description.copy_formatting_codes": "Bu seçenek, metin kopyalarken veya yapıştırırken SHIFT tuşuna \nbasılarak geçici olarak devre dışı bırakılabilir.",
     "config.scribble.option.center_book_gui": "Kitap arayüzlerini dikey olarak ortala",
+    "config.scribble.option.show_save_load_buttons": "Kaydet/yükle butonlarını göster",
+    "config.scribble.option.edit_history_size": "Geri al/yinele geçmiş boyutu",
     "text.scribble.action.delete_page": "Sayfayı sil",
     "text.scribble.action.insert_new_page": "Yeni sayfa ekle",
     "text.scribble.action.save_book_to_file": "Kitabı dosyaya kaydet...",
