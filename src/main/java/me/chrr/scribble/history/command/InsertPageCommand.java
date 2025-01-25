@@ -1,17 +1,16 @@
 package me.chrr.scribble.history.command;
 
+import me.chrr.scribble.book.SynchronizedPageList;
 import me.chrr.scribble.book.RichText;
-
-import java.util.List;
 
 public class InsertPageCommand implements Command {
 
-    private final List<RichText> pages;
+    private final SynchronizedPageList pages;
     private final int index;
 
     private final PagesListener pagesListener;
 
-    public InsertPageCommand(List<RichText> pages, int index, PagesListener pagesListener) {
+    public InsertPageCommand(SynchronizedPageList pages, int index, PagesListener pagesListener) {
         if (index < 0 || index > pages.size()) {
             throw new IllegalArgumentException("Insert page index is out of pages range");
         }
