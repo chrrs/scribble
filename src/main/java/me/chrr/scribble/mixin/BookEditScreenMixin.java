@@ -456,20 +456,15 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     private void loadFrom(Path path) {
         try {
             BookFile bookFile = BookFile.read(path);
+            Collection<RichText> loadedPages = bookFile.pages().isEmpty()
+                    ? List.of(RichText.empty()) // if loaded book has no pages, then create an empty page
+                    : bookFile.pages();
 
-            this.richPages.clear();
-            this.pages.clear();
+            richPages.clear();
+            pages.clear();
             commandManager.clear();
 
-            // Loading an empty book file would set the total amount of pages to 0.
-            // We work around this by just inserting a new empty page.
-            if (bookFile.pages().isEmpty()) {
-                this.currentPage = 0;
-                this.insertPage();
-                return;
-            }
-
-            for (RichText page : bookFile.pages()) {
+            for (RichText page : loadedPages) {
                 this.richPages.add(page);
                 this.pages.add(page.getAsFormattedString());
             }
