@@ -1,3 +1,10 @@
+## 1.5.0
+
+- Allow for more granular control of when the action buttons are visible.
+- Add a config option for the size of the history stack. (Thanks to @wiskiw for contributing!)
+- Redesign the action buttons to be more minimal.
+- Update Turkish translations. (Thanks to @MissionWAR for contributing!)
+
 ## 1.4.4
 
 - Update icon and banner.
