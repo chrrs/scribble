@@ -627,8 +627,6 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
 
     @Redirect(method = "appendNewPage", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z"))
     private boolean appendNewPage(List<String> page, Object empty) {
-        // FIXME: It feels slightly confusing that we pass in richPages here, but at the same time
-        //        use PagesListener to add plain-text pages. It makes it hard to follow.
         Command command = new InsertPageCommand(synchronizedPages, synchronizedPages.size(), this);
         commandManager.execute(command);
         return true;
