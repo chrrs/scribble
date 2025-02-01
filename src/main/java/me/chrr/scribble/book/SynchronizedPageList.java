@@ -11,7 +11,6 @@ import java.util.*;
  * This class ensures that any modification to one list is reflected in the other,
  * maintaining consistency between the two.
  */
-@SuppressWarnings("UnusedReturnValue")
 public class SynchronizedPageList {
 
     private final List<RichText> richPages;
@@ -63,12 +62,14 @@ public class SynchronizedPageList {
         pages.add(index, richText.getAsFormattedString());
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public boolean addAll(@NotNull Collection<? extends RichText> collection) {
         boolean result = richPages.addAll(collection);
         collection.forEach((richText) -> pages.add(richText.getAsFormattedString()));
         return result;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public RichText remove(int index) {
         RichText removed = richPages.remove(index);
         pages.remove(index);
