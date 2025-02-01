@@ -10,7 +10,6 @@ import static me.chrr.scribble.mixture.CommonMixture.mockPages;
 import static me.chrr.scribble.mixture.CommonMixture.mockSynchronizedPageList;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SuppressWarnings("SequencedCollectionMethodCanBeUsed")
 public class SynchronizedPageListTest {
 
     @Test
@@ -28,6 +27,7 @@ public class SynchronizedPageListTest {
 
 
     @Test
+    @SuppressWarnings("SequencedCollectionMethodCanBeUsed")
     public void populatePagesShouldUpdateRich() {
         List<String> initialPages = mockPages(1, "init");
         List<String> newPages = mockPages(1, "new");
@@ -44,6 +44,7 @@ public class SynchronizedPageListTest {
     }
 
     @Test
+    @SuppressWarnings("SequencedCollectionMethodCanBeUsed")
     public void setShouldUpdateBothLists() {
         SynchronizedPageList synchronizedList = mockSynchronizedPageList(1);
         RichText newRichText = RichText.fromFormattedString("Updated Page");
@@ -57,6 +58,7 @@ public class SynchronizedPageListTest {
     }
 
     @Test
+    @SuppressWarnings("SequencedCollectionMethodCanBeUsed")
     public void addRichTextShouldAddToBothLists() {
         SynchronizedPageList synchronizedList = new SynchronizedPageList();
         RichText newRichText = RichText.fromFormattedString("New Page");
@@ -71,6 +73,7 @@ public class SynchronizedPageListTest {
     }
 
     @Test
+    @SuppressWarnings("SequencedCollectionMethodCanBeUsed")
     public void addRichTextAtIndexShouldAddToBothLists() {
         SynchronizedPageList synchronizedList = mockSynchronizedPageList(1);
         RichText newRichText = RichText.fromFormattedString("New Page");
