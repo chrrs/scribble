@@ -1,36 +1,27 @@
 package me.chrr.scribble;
 
+import me.chrr.scribble.book.SynchronizedPageList;
 import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.history.command.DeletePageCommand;
 import me.chrr.scribble.history.command.PagesListener;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import static me.chrr.scribble.mixture.CommonMixture.mockSynchronizedPageList;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 public class DeletePageCommandTest {
 
-    private static List<RichText> mockPageList(int size) {
-        ArrayList<RichText> list = new ArrayList<>(size);
-
-        for (int i = 0; i < size; i++) {
-            RichText item = RichText.fromFormattedString("page content:" + i);
-            list.add(item);
-        }
-
-        return list;
-    }
-
     @Test
     public void testIfPagesListenerOnPageRemovedIsCalledAfterExecution() {
         PagesListener pagesListener = mock();
         int deleteIndex = 2;
         int size = deleteIndex + 2;
-        DeletePageCommand deletePageCommand = new DeletePageCommand(mockPageList(size), deleteIndex, pagesListener);
+        DeletePageCommand deletePageCommand =
+                new DeletePageCommand(mockSynchronizedPageList(size), deleteIndex, pagesListener);
 
         // Action
         deletePageCommand.execute();
@@ -44,7 +35,8 @@ public class DeletePageCommandTest {
         PagesListener pagesListener = mock();
         int size = 1;
         int deleteIndex = 0;
-        DeletePageCommand deletePageCommand = new DeletePageCommand(mockPageList(size), deleteIndex, pagesListener);
+        DeletePageCommand deletePageCommand =
+                new DeletePageCommand(mockSynchronizedPageList(size), deleteIndex, pagesListener);
 
         // Action
         deletePageCommand.execute();
@@ -59,7 +51,7 @@ public class DeletePageCommandTest {
         PagesListener pagesListener = mock();
         int deleteIndex = 2;
         int size = deleteIndex + 2;
-        List<RichText> pages = mockPageList(size);
+        SynchronizedPageList pages = mockSynchronizedPageList(size);
         DeletePageCommand deletePageCommand = new DeletePageCommand(pages, deleteIndex, pagesListener);
         deletePageCommand.execute();
 
@@ -76,7 +68,7 @@ public class DeletePageCommandTest {
         PagesListener pagesListener = mock();
         int size = 1;
         int deleteIndex = 0;
-        List<RichText> pages = mockPageList(size);
+        SynchronizedPageList pages = mockSynchronizedPageList(size);
         DeletePageCommand deletePageCommand = new DeletePageCommand(pages, deleteIndex, pagesListener);
         deletePageCommand.execute();
 
@@ -91,40 +83,41 @@ public class DeletePageCommandTest {
     public void testIfRemovesRichPageFromTheListOnExecute() {
         int deleteIndex = 1;
         int size = deleteIndex + 1;
-        List<RichText> richPages = mockPageList(size);
-        RichText pageToDelete = richPages.get(deleteIndex);
+        SynchronizedPageList synchronizedPageList = mockSynchronizedPageList(size);
+        RichText pageToDelete = synchronizedPageList.get(deleteIndex);
 
-        DeletePageCommand deletePageCommand = new DeletePageCommand(richPages, deleteIndex, mock());
+        DeletePageCommand deletePageCommand = new DeletePageCommand(synchronizedPageList, deleteIndex, mock());
 
         // Action
         deletePageCommand.execute();
 
         // Assert
-        assertFalse(richPages.contains(pageToDelete));
+        assertFalse(synchronizedPageList.getRichPages().contains(pageToDelete));
     }
 
     @Test
     public void testIfRollbacksRichPagesToOriginState() {
         int deleteIndex = 3;
         int size = deleteIndex + 1;
-        List<RichText> richPages = mockPageList(size);
-        List<RichText> originRichPages = List.copyOf(richPages);
+        SynchronizedPageList synchronizedPageList = mockSynchronizedPageList(size);
+        List<RichText> originRichPages = synchronizedPageList.getRichPages();
 
-        DeletePageCommand deletePageCommand = new DeletePageCommand(richPages, deleteIndex, mock());
+        DeletePageCommand deletePageCommand = new DeletePageCommand(synchronizedPageList, deleteIndex, mock());
 
         // Action
         deletePageCommand.execute();
         deletePageCommand.rollback();
 
         // Assert
-        assertEquals(originRichPages, richPages);
+        assertEquals(originRichPages, synchronizedPageList.getRichPages());
     }
 
     @Test
     public void testIfRollbacksReturnsFalseIfCommandWasNotExecuted() {
         int deleteIndex = 3;
         int size = deleteIndex + 1;
-        DeletePageCommand deletePageCommand = new DeletePageCommand(mockPageList(size), deleteIndex, mock());
+        DeletePageCommand deletePageCommand =
+                new DeletePageCommand(mockSynchronizedPageList(size), deleteIndex, mock());
 
         // Action / Assert
         assertFalse(deletePageCommand.rollback());
@@ -138,7 +131,7 @@ public class DeletePageCommandTest {
         // Action / Assert
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new DeletePageCommand(mockPageList(size), deleteIndex, mock())
+                () -> new DeletePageCommand(mockSynchronizedPageList(size), deleteIndex, mock())
         );
     }
 
@@ -150,7 +143,7 @@ public class DeletePageCommandTest {
         // Action / Assert
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new DeletePageCommand(mockPageList(size), deleteIndex, mock())
+                () -> new DeletePageCommand(mockSynchronizedPageList(size), deleteIndex, mock())
         );
     }
 
@@ -162,7 +155,7 @@ public class DeletePageCommandTest {
         // Action / Assert
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new DeletePageCommand(mockPageList(size), deleteIndex, mock())
+                () -> new DeletePageCommand(mockSynchronizedPageList(size), deleteIndex, mock())
         );
     }
 }

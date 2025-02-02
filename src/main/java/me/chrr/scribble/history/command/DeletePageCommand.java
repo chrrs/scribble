@@ -1,14 +1,13 @@
 package me.chrr.scribble.history.command;
 
 import me.chrr.scribble.Scribble;
+import me.chrr.scribble.book.SynchronizedPageList;
 import me.chrr.scribble.book.RichText;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-
 public class DeletePageCommand implements Command {
 
-    private final List<RichText> pages;
+    private final SynchronizedPageList pages;
     private final int index;
 
     private final PagesListener pagesListener;
@@ -16,7 +15,7 @@ public class DeletePageCommand implements Command {
     @Nullable
     private RichText deletedPage;
 
-    public DeletePageCommand(List<RichText> pages, int index, PagesListener pagesListener) {
+    public DeletePageCommand(SynchronizedPageList pages, int index, PagesListener pagesListener) {
         if (index < 0 || index >= pages.size()) {
             throw new IllegalArgumentException("Delete page index is out of pages range");
         }

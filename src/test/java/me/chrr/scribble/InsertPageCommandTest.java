@@ -1,36 +1,23 @@
 package me.chrr.scribble;
 
-import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.history.command.InsertPageCommand;
 import me.chrr.scribble.history.command.PagesListener;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import static me.chrr.scribble.mixture.CommonMixture.mockSynchronizedPageList;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 public class InsertPageCommandTest {
 
-    private static List<RichText> mockPageList(int size) {
-        ArrayList<RichText> list = new ArrayList<>(size);
-
-        for (int i = 0; i < size; i++) {
-            RichText item = RichText.fromFormattedString("page content:" + i);
-            list.add(item);
-        }
-
-        return list;
-    }
-
     @Test
     public void testIfPagesListenerOnPageAddedIsCalledAfterExecution() {
         PagesListener pagesListener = mock();
         int insertIndex = 2;
         int size = insertIndex + 2;
-        InsertPageCommand insertPageCommand = new InsertPageCommand(mockPageList(size), insertIndex, pagesListener);
+        InsertPageCommand insertPageCommand =
+                new InsertPageCommand(mockSynchronizedPageList(size), insertIndex, pagesListener);
 
         // Action
         insertPageCommand.execute();
@@ -44,7 +31,8 @@ public class InsertPageCommandTest {
         PagesListener pagesListener = mock();
         int insertIndex = 2;
         int size = insertIndex + 2;
-        InsertPageCommand insertPageCommand = new InsertPageCommand(mockPageList(size), insertIndex, pagesListener);
+        InsertPageCommand insertPageCommand =
+                new InsertPageCommand(mockSynchronizedPageList(size), insertIndex, pagesListener);
         insertPageCommand.execute();
 
         // Action
@@ -62,7 +50,7 @@ public class InsertPageCommandTest {
         // Action / Assert
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new InsertPageCommand(mockPageList(size), insertIndex, mock())
+                () -> new InsertPageCommand(mockSynchronizedPageList(size), insertIndex, mock())
         );
     }
 
@@ -74,7 +62,7 @@ public class InsertPageCommandTest {
         // Action / Assert
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new InsertPageCommand(mockPageList(size), insertIndex, mock())
+                () -> new InsertPageCommand(mockSynchronizedPageList(size), insertIndex, mock())
         );
     }
 
