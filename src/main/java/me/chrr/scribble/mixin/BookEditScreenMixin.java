@@ -53,9 +53,7 @@ import java.util.*;
 import net.minecraft.component.type.WritableBookContentComponent;
 
 @Mixin(BookEditScreen.class)
-public abstract class BookEditScreenMixin extends Screen implements PagesListener, Restorable<BookEditScreenMemento> {
-    @Unique
-    private static final int MAX_PAGES_NUMBER = 100;
+public abstract class BookEditScreenMixin extends Screen implements Restorable<BookEditScreenMemento> {
 
     @Unique
     private static final Formatting[] COLORS = new Formatting[]{
@@ -110,9 +108,6 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     protected abstract void setClipboard(String clipboard);
 
     @Shadow
-    protected abstract void invalidatePageContent();
-
-    @Shadow
     protected abstract void changePage();
 
     @Shadow
@@ -120,7 +115,21 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     //endregion
 
     @Unique
-    private final SynchronizedPageList synchronizedPages = new SynchronizedPageList();
+    private boolean isScreenReady = false;
+
+    @Unique
+    private final PageManager pageManager = new PageManager(
+            new SynchronizedPageList(),
+            (newIndex) -> currentPage = newIndex,
+            () -> currentPage,
+            (invalidateCurrentPage) -> {
+                dirty = true;
+                if (isScreenReady && invalidateCurrentPage) {
+                    updateButtons();
+                    changePage();
+                }
+            }
+    );
 
     @Unique
     private final CommandManager commandManager = new CommandManager(
@@ -186,29 +195,6 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
         BookEditScreen.Position topLeft = new BookEditScreen.Position((int) handler.getWidth(toSelectionStart), lineY);
         BookEditScreen.Position bottomRight = new BookEditScreen.Position((int) handler.getWidth(toSelectionEnd), lineY + 9);
         return this.getRectFromCorners(topLeft, bottomRight);
-    }
-
-    /**
-     * RichText-based replacement for BookEditScreen#getCurrentPageContent
-     */
-    @Unique
-    private RichText getCurrentPageText() {
-        return this.currentPage >= 0 && this.currentPage < synchronizedPages.size()
-                ? synchronizedPages.get(this.currentPage)
-                : RichText.empty();
-    }
-
-    /**
-     * RichText replacement for BookEditScreen#setPageContent.
-     */
-    @Unique
-    private void setPageText(RichText newText) {
-        if (this.currentPage >= 0 && this.currentPage < synchronizedPages.size()) {
-            synchronizedPages.set(this.currentPage, newText);
-        }
-
-        this.dirty = true;
-        this.invalidatePageContent();
     }
 
     @Unique
@@ -308,8 +294,8 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     public void init(PlayerEntity player, ItemStack stack, Hand hand, WritableBookContentComponent writableBookContent, CallbackInfo ci) {
         // Replace the selection manager with our own
         currentPageSelectionManager = new RichSelectionManager(
-                this::getCurrentPageText,
-                this::setPageText,
+                pageManager::getCurrentPage,
+                pageManager::setCurrentPage,
                 this::onCursorFormattingChanged,
                 this::getRawClipboard,
                 this::setClipboard,
@@ -322,7 +308,7 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
         // Make sure the undo/redo buttons are disabled when appropriate.
         this.commandManager.onHistoryUpdate(this::invalidateHistoryButtons);
 
-        synchronizedPages.populate(this.pages);
+        pageManager.setNativePages(this.pages);
 
         // After loading the pages, we update cursor formatting.
         getRichSelectionManager().notifyCursorFormattingChanged();
@@ -362,8 +348,13 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     }
 
     @Inject(method = "init", at = @At(value = "HEAD"))
-    private void initScreen(CallbackInfo ci) {
+    private void beforeInitScreen(CallbackInfo ci) {
         initButtons();
+    }
+
+    @Inject(method = "init", at = @At(value = "TAIL"))
+    private void afterInitScreen(CallbackInfo ci) {
+        isScreenReady = true;
     }
 
     @Inject(method = "updateButtons", at = @At(value = "HEAD"))
@@ -378,10 +369,8 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
             swatch.visible = !signing;
         }
 
-        Optional.ofNullable(deletePageButton).ifPresent(button -> button.visible = !signing && synchronizedPages.size() > 1);
-        Optional.ofNullable(insertPageButton).ifPresent(button ->
-                button.visible = !signing && synchronizedPages.size() < MAX_PAGES_NUMBER
-        );
+        Optional.ofNullable(deletePageButton).ifPresent(button -> button.visible = !signing && pageManager.canRemoveCurrentPage());
+        Optional.ofNullable(insertPageButton).ifPresent(button -> button.visible = !signing && pageManager.canAddPageAtCurrentIndex());
 
 
         boolean showSaveLoadButtons = Scribble.CONFIG_MANAGER.getConfig().showActionButtons != Config.ShowActionButtons.NEVER;
@@ -429,7 +418,7 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
      */
     @Unique
     private void confirmOverwrite(Runnable callback) {
-        if (!synchronizedPages.arePagesEmpty()) {
+        if (!pageManager.arePagesEmpty()) {
             if (client == null) {
                 return;
             }
@@ -453,7 +442,7 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     @Unique
     private void saveTo(Path path) {
         try {
-            BookFile bookFile = new BookFile(this.player.getGameProfile().getName(), synchronizedPages.getRichPages());
+            BookFile bookFile = new BookFile(this.player.getGameProfile().getName(), pageManager.getPages());
             bookFile.write(path);
         } catch (Exception e) {
             Scribble.LOGGER.error("could not save book to file", e);
@@ -464,19 +453,10 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     private void loadFrom(Path path) {
         try {
             BookFile bookFile = BookFile.read(path);
-            Collection<RichText> loadedPages = bookFile.pages().isEmpty()
-                    ? List.of(RichText.empty()) // if loaded book has no pages, then create an empty page
-                    : bookFile.pages();
-
-            synchronizedPages.clear();
             commandManager.clear();
 
-            synchronizedPages.addAll(loadedPages);
+            pageManager.setPages(bookFile.pages());
 
-            this.currentPage = 0;
-            this.dirty = true;
-            this.updateButtons();
-            this.changePage();
         } catch (Exception e) {
             Scribble.LOGGER.error("could not load book from file", e);
         }
@@ -484,16 +464,14 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
 
     @Unique
     private void deletePage() {
-        Command command = new DeletePageCommand(synchronizedPages, currentPage, this);
+        Command command = new DeletePageCommand(pageManager, pageManager.getCurrentPageIndex());
         commandManager.execute(command);
     }
 
     @Unique
     private void insertPage() {
-        if (synchronizedPages.size() < MAX_PAGES_NUMBER) {
-            Command command = new InsertPageCommand(synchronizedPages, currentPage, this);
-            commandManager.execute(command);
-        }
+        Command command = new InsertPageCommand(pageManager, pageManager.getCurrentPageIndex());
+        commandManager.execute(command);
     }
 
     // If we need to center the GUI, we shift the Y of the texture draw call down.
@@ -575,12 +553,11 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     // When shift is held down, skip to the last page.
     @Inject(method = "openNextPage", at = @At(value = "HEAD"), cancellable = true)
     public void openNextPage(CallbackInfo ci) {
-        int lastPage = synchronizedPages.size() - 1;
-        if (this.currentPage < lastPage && Screen.hasShiftDown()) {
-            this.currentPage = lastPage;
-            this.updateButtons();
-            this.changePage();
-            ci.cancel();
+        if (Screen.hasShiftDown()) {
+            boolean pageOpened = pageManager.openLastPage();
+            if (pageOpened) {
+                ci.cancel();
+            }
         }
     }
 
@@ -588,10 +565,10 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     @Inject(method = "openPreviousPage", at = @At(value = "HEAD"), cancellable = true)
     public void openPreviousPage(CallbackInfo ci) {
         if (Screen.hasShiftDown()) {
-            this.currentPage = 0;
-            this.updateButtons();
-            this.changePage();
-            ci.cancel();
+            boolean pageOpened = pageManager.openFirstPage();
+            if (pageOpened) {
+                ci.cancel();
+            }
         }
     }
 
@@ -599,7 +576,7 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     // This method is only actively used when double-clicking to select a word.
     @Redirect(method = "getCurrentPageContent", at = @At(value = "INVOKE", target = "Ljava/util/List;get(I)Ljava/lang/Object;"))
     public Object getCurrentPageContent(List<String> pages, int page) {
-        return synchronizedPages.get(page).getPlainText();
+        return pageManager.getCurrentPage().getPlainText();
     }
 
     // We cancel any drags outside the width of the book interface.
@@ -614,46 +591,14 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
 
     @Inject(method = "removeEmptyPages", at = @At(value = "HEAD"))
     private void removeEmptyPages(CallbackInfo ci) {
-        int lastIndex = synchronizedPages.size() - 1;
-        for (int i = lastIndex; i >= 0; i--) {
-            if (synchronizedPages.get(i).isEmpty()) {
-                synchronizedPages.remove(i);
-            } else {
-                // Break the loop as soon as we encounter a non-empty element
-                break;
-            }
-        }
+        pageManager.trimEmptyPages();
     }
 
     @Redirect(method = "appendNewPage", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z"))
     private boolean appendNewPage(List<String> page, Object empty) {
-        Command command = new InsertPageCommand(synchronizedPages, synchronizedPages.size(), this);
+        Command command = new InsertPageCommand(pageManager, pageManager.getPageCount());
         commandManager.execute(command);
         return true;
-    }
-
-    @Override
-    public void scribble$onPageAdded(int pageAddedIndex) {
-        currentPage = pageAddedIndex;
-        dirty = true;
-        updateButtons();
-        changePage();
-    }
-
-    @Override
-    public void scribble$onPageRemoved(int pageRemovedIndex) {
-        if (pageRemovedIndex < currentPage) {
-            // a page before opened was removed
-            // move the index to the left by 1 to keep the same page opened
-            currentPage = Math.max(0, pageRemovedIndex - 1);
-        } else if (currentPage >= synchronizedPages.size()) {
-            // the last page was opened before removing
-            currentPage = Math.max(0, synchronizedPages.size() - 1);
-        }
-
-        dirty = true;
-        updateButtons();
-        changePage();
     }
 
     /**
@@ -662,7 +607,7 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
      * game. While this will still produce incompatibilities, we at least try to
      * not crash.
      *
-     * @reason This method should not be called, as it is replaced by {@link #setPageText}.
+     * @reason This method should not be called, as it is replaced by {@link PageManager#setCurrentPage(RichText)}.
      * @author chrrrs
      */
     @Overwrite
@@ -797,7 +742,7 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
      */
     @Overwrite
     private BookEditScreen.PageContent createPageContent() {
-        RichText text = getCurrentPageText();
+        RichText text = pageManager.getCurrentPage();
         String plainText = text.getPlainText();
 
         if (text.isEmpty()) {
@@ -895,10 +840,10 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     public BookEditScreenMemento scribble$createMemento() {
         RichSelectionManager selectionManager = this.getRichSelectionManager();
         return new BookEditScreenMemento(
-                currentPage,
+                pageManager.getCurrentPageIndex(),
                 selectionManager.selectionStart,
                 selectionManager.selectionEnd,
-                getCurrentPageText(),
+                pageManager.getCurrentPage(),
                 activeColor,
                 Set.copyOf(activeModifiers)
         );
@@ -907,12 +852,12 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     @Override
     public void scribble$restore(BookEditScreenMemento memento) {
         // restore opened page index
-        currentPage = memento.pageIndex();
-        updateButtons();
-        changePage();
+        pageManager.openPage(memento.pageIndex());
+        updateButtons(); // FIXME this is not longer needed here, pageManager#openPage handles it
+        changePage(); // FIXME this is also redundant
 
         // restore page content
-        setPageText(memento.currentPageRichText());
+        pageManager.setCurrentPage(memento.currentPageRichText());
 
         // restore text selection / cursor position
         RichSelectionManager selectionManager = this.getRichSelectionManager();

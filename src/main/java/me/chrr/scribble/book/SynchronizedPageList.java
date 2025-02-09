@@ -102,13 +102,4 @@ public class SynchronizedPageList {
     public boolean isEmpty() {
         return richPages.isEmpty();
     }
-
-    public boolean arePagesEmpty() {
-        for (RichText page : richPages) {
-            if (!page.isEmpty()) {
-                return false;
-            }
-        }
-        return true;
-    }
 }
