@@ -18,7 +18,7 @@ public class KeyboardMixin {
     private MinecraftClient client;
 
     // Disable the narrator hotkey when editing a book.
-    @WrapOperation(method = "onKey", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/SimpleOption;getValue()Ljava/lang/Object;"))
+    @WrapOperation(method = "onKey", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/SimpleOption;getValue()Ljava/lang/Object;", ordinal = 0))
     private Object getValue(SimpleOption<?> instance, Operation<?> original) {
         if (client.currentScreen instanceof BookEditScreen) return false;
         else return original.call(instance);
