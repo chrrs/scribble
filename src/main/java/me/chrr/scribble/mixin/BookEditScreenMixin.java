@@ -54,6 +54,7 @@ import net.minecraft.component.type.WritableBookContentComponent;
 
 @Mixin(BookEditScreen.class)
 public abstract class BookEditScreenMixin extends Screen implements PagesListener, Restorable<BookEditScreenMemento> {
+    //region Constants
     @Unique
     private static final int MAX_PAGES_NUMBER = 100;
 
@@ -71,6 +72,7 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
 
     @Unique
     private static final Formatting DEFAULT_COLOR = Formatting.BLACK;
+    //endregion
 
     //region @Shadow declarations
     @Mutable
@@ -119,6 +121,7 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     protected abstract void updateButtons();
     //endregion
 
+    //region Variables
     @Unique
     private final SynchronizedPageList synchronizedPages = new SynchronizedPageList();
 
@@ -163,58 +166,44 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     private IconButtonWidget saveBookButton;
     @Unique
     private IconButtonWidget loadBookButton;
+    //endregion
 
     // Dummy constructor to match super class.
     private BookEditScreenMixin() {
         super(null);
     }
 
-    @Unique
-    private String getRawClipboard() {
-        // the original logic of BookEditScreen.getClipboard without Formatting.strip() call
-        // to keep text styling modifiers in copied text
-        return this.client != null ? client.keyboard.getClipboard().replaceAll("\\r", "") : "";
+    //region Initialization and invalidation
+    @Inject(method = "<init>", at = @At(value = "TAIL"))
+    //? if <1.21.2 {
+    /*public void init(PlayerEntity player, ItemStack stack, Hand hand, CallbackInfo ci) {
+     *///?} else
+    public void init(PlayerEntity player, ItemStack stack, Hand hand, WritableBookContentComponent writableBookContent, CallbackInfo ci) {
+        // Replace the selection manager with our own
+        currentPageSelectionManager = new RichSelectionManager(
+                this::getCurrentPageText,
+                this::setPageText,
+                this::onCursorFormattingChanged,
+                this::getRawClipboard,
+                this::setClipboard,
+                text -> text.getAsFormattedString().length() < 1024
+                        && this.textRenderer.getWrappedLinesHeight(text, 114) <= 128,
+                () -> Optional.ofNullable(this.activeColor).orElse(DEFAULT_COLOR),
+                () -> this.activeModifiers
+        );
+
+        // Make sure the undo/redo buttons are disabled when appropriate.
+        this.commandManager.onHistoryUpdate(this::invalidateHistoryButtons);
+
+        synchronizedPages.populate(this.pages);
+
+        // After loading the pages, we update cursor formatting.
+        getRichSelectionManager().notifyCursorFormattingChanged();
     }
 
-    /**
-     * RichText-based replacement for BookEditScreen#getLineSelectionRectangle
-     */
-    @Unique
-    private Rect2i getSelectionRectangle(RichText text, TextHandler handler, int selectionStart, int selectionEnd, int lineY, int lineStart) {
-        RichText toSelectionStart = text.subText(lineStart, selectionStart);
-        RichText toSelectionEnd = text.subText(lineStart, selectionEnd);
-        BookEditScreen.Position topLeft = new BookEditScreen.Position((int) handler.getWidth(toSelectionStart), lineY);
-        BookEditScreen.Position bottomRight = new BookEditScreen.Position((int) handler.getWidth(toSelectionEnd), lineY + 9);
-        return this.getRectFromCorners(topLeft, bottomRight);
-    }
-
-    /**
-     * RichText-based replacement for BookEditScreen#getCurrentPageContent
-     */
-    @Unique
-    private RichText getCurrentPageText() {
-        return this.currentPage >= 0 && this.currentPage < synchronizedPages.size()
-                ? synchronizedPages.get(this.currentPage)
-                : RichText.empty();
-    }
-
-    /**
-     * RichText replacement for BookEditScreen#setPageContent.
-     */
-    @Unique
-    private void setPageText(RichText newText) {
-        if (this.currentPage >= 0 && this.currentPage < synchronizedPages.size()) {
-            synchronizedPages.set(this.currentPage, newText);
-        }
-
-        this.dirty = true;
-        this.invalidatePageContent();
-    }
-
-    @Unique
-    private RichSelectionManager getRichSelectionManager() {
-        // This is always the case, as we replace it in #init.
-        return (RichSelectionManager) this.currentPageSelectionManager;
+    @Inject(method = "init", at = @At(value = "HEAD"))
+    private void initScreen(CallbackInfo ci) {
+        initButtons();
     }
 
     @Unique
@@ -301,33 +290,6 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
         return addDrawableChild(button);
     }
 
-    @Inject(method = "<init>", at = @At(value = "TAIL"))
-    //? if <1.21.2 {
-    /*public void init(PlayerEntity player, ItemStack stack, Hand hand, CallbackInfo ci) {
-     *///?} else
-    public void init(PlayerEntity player, ItemStack stack, Hand hand, WritableBookContentComponent writableBookContent, CallbackInfo ci) {
-        // Replace the selection manager with our own
-        currentPageSelectionManager = new RichSelectionManager(
-                this::getCurrentPageText,
-                this::setPageText,
-                this::onCursorFormattingChanged,
-                this::getRawClipboard,
-                this::setClipboard,
-                text -> text.getAsFormattedString().length() < 1024
-                        && this.textRenderer.getWrappedLinesHeight(text, 114) <= 128,
-                () -> Optional.ofNullable(this.activeColor).orElse(DEFAULT_COLOR),
-                () -> this.activeModifiers
-        );
-
-        // Make sure the undo/redo buttons are disabled when appropriate.
-        this.commandManager.onHistoryUpdate(this::invalidateHistoryButtons);
-
-        synchronizedPages.populate(this.pages);
-
-        // After loading the pages, we update cursor formatting.
-        getRichSelectionManager().notifyCursorFormattingChanged();
-    }
-
     @Unique
     private void changeActiveColor(@NotNull Formatting newColor) {
         if (newColor == activeColor) {
@@ -359,11 +321,6 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
             getRichSelectionManager().toggleModifierForSelection(modifier, toggled);
         });
         commandManager.execute(command);
-    }
-
-    @Inject(method = "init", at = @At(value = "HEAD"))
-    private void initScreen(CallbackInfo ci) {
-        initButtons();
     }
 
     @Inject(method = "updateButtons", at = @At(value = "HEAD"))
@@ -421,6 +378,175 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
 
         invalidateFormattingButtons();
     }
+    //endregion
+
+    //region Text management
+    // When asking for the current page content, we return the plain text.
+    // This method is only actively used when double-clicking to select a word.
+    @Redirect(method = "getCurrentPageContent", at = @At(value = "INVOKE", target = "Ljava/util/List;get(I)Ljava/lang/Object;"))
+    public Object getCurrentPageContent(List<String> pages, int page) {
+        return synchronizedPages.get(page).getPlainText();
+    }
+
+    /**
+     * NOTE: This method is marked public, while the original method is private. Some mods
+     * will try to access-modify `setPageContent` to be public, and thus crash the
+     * game. While this will still produce incompatibilities, we at least try to
+     * not crash.
+     *
+     * @reason This method should not be called, as it is replaced by {@link #setPageText}.
+     * @author chrrrs
+     */
+    @Overwrite
+    @SuppressWarnings("visibility")
+    public void setPageContent(String newContent) {
+        Scribble.LOGGER.warn("setPageContent() was called, but ignored.");
+    }
+
+    @Unique
+    private String getRawClipboard() {
+        // the original logic of BookEditScreen.getClipboard without Formatting.strip() call
+        // to keep text styling modifiers in copied text
+        return this.client != null ? client.keyboard.getClipboard().replaceAll("\\r", "") : "";
+    }
+
+    /**
+     * RichText-based replacement for BookEditScreen#getLineSelectionRectangle
+     */
+    @Unique
+    private Rect2i getSelectionRectangle(RichText text, TextHandler handler, int selectionStart, int selectionEnd, int lineY, int lineStart) {
+        RichText toSelectionStart = text.subText(lineStart, selectionStart);
+        RichText toSelectionEnd = text.subText(lineStart, selectionEnd);
+        BookEditScreen.Position topLeft = new BookEditScreen.Position((int) handler.getWidth(toSelectionStart), lineY);
+        BookEditScreen.Position bottomRight = new BookEditScreen.Position((int) handler.getWidth(toSelectionEnd), lineY + 9);
+        return this.getRectFromCorners(topLeft, bottomRight);
+    }
+
+    /**
+     * RichText-based replacement for BookEditScreen#getCurrentPageContent
+     */
+    @Unique
+    private RichText getCurrentPageText() {
+        return this.currentPage >= 0 && this.currentPage < synchronizedPages.size()
+                ? synchronizedPages.get(this.currentPage)
+                : RichText.empty();
+    }
+
+    /**
+     * RichText replacement for BookEditScreen#setPageContent.
+     */
+    @Unique
+    private void setPageText(RichText newText) {
+        if (this.currentPage >= 0 && this.currentPage < synchronizedPages.size()) {
+            synchronizedPages.set(this.currentPage, newText);
+        }
+
+        this.dirty = true;
+        this.invalidatePageContent();
+    }
+
+    @Unique
+    private RichSelectionManager getRichSelectionManager() {
+        // This is always the case, as we replace it in #init.
+        return (RichSelectionManager) this.currentPageSelectionManager;
+    }
+    //endregion
+
+    //region Page management
+    @Inject(method = "removeEmptyPages", at = @At(value = "HEAD"))
+    private void removeEmptyPages(CallbackInfo ci) {
+        int lastIndex = synchronizedPages.size() - 1;
+        for (int i = lastIndex; i >= 0; i--) {
+            if (synchronizedPages.get(i).isEmpty()) {
+                synchronizedPages.remove(i);
+            } else {
+                // Break the loop as soon as we encounter a non-empty element
+                break;
+            }
+        }
+    }
+
+    @Redirect(method = "appendNewPage", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z"))
+    private boolean appendNewPage(List<String> page, Object empty) {
+        Command command = new InsertPageCommand(synchronizedPages, synchronizedPages.size(), this);
+        commandManager.execute(command);
+        return true;
+    }
+
+    @Override
+    public void scribble$onPageAdded(int pageAddedIndex) {
+        currentPage = pageAddedIndex;
+        dirty = true;
+        updateButtons();
+        changePage();
+    }
+
+    @Override
+    public void scribble$onPageRemoved(int pageRemovedIndex) {
+        if (pageRemovedIndex < currentPage) {
+            // a page before opened was removed
+            // move the index to the left by 1 to keep the same page opened
+            currentPage = Math.max(0, pageRemovedIndex - 1);
+        } else if (currentPage >= synchronizedPages.size()) {
+            // the last page was opened before removing
+            currentPage = Math.max(0, synchronizedPages.size() - 1);
+        }
+
+        dirty = true;
+        updateButtons();
+        changePage();
+    }
+
+    @Unique
+    private void deletePage() {
+        Command command = new DeletePageCommand(synchronizedPages, currentPage, this);
+        commandManager.execute(command);
+    }
+
+    @Unique
+    private void insertPage() {
+        if (synchronizedPages.size() < MAX_PAGES_NUMBER) {
+            Command command = new InsertPageCommand(synchronizedPages, currentPage, this);
+            commandManager.execute(command);
+        }
+    }
+    //endregion
+
+    //region History
+    @Override
+    public BookEditScreenMemento scribble$createMemento() {
+        RichSelectionManager selectionManager = this.getRichSelectionManager();
+        return new BookEditScreenMemento(
+                currentPage,
+                selectionManager.selectionStart,
+                selectionManager.selectionEnd,
+                getCurrentPageText(),
+                activeColor,
+                Set.copyOf(activeModifiers)
+        );
+    }
+
+    @Override
+    public void scribble$restore(BookEditScreenMemento memento) {
+        // restore opened page index
+        currentPage = memento.pageIndex();
+        updateButtons();
+        changePage();
+
+        // restore page content
+        setPageText(memento.currentPageRichText());
+
+        // restore text selection / cursor position
+        RichSelectionManager selectionManager = this.getRichSelectionManager();
+        selectionManager.setSelection(memento.selectionStart(), memento.selectionEnd());
+
+        activeColor = memento.color();
+        activeModifiers = new HashSet<>(memento.modifiers()); // to be sure it's mutable
+        invalidateFormattingButtons();
+    }
+    //endregion
+
+    //region Confirmations
 
     /**
      * If the book is not empty, ask for confirmation before executing a function.
@@ -450,6 +576,30 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
         }
     }
 
+    /**
+     * Ask for confirmation before closing without saving.
+     */
+    @Override
+    public void close() {
+        if (this.dirty && this.client != null) {
+            this.client.setScreen(new ConfirmScreen(
+                    confirmed -> {
+                        if (confirmed) {
+                            super.close();
+                        } else {
+                            this.client.setScreen(this);
+                        }
+                    },
+                    Text.translatable("text.scribble.quit_without_saving.title"),
+                    Text.translatable("text.scribble.quit_without_saving.description")
+            ));
+        } else {
+            super.close();
+        }
+    }
+    //endregion
+
+    //region Book saving / loading
     @Unique
     private void saveTo(Path path) {
         try {
@@ -481,21 +631,9 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
             Scribble.LOGGER.error("could not load book from file", e);
         }
     }
+    //endregion
 
-    @Unique
-    private void deletePage() {
-        Command command = new DeletePageCommand(synchronizedPages, currentPage, this);
-        commandManager.execute(command);
-    }
-
-    @Unique
-    private void insertPage() {
-        if (synchronizedPages.size() < MAX_PAGES_NUMBER) {
-            Command command = new InsertPageCommand(synchronizedPages, currentPage, this);
-            commandManager.execute(command);
-        }
-    }
-
+    //region GUI centering
     // If we need to center the GUI, we shift the Y of the texture draw call down.
     // For 1.20.1, this draw call happens in render, so we don't need to do it separately.
     //? if >=1.20.2 {
@@ -549,26 +687,16 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
     public void popRender(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         context.getMatrices().pop();
     }
+    //endregion
 
-    /**
-     * Ask for confirmation before closing without saving.
-     */
-    @Override
-    public void close() {
-        if (this.dirty && this.client != null) {
-            this.client.setScreen(new ConfirmScreen(
-                    confirmed -> {
-                        if (confirmed) {
-                            super.close();
-                        } else {
-                            this.client.setScreen(this);
-                        }
-                    },
-                    Text.translatable("text.scribble.quit_without_saving.title"),
-                    Text.translatable("text.scribble.quit_without_saving.description")
-            ));
-        } else {
-            super.close();
+    //region Mouse and keyboard
+    // We cancel any drags outside the width of the book interface.
+    // This needs to be here, because in this GUI no buttons can ever be focused.
+    @Inject(method = "mouseDragged", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/BookEditScreen;getPageContent()Lnet/minecraft/client/gui/screen/ingame/BookEditScreen$PageContent;"), cancellable = true)
+    private void mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY, CallbackInfoReturnable<Boolean> cir) {
+        if (mouseX < (this.width - 152) / 2.0 || mouseX > (this.width + 152) / 2.0) {
+            cir.setReturnValue(true);
+            cir.cancel();
         }
     }
 
@@ -593,82 +721,6 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
             this.changePage();
             ci.cancel();
         }
-    }
-
-    // When asking for the current page content, we return the plain text.
-    // This method is only actively used when double-clicking to select a word.
-    @Redirect(method = "getCurrentPageContent", at = @At(value = "INVOKE", target = "Ljava/util/List;get(I)Ljava/lang/Object;"))
-    public Object getCurrentPageContent(List<String> pages, int page) {
-        return synchronizedPages.get(page).getPlainText();
-    }
-
-    // We cancel any drags outside the width of the book interface.
-    // This needs to be here, because in this GUI no buttons can ever be focused.
-    @Inject(method = "mouseDragged", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/BookEditScreen;getPageContent()Lnet/minecraft/client/gui/screen/ingame/BookEditScreen$PageContent;"), cancellable = true)
-    private void mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY, CallbackInfoReturnable<Boolean> cir) {
-        if (mouseX < (this.width - 152) / 2.0 || mouseX > (this.width + 152) / 2.0) {
-            cir.setReturnValue(true);
-            cir.cancel();
-        }
-    }
-
-    @Inject(method = "removeEmptyPages", at = @At(value = "HEAD"))
-    private void removeEmptyPages(CallbackInfo ci) {
-        int lastIndex = synchronizedPages.size() - 1;
-        for (int i = lastIndex; i >= 0; i--) {
-            if (synchronizedPages.get(i).isEmpty()) {
-                synchronizedPages.remove(i);
-            } else {
-                // Break the loop as soon as we encounter a non-empty element
-                break;
-            }
-        }
-    }
-
-    @Redirect(method = "appendNewPage", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z"))
-    private boolean appendNewPage(List<String> page, Object empty) {
-        Command command = new InsertPageCommand(synchronizedPages, synchronizedPages.size(), this);
-        commandManager.execute(command);
-        return true;
-    }
-
-    @Override
-    public void scribble$onPageAdded(int pageAddedIndex) {
-        currentPage = pageAddedIndex;
-        dirty = true;
-        updateButtons();
-        changePage();
-    }
-
-    @Override
-    public void scribble$onPageRemoved(int pageRemovedIndex) {
-        if (pageRemovedIndex < currentPage) {
-            // a page before opened was removed
-            // move the index to the left by 1 to keep the same page opened
-            currentPage = Math.max(0, pageRemovedIndex - 1);
-        } else if (currentPage >= synchronizedPages.size()) {
-            // the last page was opened before removing
-            currentPage = Math.max(0, synchronizedPages.size() - 1);
-        }
-
-        dirty = true;
-        updateButtons();
-        changePage();
-    }
-
-    /**
-     * NOTE: This method is marked public, while the original method is private. Some mods
-     * will try to access-modify `setPageContent` to be public, and thus crash the
-     * game. While this will still produce incompatibilities, we at least try to
-     * not crash.
-     *
-     * @reason This method should not be called, as it is replaced by {@link #setPageText}.
-     * @author chrrrs
-     */
-    @Overwrite
-    @SuppressWarnings("visibility")
-    public void setPageContent(String newContent) {
-        Scribble.LOGGER.warn("setPageContent() was called, but ignored.");
     }
 
     // NOTE: There are two "insert" calls in the original method. One is editing the book title, which
@@ -768,7 +820,9 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
             cir.cancel();
         }
     }
+    //endregion
 
+    //region Functionality mixins
     @ModifyArg(method = "drawCursor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawText(Lnet/minecraft/client/font/TextRenderer;Ljava/lang/String;IIIZ)I"), index = 4)
     private int modifyEndCursorColor(int constant) {
         return activeColor == null || activeColor.getColorValue() == null ? constant : activeColor.getColorValue();
@@ -889,37 +943,5 @@ public abstract class BookEditScreenMixin extends Screen implements PagesListene
 
         return new RichPageContent(text, cursorPosition, atEnd, lineStartsArray, lines.toArray(new BookEditScreen.Line[0]), selectionRectangles.toArray(new Rect2i[0]));
     }
-
-
-    @Override
-    public BookEditScreenMemento scribble$createMemento() {
-        RichSelectionManager selectionManager = this.getRichSelectionManager();
-        return new BookEditScreenMemento(
-                currentPage,
-                selectionManager.selectionStart,
-                selectionManager.selectionEnd,
-                getCurrentPageText(),
-                activeColor,
-                Set.copyOf(activeModifiers)
-        );
-    }
-
-    @Override
-    public void scribble$restore(BookEditScreenMemento memento) {
-        // restore opened page index
-        currentPage = memento.pageIndex();
-        updateButtons();
-        changePage();
-
-        // restore page content
-        setPageText(memento.currentPageRichText());
-
-        // restore text selection / cursor position
-        RichSelectionManager selectionManager = this.getRichSelectionManager();
-        selectionManager.setSelection(memento.selectionStart(), memento.selectionEnd());
-
-        activeColor = memento.color();
-        activeModifiers = new HashSet<>(memento.modifiers()); // to be sure it's mutable
-        invalidateFormattingButtons();
-    }
+    //endregion
 }
