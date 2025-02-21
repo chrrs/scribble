@@ -66,7 +66,13 @@ dependencies {
         }
 
         "neoforge" -> "neoForge"("net.neoforged:neoforge:${prop("neoforge", "version")}")
-        "forge" -> "forge"("net.minecraftforge:forge:${prop("forge", "version")}")
+        "forge" -> {
+            "forge"("net.minecraftforge:forge:${prop("forge", "version")}")
+
+            // For Forge, we need to include MixinExtras
+            compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1")!!)
+            implementation(include("io.github.llamalad7:mixinextras-forge:0.4.1")!!)
+        }
     }
 
     // Third party mod compat dependencies
