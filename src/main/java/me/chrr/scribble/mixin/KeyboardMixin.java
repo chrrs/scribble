@@ -1,15 +1,16 @@
 package me.chrr.scribble.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.Keyboard;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
-import org.lwjgl.glfw.GLFW;
+import net.minecraft.client.util.NarratorManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(Keyboard.class)
 public class KeyboardMixin {
@@ -17,17 +18,13 @@ public class KeyboardMixin {
     @Final
     private MinecraftClient client;
 
-    // Disable the narrator hotkey when editing a book.
-    // We mix into the constant, because there's not really many other good places
-    // that we can mixin into to change the condition.
-    @ModifyConstant(method = "onKey", constant = @Constant(intValue = GLFW.GLFW_KEY_B))
-    public int getNarratorKey(int constant) {
+    // Disable the narrator hotkey when editing a book, and while not holding SHIFT.
+    @WrapOperation(method = "onKey", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/NarratorManager;isActive()Z"))
+    public boolean isNarratorActive(NarratorManager instance, Operation<Boolean> original) {
         if (client.currentScreen instanceof BookEditScreen && !Screen.hasShiftDown()) {
-            // We'll change the key needed to activate the narrator to
-            // a known non-existent key if we're currently editing a book.
-            return GLFW.GLFW_KEY_LAST + 1;
+            return false;
         } else {
-            return GLFW.GLFW_KEY_B;
+            return original.call(instance);
         }
     }
 }
