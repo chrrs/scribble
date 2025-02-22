@@ -9,8 +9,8 @@ fun Project.prop(namespace: String, key: String) = property("$namespace.$key") a
 val minecraft = stonecutter.current.version
 
 group = prop("mod", "group")
-version = "${prop("mod", "version")}+mc$minecraft"
-base.archivesName.set("${prop("mod", "name")}-common")
+version = "${prop("mod", "version")}+mc$minecraft-common"
+base.archivesName.set(prop("mod", "name"))
 
 architectury.injectInjectables = false
 architectury.common(stonecutter.tree.branches.mapNotNull {

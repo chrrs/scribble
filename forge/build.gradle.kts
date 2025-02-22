@@ -13,8 +13,8 @@ fun Project.prop(namespace: String, key: String) = property("$namespace.$key") a
 val minecraft = stonecutter.current.version
 val common = requireNotNull(stonecutter.node.sibling(""))
 
-version = "${common.prop("mod", "version")}+mc$minecraft"
-base.archivesName.set("${prop("mod", "name")}-forge")
+version = "${common.prop("mod", "version")}+mc$minecraft-forge"
+base.archivesName.set(prop("mod", "name"))
 
 architectury {
     platformSetupLoomIde()
@@ -128,7 +128,7 @@ publishMods {
     }
 
     displayName.set("$modVersion - Forge $minecraft")
-    version.set("${project.version}-forge")
+    version.set(project.version.toString())
     modLoaders.addAll(prop("platform", "loaders").split(","))
     file.set(tasks.remapJar.get().archiveFile)
 
