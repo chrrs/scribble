@@ -24,3 +24,6 @@ jobs:
 
       - name: Run Build
         run: ./gradlew chiseledBuild
+
+      - name: Run Tests
+        run: ./gradlew chiseledTest

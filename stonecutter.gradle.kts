@@ -27,6 +27,13 @@ stonecutter registerChiseled tasks.register("chiseledPublish", stonecutter.chise
     ofTask("publishMods")
 }
 
+// Test on every version
+stonecutter registerChiseled tasks.register("chiseledTest", stonecutter.chiseled) {
+    versions { branch, _ -> branch == "" }
+    group = "project"
+    ofTask("test")
+}
+
 for (node in stonecutter.tree.nodes) {
     if (node.metadata != stonecutter.current || node.branch.id.isEmpty()) continue
 
