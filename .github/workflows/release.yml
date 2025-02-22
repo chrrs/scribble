@@ -46,4 +46,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           body: ${{ env.CHANGELOG }}
-          files: versions/*/build/libs/*.jar
+          files: build/libs/*.jar
