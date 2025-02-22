@@ -1,6 +1,7 @@
 package me.chrr.scribble.config;
 
 import com.google.gson.*;
+import me.chrr.scribble.Scribble;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,12 +35,7 @@ public class ConfigManager {
     }
 
     private Path getConfigPath() {
-        //? if fabric {
-        return net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir().resolve("scribble.json");
-        //?} else if neoforge {
-        /*return net.neoforged.fml.loading.FMLPaths.CONFIGDIR.get().resolve("Scribble.json");
-         *///?} else
-        /*return net.minecraftforge.fml.loading.FMLPaths.CONFIGDIR.get().resolve("config.json");*/
+        return Scribble.CONFIG_DIR.resolve("scribble.json");
     }
 
     /// Exclusion strategy to skip all fields that are annotated with {@link DeprecatedConfigOption}.

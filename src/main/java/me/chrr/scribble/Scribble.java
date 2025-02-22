@@ -6,12 +6,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class Scribble {
     public static final String MOD_ID = "scribble";
     public static Logger LOGGER = LogManager.getLogger();
 
     public static final ConfigManager CONFIG_MANAGER = new ConfigManager();
+
+    public static Path CONFIG_DIR = null;
+    public static Path BOOK_DIR = null;
 
     public static void init() {
         try {

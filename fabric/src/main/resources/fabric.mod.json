@@ -1,7 +1,7 @@
 {
     "schemaVersion": 1,
     "id": "scribble",
-    "version": "${modVersion}",
+    "version": "${version}",
     "name": "Scribble",
     "description": "Expertly edit your books with rich formatting options, page utilities and more!",
     "authors": [
@@ -17,25 +17,21 @@
     },
     "license": "MIT",
     "icon": "assets/scribble/icon.png",
-    "accessWidener": "scribble.accesswidener",
     "mixins": [
-        {
-            "config": "scribble.mixins.json",
-            "environment": "client"
-        }
+        "scribble.mixins.json"
     ],
     "environment": "client",
     "entrypoints": {
         "client": [
-            "me.chrr.scribble.PlatformEntry"
+            "me.chrr.scribble.fabric.ScribbleFabric"
         ],
         "modmenu": [
-            "me.chrr.scribble.compat.ModMenuCompat"
+            "me.chrr.scribble.fabric.ModMenuCompat"
         ]
     },
     "depends": {
-        "minecraft": "${minecraftDependency}",
-        "fabricloader": ">=0.14",
+        "minecraft": "${minecraft}",
+        "fabricloader": ">=0.15",
         "fabric-resource-loader-v0": "*"
     },
     "breaks": {

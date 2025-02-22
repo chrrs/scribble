@@ -1,8 +1,8 @@
-package me.chrr.scribble.compat;
+package me.chrr.scribble.fabric;
 
-//? if fabric {
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
+import me.chrr.scribble.compat.ClothConfigScreenFactory;
 import net.fabricmc.loader.api.FabricLoader;
 
 public class ModMenuCompat implements ModMenuApi {
@@ -10,9 +10,8 @@ public class ModMenuCompat implements ModMenuApi {
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
         if (FabricLoader.getInstance().isModLoaded("cloth-config2")) {
             return ClothConfigScreenFactory::create;
-        } else {
-            return null;
         }
+
+        return null;
     }
 }
-//?}
