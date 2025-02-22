@@ -1,7 +1,6 @@
 plugins {
     id("dev.architectury.loom")
     id("architectury-plugin")
-    id("me.modmuss50.mod-publish-plugin")
 }
 
 fun Project.hasProp(namespace: String, key: String) = hasProperty("$namespace.$key")
@@ -13,6 +12,7 @@ group = prop("mod", "group")
 version = "${prop("mod", "version")}+mc$minecraft"
 base.archivesName.set("${prop("mod", "name")}-common")
 
+architectury.injectInjectables = false
 architectury.common(stonecutter.tree.branches.mapNotNull {
     if (stonecutter.current.project !in it) null
     else if (!it.hasProp("loom", "platform")) null
@@ -69,35 +69,9 @@ tasks {
     }
 }
 
-
-//publishMods {
-//    val displayLoader = when (loader) {
-//        "forge" -> "Forge"
-//        "fabric" -> "Fabric"
-//        "neoforge" -> "NeoForge"
-//        else -> loader
-//    }
-//
-//    displayName.set("${prop("mod", "version")} - $displayLoader $minecraftVersion")
-//
-//    file.set(tasks.remapJar.get().archiveFile)
-//    changelog.set(providers.environmentVariable("CHANGELOG"))
-//    type.set(if (prop("mod", "version").contains("beta")) ReleaseType.BETA else ReleaseType.STABLE)
-//    modLoaders.addAll(prop("platform", "loaders").split(","))
-//
-//    val gameVersions = prop("platform", "versions").split(",")
-//
-//    modrinth {
-//        projectId.set(prop("modrinth", "id"))
-//        accessToken.set(providers.environmentVariable("MODRINTH_TOKEN"))
-//        minecraftVersions.addAll(gameVersions)
-//        optional("cloth-config")
-//    }
-//
-//    curseforge {
-//        projectId.set(prop("curseforge", "id"))
-//        accessToken.set(providers.environmentVariable("CURSEFORGE_TOKEN"))
-//        minecraftVersions.addAll(gameVersions)
-//        optional("cloth-config")
-//    }
-//}
+/// Find the changelog entry for the given version in `CHANGELOG.md`.
+fun fetchChangelog(modVersion: String): String {
+    val regex = Regex("## ${Regex.escape(modVersion)}\\n+([\\S\\s]*?)(?:\$|\\n+##)")
+    val content = rootProject.file("CHANGELOG.md").readText().replace("\r\n", "\n")
+    return regex.find(content)?.groupValues?.get(1) ?: "*No changelog.*"
+}

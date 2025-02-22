@@ -1,7 +1,10 @@
+import me.modmuss50.mpp.ReleaseType
+
 plugins {
     id("dev.architectury.loom")
     id("architectury-plugin")
     id("com.github.johnrengelman.shadow")
+    id("me.modmuss50.mod-publish-plugin")
 }
 
 fun Project.hasProp(namespace: String, key: String) = hasProperty("$namespace.$key")
@@ -106,5 +109,38 @@ tasks {
         from(remapJar.get().archiveFile)
         into(rootProject.layout.buildDirectory.file("libs"))
         dependsOn(build)
+    }
+
+    publishMods.get().dependsOn("buildAndCollect")
+}
+
+publishMods {
+    val versions = common.prop("platform", "versions").split(",")
+    val modVersion = common.prop("mod", "version")
+    changelog.set(providers.environmentVariable("CHANGELOG"))
+
+    type = when {
+        modVersion.contains("alpha") -> ReleaseType.ALPHA
+        modVersion.contains("beta") -> ReleaseType.BETA
+        else -> ReleaseType.STABLE
+    }
+
+    displayName.set("$modVersion - Fabric $minecraft")
+    version.set("${project.version}-fabric")
+    modLoaders.addAll(prop("platform", "loaders").split(","))
+    file.set(tasks.remapJar.get().archiveFile)
+
+    modrinth {
+        projectId.set(prop("modrinth", "id"))
+        accessToken.set(providers.environmentVariable("MODRINTH_TOKEN"))
+        minecraftVersions.addAll(versions)
+        optional("cloth-config")
+    }
+
+    curseforge {
+        projectId.set(prop("curseforge", "id"))
+        accessToken.set(providers.environmentVariable("CURSEFORGE_TOKEN"))
+        minecraftVersions.addAll(versions)
+        optional("cloth-config")
     }
 }
