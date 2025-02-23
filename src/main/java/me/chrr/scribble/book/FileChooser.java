@@ -60,23 +60,14 @@ public class FileChooser {
     }
 
     public static Path createAndGetBookDirectory() {
-        //? if fabric {
-        Path gameDir = net.fabricmc.loader.api.FabricLoader.getInstance().getGameDir();
-        //?} elif neoforge {
-        /*Path gameDir = net.neoforged.fml.loading.FMLPaths.GAMEDIR.get();
-         *///?} elif forge
-        /*Path gameDir = net.minecraftforge.fml.loading.FMLPaths.GAMEDIR.get();*/
-
-        Path booksDir = gameDir.resolve("books");
-
         try {
-            if (!Files.exists(booksDir)) {
-                Files.createDirectory(booksDir);
+            if (!Files.exists(Scribble.BOOK_DIR)) {
+                Files.createDirectory(Scribble.BOOK_DIR);
             }
         } catch (Exception ignored) {
             Scribble.LOGGER.warn("couldn't create the default books directory");
         }
 
-        return booksDir;
+        return Scribble.BOOK_DIR;
     }
 }

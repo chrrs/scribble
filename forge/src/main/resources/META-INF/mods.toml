@@ -5,7 +5,7 @@ license = "MIT"
 
 [[mods]]
 modId = "scribble"
-version = "${modVersion}"
+version = "${version}"
 displayName = "Scribble"
 description = "Expertly edit your books with rich formatting options, page utilities and more!"
 authors = "chrrrs"
@@ -19,4 +19,4 @@ config = "scribble.mixins.json"
 [[dependencies.scribble]]
 modId = "minecraft"
 mandatory = true
-versionRange = "${minecraftDependency}"
+versionRange = "${minecraft}"
