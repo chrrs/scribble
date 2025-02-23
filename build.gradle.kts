@@ -68,10 +68,3 @@ tasks {
         description = "Must run through `chiseledBuild`"
     }
 }
-
-/// Find the changelog entry for the given version in `CHANGELOG.md`.
-fun fetchChangelog(modVersion: String): String {
-    val regex = Regex("## ${Regex.escape(modVersion)}\\n+([\\S\\s]*?)(?:\$|\\n+##)")
-    val content = rootProject.file("CHANGELOG.md").readText().replace("\r\n", "\n")
-    return regex.find(content)?.groupValues?.get(1) ?: "*No changelog.*"
-}
