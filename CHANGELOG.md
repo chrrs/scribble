@@ -1,3 +1,9 @@
+## 1.5.1
+
+- Improve compatability with mods changing the Narrator shortcut.
+- Update Turkish, Mexican Spanish and German translations. (Thanks to @MissionWAR, @TheLegendOfSaram and @J4PC for
+  contributing!)
+
 ## 1.5.0
 
 - Allow for more granular control of when the action buttons are visible.
