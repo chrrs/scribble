@@ -1,3 +1,10 @@
+## 1.5.2
+
+- Update Russian translation (Thanks to @FaNToMaSikkk for contributing!)
+- Update to 1.21.5
+
+*Note that this release is only for Fabric. Support for NeoForge will come later.*
+
 ## 1.5.1
 
 - Improve compatability with mods changing the Narrator shortcut.
