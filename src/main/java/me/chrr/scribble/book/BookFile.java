@@ -5,6 +5,7 @@ import net.minecraft.nbt.*;
 import java.io.*;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Optional;
 
 /**
  * A record of the data saved to a .book file. The .book file is an NBT
@@ -24,12 +25,22 @@ public record BookFile(String author, Collection<RichText> pages) {
             throw new IOException("could not read book nbt file");
         }
 
-        String author = root.getString("author");
+        //? if >=1.21.5 {
+        String author = root.getString("author").orElse("<unknown>");
+        Collection<RichText> pages = root.getList("pages").orElse(new NbtList())
+                .stream()
+                .map(NbtElement::asString)
+                .map(Optional::orElseThrow)
+                .map(RichText::fromFormattedString)
+                .toList();
+        //?} else {
+        /*String author = root.getString("author");
         Collection<RichText> pages = root.getList("pages", NbtElement.STRING_TYPE)
                 .stream()
                 .map(NbtElement::asString)
                 .map(RichText::fromFormattedString)
                 .toList();
+        *///?}
 
         return new BookFile(author, pages);
     }

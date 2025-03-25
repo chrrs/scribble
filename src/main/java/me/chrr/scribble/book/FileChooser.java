@@ -7,6 +7,7 @@ import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.Platform;
 import org.lwjgl.util.tinyfd.TinyFileDialogs;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -24,7 +25,7 @@ public class FileChooser {
                 filter.put(stack.UTF8("*.book"));
                 filter.flip();
 
-                String defaultPath = createAndGetBookDirectory() + "/";
+                String defaultPath = createAndGetBookDirectory().toAbsolutePath() + File.separator;
 
                 // Depending on the arguments, we open either a save or open file dialog.
                 String path;

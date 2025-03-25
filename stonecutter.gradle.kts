@@ -1,3 +1,5 @@
+import dev.kikugie.stonecutter.StonecutterProject
+
 plugins {
     id("dev.kikugie.stonecutter")
     id("dev.architectury.loom") version "1.9-SNAPSHOT" apply false
@@ -6,23 +8,31 @@ plugins {
     id("me.modmuss50.mod-publish-plugin") version "0.5.1" apply false
 }
 
-stonecutter active "1.21.4" /* [SC] DO NOT EDIT */
+stonecutter active "1.21.5" /* [SC] DO NOT EDIT */
 
 // Read the versions from CHISELED_VERSIONS, and only build / publish those versions.
-// If it's blank, we build / publish all available versions.
+// If it's blank, we build / publish all available versions. Same for loaders.
 val chiseledVersions = providers.environmentVariable("CHISELED_VERSIONS")
     .orNull?.ifBlank { null }?.split(",")
+val chiseledLoaders = providers.environmentVariable("CHISELED_LOADERS")
+    .orNull?.ifBlank { null }?.split(",")
+
+val versionSelector = { branch: String, project: StonecutterProject ->
+    val selectVersion = chiseledVersions?.contains(project.version) ?: true
+    val selectBranch = chiseledLoaders?.contains(branch) ?: true
+    selectVersion && selectBranch
+}
 
 // Build every version into `build/libs`.
 stonecutter registerChiseled tasks.register("chiseledBuild", stonecutter.chiseled) {
-    versions { _, it -> chiseledVersions?.contains(it.version) ?: true }
+    versions(versionSelector)
     group = "project"
     ofTask("buildAndCollect")
 }
 
 // Publish every version after building.
 stonecutter registerChiseled tasks.register("chiseledPublish", stonecutter.chiseled) {
-    versions { _, it -> chiseledVersions?.contains(it.version) ?: true }
+    versions(versionSelector)
     group = "project"
     ofTask("publishMods")
 }

@@ -7,6 +7,10 @@ on:
         required: false
         description: Published Minecraft versions
         type: string
+      publishedLoaders:
+        required: false
+        description: Published Loaders
+        type: string
 
 jobs:
   release:
@@ -41,6 +45,7 @@ jobs:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
           CHISELED_VERSIONS: ${{ inputs.publishedVersions }}
+          CHISELED_LOADERS: ${{ inputs.publishedLoaders }}
 
       - name: Create release
         uses: softprops/action-gh-release@v2
