@@ -10,10 +10,12 @@ plugins {
 fun Project.hasProp(namespace: String, key: String) = hasProperty("$namespace.$key")
 fun Project.prop(namespace: String, key: String) = property("$namespace.$key") as String
 
-val minecraft = stonecutter.current.version
 val common = requireNotNull(stonecutter.node.sibling(""))
 
-version = "${common.prop("mod", "version")}+mc$minecraft-fabric"
+val current = stonecutter.current.version
+val minecraft = common.prop("minecraft", "version")
+
+version = "${common.prop("mod", "version")}+mc$current-fabric"
 base.archivesName.set(prop("mod", "name"))
 
 architectury {
@@ -60,7 +62,7 @@ loom {
 }
 
 java {
-    val java = if (stonecutter.eval(minecraft, ">=1.20.5"))
+    val java = if (stonecutter.eval(current, ">=1.20.5"))
         JavaVersion.VERSION_21 else JavaVersion.VERSION_17
     targetCompatibility = java
     sourceCompatibility = java

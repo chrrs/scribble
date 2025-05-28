@@ -6,10 +6,11 @@ plugins {
 fun Project.hasProp(namespace: String, key: String) = hasProperty("$namespace.$key")
 fun Project.prop(namespace: String, key: String) = property("$namespace.$key") as String
 
-val minecraft = stonecutter.current.version
+val current = stonecutter.current.version
+val minecraft = prop("minecraft", "version")
 
 group = prop("mod", "group")
-version = "${prop("mod", "version")}+mc$minecraft-common"
+version = "${prop("mod", "version")}+mc$current-common"
 base.archivesName.set(prop("mod", "name"))
 
 architectury.injectInjectables = false
@@ -21,7 +22,7 @@ architectury.common(stonecutter.tree.branches.mapNotNull {
 
 stonecutter {
     // `renderButton` was changed to renderWidget after 1.20.3.
-    val method = if (eval(minecraft, ">=1.20.3")) "renderWidget" else "renderButton"
+    val method = if (eval(current.version, ">=1.20.3")) "renderWidget" else "renderButton"
     swaps["renderWidget"] = "protected void $method(DrawContext context, int mouseX, int mouseY, float delta) {"
 }
 
@@ -47,7 +48,7 @@ loom {
 }
 
 java {
-    val java = if (stonecutter.eval(minecraft, ">=1.20.5"))
+    val java = if (stonecutter.eval(current, ">=1.20.5"))
         JavaVersion.VERSION_21 else JavaVersion.VERSION_17
     targetCompatibility = java
     sourceCompatibility = java
