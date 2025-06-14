@@ -1,27 +1,27 @@
-package me.chrr.scribble.gui;
+package me.chrr.scribble.gui.button;
 
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.gui.widget.PressableWidget;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-public class ColorSwatchWidget extends ClickableWidget {
+public class ColorSwatchWidget extends PressableWidget {
     private final Formatting color;
     private final Runnable onClick;
 
-    private boolean toggled = false;
+    private boolean toggled;
 
-    public ColorSwatchWidget(Text tooltip, Formatting color, Runnable onClick, int x, int y, int width, int height) {
+    public ColorSwatchWidget(Text tooltip, Formatting color, Runnable onClick, int x, int y, int width, int height, boolean toggled) {
         super(x, y, width, height, tooltip);
         this.setTooltip(Tooltip.of(tooltip));
         this.color = color;
         this.onClick = onClick;
+        this.toggled = toggled;
     }
 
     @Override
-    //$ renderWidget
     protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
         if (isSelected() || toggled) {
             context.fill(getX(), getY(), getX() + width, getY() + height, isSelected() ? 0xffffffff : 0xffa0a0a0);
@@ -42,7 +42,7 @@ public class ColorSwatchWidget extends ClickableWidget {
     }
 
     @Override
-    public void onClick(double mouseX, double mouseY) {
+    public void onPress() {
         this.toggled = true;
         this.onClick.run();
     }

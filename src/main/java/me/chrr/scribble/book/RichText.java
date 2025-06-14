@@ -1,8 +1,6 @@
 package me.chrr.scribble.book;
 
-import net.minecraft.text.StringVisitable;
-import net.minecraft.text.Style;
-import net.minecraft.text.TextColor;
+import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -48,19 +46,6 @@ public class RichText implements StringVisitable {
      */
     public RichText(String text, Formatting color, Set<Formatting> modifiers) {
         this(List.of(new Segment(text, color, modifiers)));
-    }
-
-    public List<Segment> getSegments() {
-        return segments;
-    }
-
-    /**
-     * Create a new empty RichText instance.
-     *
-     * @return a rich text without any segments.
-     */
-    public static RichText empty() {
-        return new RichText(List.of());
     }
 
     /**
@@ -511,6 +496,34 @@ public class RichText implements StringVisitable {
         }
 
         return out.toString();
+    }
+
+    /**
+     * Get the rich text as a vanilla {@link MutableText}. Note that this text content is valid for
+     * this client only!
+     *
+     * @return this rich-text as mutable text.
+     */
+    public MutableText getAsMutableText() {
+        RichText text = this;
+        return MutableText.of(new TextContent() {
+            @Override
+            public <T> Optional<T> visit(StringVisitable.StyledVisitor<T> visitor, Style style) {
+                return text.visit(visitor, style);
+            }
+
+            @Override
+            public <T> Optional<T> visit(StringVisitable.Visitor<T> visitor) {
+                return text.visit(visitor);
+            }
+
+            @Override
+            public Type<?> getType() {
+                // This is not accurate, but this TextContent is never sent to the
+                // server, so it doesn't need to be.
+                return PlainTextContent.TYPE;
+            }
+        });
     }
 
     /**

@@ -1,17 +1,42 @@
 accessWidener v2 named
 
-accessible class net/minecraft/client/gui/screen/ingame/BookEditScreen$PageContent
-accessible class net/minecraft/client/gui/screen/ingame/BookEditScreen$Position
-accessible class net/minecraft/client/gui/screen/ingame/BookEditScreen$Line
+# Expose fields and methods so we can override them in RichEditBoxWidget.
+accessible method net/minecraft/client/gui/widget/EditBoxWidget <init> (Lnet/minecraft/client/font/TextRenderer;IIIILnet/minecraft/text/Text;Lnet/minecraft/text/Text;IZIZZ)V
+accessible method net/minecraft/client/gui/widget/EditBoxWidget drawSelection (Lnet/minecraft/client/gui/DrawContext;IIII)V
+accessible field net/minecraft/client/gui/widget/EditBoxWidget editBox Lnet/minecraft/client/gui/EditBox;
+mutable field net/minecraft/client/gui/widget/EditBoxWidget editBox Lnet/minecraft/client/gui/EditBox;
+accessible field net/minecraft/client/gui/widget/EditBoxWidget lastSwitchFocusTime J
+accessible field net/minecraft/client/gui/widget/EditBoxWidget placeholder Lnet/minecraft/text/Text;
+accessible field net/minecraft/client/gui/widget/EditBoxWidget textColor I
+accessible field net/minecraft/client/gui/widget/EditBoxWidget textRenderer Lnet/minecraft/client/font/TextRenderer;
+accessible field net/minecraft/client/gui/widget/EditBoxWidget textShadow Z
 
-accessible field net/minecraft/client/gui/screen/ingame/BookEditScreen$PageContent lines [Lnet/minecraft/client/gui/screen/ingame/BookEditScreen$Line;
-accessible field net/minecraft/client/gui/screen/ingame/BookEditScreen$PageContent lineStarts [I
-extendable class net/minecraft/client/gui/screen/ingame/BookEditScreen$PageContent
+# Expose fields and methods (and sub-class) so we can override them in RichEditBox.
+accessible class net/minecraft/client/gui/EditBox$Substring
+accessible method net/minecraft/client/gui/EditBox$Substring <init> (II)V
+accessible method net/minecraft/client/gui/EditBox getCurrentLine ()Lnet/minecraft/client/gui/EditBox$Substring;
+accessible method net/minecraft/client/gui/EditBox getOffsetLine (I)Lnet/minecraft/client/gui/EditBox$Substring;
+accessible method net/minecraft/client/gui/EditBox onChange ()V
+extendable method net/minecraft/client/gui/EditBox rewrap ()V
+accessible method net/minecraft/client/gui/EditBox truncate (Ljava/lang/String;)Ljava/lang/String;
+accessible method net/minecraft/client/gui/EditBox truncateForReplacement (Ljava/lang/String;)Ljava/lang/String;
+accessible field net/minecraft/client/gui/EditBox cursor I
+accessible field net/minecraft/client/gui/EditBox lines Ljava/util/List;
+accessible field net/minecraft/client/gui/EditBox maxLines I
+accessible field net/minecraft/client/gui/EditBox selectionEnd I
+accessible field net/minecraft/client/gui/EditBox text Ljava/lang/String;
+accessible field net/minecraft/client/gui/EditBox textRenderer Lnet/minecraft/client/font/TextRenderer;
+accessible field net/minecraft/client/gui/EditBox width I
 
-accessible method net/minecraft/client/gui/screen/ingame/BookEditScreen$Position <init> (II)V
-
-accessible field net/minecraft/client/gui/screen/ingame/BookEditScreen$Line text Lnet/minecraft/text/Text;
-mutable field net/minecraft/client/gui/screen/ingame/BookEditScreen$Line text Lnet/minecraft/text/Text;
+# We need access to all the builder properties, so that we can build our own RichEditBoxWidget.
+accessible field net/minecraft/client/gui/widget/EditBoxWidget$Builder x I
+accessible field net/minecraft/client/gui/widget/EditBoxWidget$Builder y I
+accessible field net/minecraft/client/gui/widget/EditBoxWidget$Builder placeholder Lnet/minecraft/text/Text;
+accessible field net/minecraft/client/gui/widget/EditBoxWidget$Builder textColor I
+accessible field net/minecraft/client/gui/widget/EditBoxWidget$Builder textShadow Z
+accessible field net/minecraft/client/gui/widget/EditBoxWidget$Builder cursorColor I
+accessible field net/minecraft/client/gui/widget/EditBoxWidget$Builder hasBackground Z
+accessible field net/minecraft/client/gui/widget/EditBoxWidget$Builder hasOverlay Z
 
 accessible field net/minecraft/client/util/SelectionManager selectionStart I
 accessible field net/minecraft/client/util/SelectionManager selectionEnd I
@@ -19,5 +44,3 @@ accessible field net/minecraft/client/util/SelectionManager clipboardGetter Ljav
 accessible field net/minecraft/client/util/SelectionManager clipboardSetter Ljava/util/function/Consumer;
 accessible method net/minecraft/client/util/SelectionManager getSelectedText (Ljava/lang/String;)Ljava/lang/String;
 extendable method net/minecraft/client/util/SelectionManager updateSelectionRange (Z)V
-
-accessible method net/minecraft/client/gui/screen/Screen blur ()V

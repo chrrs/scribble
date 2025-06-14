@@ -8,7 +8,7 @@ plugins {
     id("me.modmuss50.mod-publish-plugin") version "0.5.1" apply false
 }
 
-stonecutter active "1.21.5" /* [SC] DO NOT EDIT */
+stonecutter active "1.21.6" /* [SC] DO NOT EDIT */
 
 // Read the versions from CHISELED_VERSIONS, and only build / publish those versions.
 // If it's blank, we build / publish all available versions. Same for loaders.
