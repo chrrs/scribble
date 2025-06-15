@@ -40,7 +40,7 @@ public class RichEditBoxWidget extends EditBoxWidget {
 
     private void onFormatUpdate(Formatting color, Set<Formatting> modifiers) {
         this.color = color;
-        this.modifiers = modifiers;
+        this.modifiers = new HashSet<>(modifiers);
 
         if (this.onInvalidateFormat != null) {
             this.onInvalidateFormat.run();
