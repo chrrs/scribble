@@ -1,7 +1,7 @@
 package me.chrr.scribble.neoforge;
 
 import me.chrr.scribble.Scribble;
-import me.chrr.scribble.compat.ClothConfigScreenFactory;
+import me.chrr.scribble.config.ClothConfigScreenFactory;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.ModList;
