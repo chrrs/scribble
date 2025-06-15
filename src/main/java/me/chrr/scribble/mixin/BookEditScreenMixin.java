@@ -12,6 +12,7 @@ import me.chrr.scribble.gui.edit.RichEditBoxWidget;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
+import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
 import net.minecraft.client.gui.widget.EditBoxWidget;
@@ -32,6 +33,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 @Mixin(BookEditScreen.class)
 public abstract class BookEditScreenMixin extends Screen {
@@ -90,6 +92,9 @@ public abstract class BookEditScreenMixin extends Screen {
     private IconButtonWidget scribble$deletePageButton;
     @Unique
     private IconButtonWidget scribble$insertPageButton;
+
+    @Unique
+    private boolean scribble$dirty = false;
     //endregion
 
     // Dummy constructor to match super class.
@@ -275,8 +280,8 @@ public abstract class BookEditScreenMixin extends Screen {
                 ax, ay + 12 * 2 + 4, 48, 90, 12, 12));
         addDrawableChild(new IconButtonWidget(
                 Text.translatable("text.scribble.action.load_book_from_file"),
-                // FIXME: show confirm dialog to overwrite.
-                () -> FileChooser.chooseBook(false, this::scribble$loadFrom),
+                () -> this.scribble$confirmIf(true, "overwrite_warning",
+                        () -> FileChooser.chooseBook(false, this::scribble$loadFrom)),
                 ax, ay + 12 * 3 + 4, 60, 90, 12, 12));
     }
     //endregion
@@ -331,6 +336,43 @@ public abstract class BookEditScreenMixin extends Screen {
         } catch (Exception e) {
             Scribble.LOGGER.error("could not load book from file", e);
         }
+    }
+    //endregion
+
+    //region Overwrite / Close confirmations
+    // We want to keep track of if the book has been edited (i.e. if it's "dirty").
+    @ModifyArg(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/widget/EditBoxWidget;setChangeListener(Ljava/util/function/Consumer;)V"), index = 0)
+    public Consumer<String> modifyChangeListener(Consumer<String> changeListener) {
+        return (text) -> {
+            if (!text.equals(this.pages.get(this.currentPage))) {
+                this.scribble$dirty = true;
+            }
+
+            changeListener.accept(text);
+        };
+    }
+
+    // Show a confirmation dialog if passed condition is true, otherwise run the runnable immediately.
+    @Unique
+    public void scribble$confirmIf(boolean condition, String name, Runnable runnable) {
+        if (condition && this.client != null) {
+            this.client.setScreen(new ConfirmScreen(
+                    confirmed -> {
+                        this.client.setScreen(this);
+                        if (confirmed) runnable.run();
+                    },
+                    Text.translatable("text.scribble." + name + ".title"),
+                    Text.translatable("text.scribble." + name + ".description")
+            ));
+        } else {
+            runnable.run();
+        }
+    }
+
+    // Show a confirmation dialog when trying to exit the screen if the book has been edited
+    @Override
+    public void close() {
+        this.scribble$confirmIf(this.scribble$dirty, "quit_without_saving", super::close);
     }
     //endregion
 
