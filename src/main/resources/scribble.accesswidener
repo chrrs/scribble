@@ -37,10 +37,3 @@ accessible field net/minecraft/client/gui/widget/EditBoxWidget$Builder textShado
 accessible field net/minecraft/client/gui/widget/EditBoxWidget$Builder cursorColor I
 accessible field net/minecraft/client/gui/widget/EditBoxWidget$Builder hasBackground Z
 accessible field net/minecraft/client/gui/widget/EditBoxWidget$Builder hasOverlay Z
-
-accessible field net/minecraft/client/util/SelectionManager selectionStart I
-accessible field net/minecraft/client/util/SelectionManager selectionEnd I
-accessible field net/minecraft/client/util/SelectionManager clipboardGetter Ljava/util/function/Supplier;
-accessible field net/minecraft/client/util/SelectionManager clipboardSetter Ljava/util/function/Consumer;
-accessible method net/minecraft/client/util/SelectionManager getSelectedText (Ljava/lang/String;)Ljava/lang/String;
-extendable method net/minecraft/client/util/SelectionManager updateSelectionRange (Z)V
