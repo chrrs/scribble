@@ -19,7 +19,7 @@ stonecutter {
     create(rootProject) {
         versions("1.21.6")
         branch("fabric") { versions("1.21.6") }
-//        branch("neoforge") { versions("1.21.6") }
+        branch("neoforge") { versions("1.21.6") }
     }
 }
 
