@@ -34,6 +34,7 @@ configurations {
 
 repositories {
     maven("https://maven.neoforged.net/releases/")
+    maven("https://prmaven.neoforged.net/NeoForge/pr2297")
 }
 
 dependencies {

@@ -1,7 +1,6 @@
-package me.chrr.scribble.compat;
+package me.chrr.scribble.config;
 
 import me.chrr.scribble.Scribble;
-import me.chrr.scribble.config.Config;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
