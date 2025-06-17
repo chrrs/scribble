@@ -20,6 +20,7 @@ import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -29,6 +30,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -92,6 +94,11 @@ public abstract class BookEditScreenMixin extends Screen {
     private IconButtonWidget scribble$deletePageButton;
     @Unique
     private IconButtonWidget scribble$insertPageButton;
+
+    @Unique
+    private IconButtonWidget scribble$undoButton;
+    @Unique
+    private IconButtonWidget scribble$redoButton;
 
     @Unique
     private boolean scribble$dirty = false;
@@ -241,6 +248,7 @@ public abstract class BookEditScreenMixin extends Screen {
 
             this.updatePage();
             this.updatePreviousPageButtonVisibility();
+            this.scribble$dirty = true;
         }
     }
 
@@ -250,6 +258,7 @@ public abstract class BookEditScreenMixin extends Screen {
             this.pages.add(this.currentPage, "");
             this.updatePage();
             this.updatePreviousPageButtonVisibility();
+            this.scribble$dirty = true;
         }
     }
     //endregion
@@ -260,19 +269,16 @@ public abstract class BookEditScreenMixin extends Screen {
         int ax = this.width / 2 - 78 - 7 - 12;
         int ay = Scribble.getBookScreenYOffset(height) + 12 + 4;
 
-        IconButtonWidget undoButton = addDrawableChild(new IconButtonWidget(
+        scribble$undoButton = addDrawableChild(new IconButtonWidget(
                 Text.translatable("text.scribble.action.undo"),
                 () -> {
                 },
                 ax, ay, 24, 90, 12, 12));
-        IconButtonWidget redoButton = addDrawableChild(new IconButtonWidget(
+        scribble$redoButton = addDrawableChild(new IconButtonWidget(
                 Text.translatable("text.scribble.action.redo"),
                 () -> {
                 },
                 ax, ay + 12, 36, 90, 12, 12));
-
-        undoButton.active = false;
-        redoButton.active = false;
 
         addDrawableChild(new IconButtonWidget(
                 Text.translatable("text.scribble.action.save_book_to_file"),
@@ -283,6 +289,28 @@ public abstract class BookEditScreenMixin extends Screen {
                 () -> this.scribble$confirmIf(true, "overwrite_warning",
                         () -> FileChooser.chooseBook(false, this::scribble$loadFrom)),
                 ax, ay + 12 * 3 + 4, 60, 90, 12, 12));
+
+        scribble$invalidateActionButtons();
+    }
+
+    @Unique
+    private void scribble$invalidateActionButtons() {
+        scribble$undoButton.active = false;
+        scribble$redoButton.active = false;
+    }
+
+    @Inject(method = "keyPressed", at = @At(value = "HEAD"), cancellable = true)
+    public void onActionKeyPressed(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
+        if (Screen.hasControlDown() && !Screen.hasAltDown()) {
+            boolean shift = Screen.hasShiftDown();
+            if ((keyCode == GLFW.GLFW_KEY_Z && !shift && scribble$undoButton.active)) {
+                scribble$undoButton.onPress();
+                cir.cancel();
+            } else if (((keyCode == GLFW.GLFW_KEY_Z && shift) || (keyCode == GLFW.GLFW_KEY_Y && !shift)) && scribble$redoButton.active) {
+                scribble$redoButton.onPress();
+                cir.cancel();
+            }
+        }
     }
     //endregion
 
@@ -333,6 +361,7 @@ public abstract class BookEditScreenMixin extends Screen {
 
             this.updatePage();
             this.updatePreviousPageButtonVisibility();
+            this.scribble$dirty = true;
         } catch (Exception e) {
             Scribble.LOGGER.error("could not load book from file", e);
         }
