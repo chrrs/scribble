@@ -35,13 +35,14 @@ public class RichEditBoxWidget extends EditBoxWidget {
         this.editBox = new RichEditBox(
                 textRenderer, width - this.getPadding(),
                 () -> new Pair<>(Optional.ofNullable(color).orElse(Formatting.BLACK), modifiers),
-                this::onFormatUpdate);
+                (color, modifiers) -> {
+                    this.color = color;
+                    this.modifiers = new HashSet<>(modifiers);
+                    this.notifyInvalidateFormat();
+                });
     }
 
-    private void onFormatUpdate(Formatting color, Set<Formatting> modifiers) {
-        this.color = color;
-        this.modifiers = new HashSet<>(modifiers);
-
+    private void notifyInvalidateFormat() {
         if (this.onInvalidateFormat != null) {
             this.onInvalidateFormat.run();
         }
@@ -63,9 +64,7 @@ public class RichEditBoxWidget extends EditBoxWidget {
                 this.color = formatting;
             }
 
-            if (this.onInvalidateFormat != null) {
-                this.onInvalidateFormat.run();
-            }
+            this.notifyInvalidateFormat();
         }
     }
 
