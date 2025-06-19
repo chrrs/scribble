@@ -1,6 +1,8 @@
 package me.chrr.scribble.gui.edit;
 
+import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.RichText;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.EditBox;
 import net.minecraft.client.gui.screen.Screen;
@@ -11,6 +13,7 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.math.MathHelper;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -104,7 +107,6 @@ public class RichEditBox extends EditBox {
 
         // If the string contains formatting codes, we keep them in. Otherwise,
         // we just type in the current color and modifiers.
-        // FIXME: respect config option on copying and pasting formatting codes.
         Pair<Formatting, Set<Formatting>> style = this.formatSupplier.get();
         RichText replacement = Formatting.strip(string).equals(string)
                 ? new RichText(string, style.getLeft(), style.getRight())
@@ -159,14 +161,30 @@ public class RichEditBox extends EditBox {
 
     @Override
     public boolean handleSpecialKey(int keyCode) {
-        boolean handled = super.handleSpecialKey(keyCode);
-
-        // FIXME: vanilla bug? cursor update callback isn't called from here.
-        if (handled && Screen.isSelectAll(keyCode)) {
-            this.sendUpdateFormat();
+        // Override copy/cut/paste to remove formatting codes if the config option is set or SHIFT is held down.
+        boolean keepFormatting = Scribble.CONFIG_MANAGER.getConfig().copyFormattingCodes ^ Screen.hasShiftDown();
+        boolean ctrlNoAlt = Screen.hasControlDown() && !Screen.hasAltDown();
+        if (ctrlNoAlt && (keyCode == GLFW.GLFW_KEY_C || keyCode == GLFW.GLFW_KEY_X)) {
+            String text = this.getSelectedText();
+            if (!keepFormatting) text = Formatting.strip(text);
+            MinecraftClient.getInstance().keyboard.setClipboard(text);
+            if (keyCode == GLFW.GLFW_KEY_X) this.replaceSelection("");
+            return true;
+        } else if (ctrlNoAlt && keyCode == GLFW.GLFW_KEY_V) {
+            String text = MinecraftClient.getInstance().keyboard.getClipboard();
+            if (!keepFormatting) text = Formatting.strip(text);
+            this.replaceSelection(text);
+            return true;
         }
 
-        return handled;
+        // FIXME: vanilla bug? cursor update callback isn't called on select all.
+        if (Screen.isSelectAll(keyCode)) {
+            boolean handled = super.handleSpecialKey(keyCode);
+            this.sendUpdateFormat();
+            return handled;
+        }
+
+        return super.handleSpecialKey(keyCode);
     }
 
     @Override
