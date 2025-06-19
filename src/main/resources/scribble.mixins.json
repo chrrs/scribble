@@ -6,6 +6,7 @@
     "client": [
         "BookEditScreenMixin",
         "BookScreenMixin",
+        "BookSigningScreenMixin",
         "KeyboardMixin",
         "LecternScreenMixin"
     ],
