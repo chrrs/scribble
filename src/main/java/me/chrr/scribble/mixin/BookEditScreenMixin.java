@@ -8,7 +8,11 @@ import me.chrr.scribble.book.FileChooser;
 import me.chrr.scribble.gui.button.ColorSwatchWidget;
 import me.chrr.scribble.gui.button.IconButtonWidget;
 import me.chrr.scribble.gui.button.ModifierButtonWidget;
+import me.chrr.scribble.gui.edit.RichEditBox;
 import me.chrr.scribble.gui.edit.RichEditBoxWidget;
+import me.chrr.scribble.history.CommandManager;
+import me.chrr.scribble.history.HistoryListener;
+import me.chrr.scribble.history.command.EditCommand;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
@@ -20,6 +24,7 @@ import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,11 +39,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 @Mixin(BookEditScreen.class)
-public abstract class BookEditScreenMixin extends Screen {
+public abstract class BookEditScreenMixin extends Screen implements HistoryListener {
     //region Constants
     @Unique
     private static final Formatting[] scribble$COLORS = new Formatting[]{
@@ -102,6 +109,8 @@ public abstract class BookEditScreenMixin extends Screen {
 
     @Unique
     private boolean scribble$dirty = false;
+    @Unique
+    private final CommandManager scribble$commandManager = new CommandManager(this);
     //endregion
 
     // Dummy constructor to match super class.
@@ -111,7 +120,9 @@ public abstract class BookEditScreenMixin extends Screen {
 
     @Redirect(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/widget/EditBoxWidget;builder()Lnet/minecraft/client/gui/widget/EditBoxWidget$Builder;"))
     public EditBoxWidget.Builder buildEditBoxWidget() {
-        return new RichEditBoxWidget.Builder().onInvalidateFormat(this::scribble$invalidateFormattingButtons);
+        return new RichEditBoxWidget.Builder()
+                .onInvalidateFormat(this::scribble$invalidateFormattingButtons)
+                .onHistoryPush(this::scribble$pushEditCommand);
     }
 
     @Unique
@@ -240,6 +251,7 @@ public abstract class BookEditScreenMixin extends Screen {
 
     @Unique
     private void scribble$deletePage() {
+        // FIXME: add a history command for deleting pages.
         if (this.pages.size() > 1) {
             this.pages.remove(this.currentPage);
             if (this.currentPage == this.pages.size()) {
@@ -254,6 +266,7 @@ public abstract class BookEditScreenMixin extends Screen {
 
     @Unique
     private void scribble$insertPage() {
+        // FIXME: add a history command for inserting pages.
         if (this.pages.size() < 100) {
             this.pages.add(this.currentPage, "");
             this.updatePage();
@@ -272,11 +285,15 @@ public abstract class BookEditScreenMixin extends Screen {
         scribble$undoButton = addDrawableChild(new IconButtonWidget(
                 Text.translatable("text.scribble.action.undo"),
                 () -> {
+                    scribble$commandManager.tryUndo();
+                    this.scribble$invalidateActionButtons();
                 },
                 ax, ay, 24, 90, 12, 12));
         scribble$redoButton = addDrawableChild(new IconButtonWidget(
                 Text.translatable("text.scribble.action.redo"),
                 () -> {
+                    scribble$commandManager.tryRedo();
+                    this.scribble$invalidateActionButtons();
                 },
                 ax, ay + 12, 36, 90, 12, 12));
 
@@ -295,8 +312,8 @@ public abstract class BookEditScreenMixin extends Screen {
 
     @Unique
     private void scribble$invalidateActionButtons() {
-        scribble$undoButton.active = false;
-        scribble$redoButton.active = false;
+        scribble$undoButton.active = scribble$commandManager.canUndo();
+        scribble$redoButton.active = scribble$commandManager.canRedo();
     }
 
     @Inject(method = "keyPressed", at = @At(value = "HEAD"), cancellable = true)
@@ -305,12 +322,49 @@ public abstract class BookEditScreenMixin extends Screen {
             boolean shift = Screen.hasShiftDown();
             if ((keyCode == GLFW.GLFW_KEY_Z && !shift && scribble$undoButton.active)) {
                 scribble$undoButton.onPress();
-                cir.cancel();
+                cir.setReturnValue(true);
             } else if (((keyCode == GLFW.GLFW_KEY_Z && shift) || (keyCode == GLFW.GLFW_KEY_Y && !shift)) && scribble$redoButton.active) {
                 scribble$redoButton.onPress();
-                cir.cancel();
+                cir.setReturnValue(true);
             }
         }
+    }
+    //endregion
+
+    //region History
+    @Override
+    public void scribble$history$switchPage(int page) {
+        if (page < 0 || page >= this.pages.size())
+            return;
+
+        this.currentPage = page;
+        this.updatePage();
+        this.updatePreviousPageButtonVisibility();
+    }
+
+    @Override
+    public void scribble$history$setFormat(@Nullable Formatting color, Set<Formatting> modifiers) {
+        RichEditBoxWidget editBox = this.scribble$getRichEditBoxWidget();
+        editBox.color = color;
+        editBox.modifiers = new HashSet<>(modifiers);
+        this.scribble$invalidateFormattingButtons();
+    }
+
+    @Override
+    public RichEditBox scribble$history$getRichEditBox() {
+        return this.scribble$getRichEditBoxWidget().getRichEditBox();
+    }
+
+    @Unique
+    private void scribble$pushEditCommand(EditCommand command) {
+        RichEditBoxWidget editBox = this.scribble$getRichEditBoxWidget();
+
+        command.page = this.currentPage;
+        command.color = editBox.color;
+        command.modifiers = editBox.modifiers;
+
+        this.scribble$commandManager.push(command);
+        this.scribble$invalidateActionButtons();
     }
     //endregion
 

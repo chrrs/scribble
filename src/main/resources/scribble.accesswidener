@@ -23,6 +23,7 @@ accessible method net/minecraft/client/gui/EditBox truncateForReplacement (Ljava
 accessible field net/minecraft/client/gui/EditBox cursor I
 accessible field net/minecraft/client/gui/EditBox lines Ljava/util/List;
 accessible field net/minecraft/client/gui/EditBox maxLines I
+accessible field net/minecraft/client/gui/EditBox selecting Z
 accessible field net/minecraft/client/gui/EditBox selectionEnd I
 accessible field net/minecraft/client/gui/EditBox text Ljava/lang/String;
 accessible field net/minecraft/client/gui/EditBox textRenderer Lnet/minecraft/client/font/TextRenderer;
