@@ -42,7 +42,7 @@ public class RichEditBox extends EditBox {
         super.setChangeListener((text) -> changeListener.accept(getText()));
     }
 
-    private void sendUpdateFormat() {
+    public void sendUpdateFormat() {
         if (this.formatListener != null) {
             Substring selection = this.getSelection();
             Pair<@Nullable Formatting, Set<Formatting>> format = this.richText.getCommonFormat(selection.beginIndex(), selection.endIndex());
@@ -94,6 +94,11 @@ public class RichEditBox extends EditBox {
     @Override
     public String getText() {
         return richText.getAsFormattedString();
+    }
+
+    public void setRichTextWithoutUpdating(RichText richText) {
+        this.richText = richText;
+        this.text = richText.getPlainText();
     }
 
     @Override

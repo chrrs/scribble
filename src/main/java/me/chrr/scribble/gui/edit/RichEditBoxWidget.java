@@ -1,6 +1,7 @@
 package me.chrr.scribble.gui.edit;
 
 import me.chrr.scribble.book.RichText;
+import me.chrr.scribble.history.command.EditCommand;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.EditBox;
@@ -9,28 +10,33 @@ import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.screen.narration.NarrationPart;
 import net.minecraft.client.gui.widget.EditBoxWidget;
 import net.minecraft.text.Text;
-import net.minecraft.util.Colors;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Pair;
-import net.minecraft.util.Util;
+import net.minecraft.util.*;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public class RichEditBoxWidget extends EditBoxWidget {
     @Nullable
     private final Runnable onInvalidateFormat;
+    @Nullable
+    private final Consumer<EditCommand> onHistoryPush;
 
     @Nullable
     public Formatting color = Formatting.BLACK;
     public Set<Formatting> modifiers = new HashSet<>();
 
-    private RichEditBoxWidget(TextRenderer textRenderer, int x, int y, int width, int height, Text placeholder, Text message, int textColor, boolean textShadow, int cursorColor, boolean hasBackground, boolean hasOverlay, @Nullable Runnable onInvalidateFormat) {
+    private RichEditBoxWidget(TextRenderer textRenderer, int x, int y, int width, int height,
+                              Text placeholder, Text message, int textColor, boolean textShadow, int cursorColor,
+                              boolean hasBackground, boolean hasOverlay,
+                              @Nullable Runnable onInvalidateFormat, @Nullable Consumer<EditCommand> onHistoryPush) {
         super(textRenderer, x, y, width, height, placeholder, message, textColor, textShadow, cursorColor, hasBackground, hasOverlay);
         this.onInvalidateFormat = onInvalidateFormat;
+        this.onHistoryPush = onHistoryPush;
 
         this.editBox = new RichEditBox(
                 textRenderer, width - this.getPadding(),
@@ -48,11 +54,19 @@ public class RichEditBoxWidget extends EditBoxWidget {
         }
     }
 
+    private void pushHistory(EditCommand command) {
+        if (this.onHistoryPush != null) {
+            this.onHistoryPush.accept(command);
+        }
+    }
+
     public void applyFormatting(Formatting formatting, boolean active) {
         RichEditBox editBox = this.getRichEditBox();
 
         if (editBox.hasSelection()) {
-            editBox.applyFormatting(formatting, active);
+            EditCommand command = new EditCommand(editBox, (box) -> box.applyFormatting(formatting, active));
+            command.executeEdit(editBox);
+            this.pushHistory(command);
         } else {
             if (formatting.isModifier()) {
                 if (active) {
@@ -165,6 +179,19 @@ public class RichEditBoxWidget extends EditBoxWidget {
     }
 
     @Override
+    public boolean charTyped(char chr, int modifiers) {
+        if (this.visible && this.isFocused() && StringHelper.isValidChar(chr)) {
+            EditCommand command = new EditCommand(this.getRichEditBox(),
+                    (editBox) -> editBox.replaceSelection(Character.toString(chr)));
+            command.executeEdit(this.getRichEditBox());
+            this.pushHistory(command);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         // Respond to common hotkeys for toggling modifiers, such as Ctrl-B for bold.
         if (Screen.hasControlDown() && !Screen.hasShiftDown() && !Screen.hasAltDown()) {
@@ -183,6 +210,18 @@ public class RichEditBoxWidget extends EditBoxWidget {
             }
         }
 
+        // Wrap the operation with an edit command if it edits the text.
+        if (Screen.isCut(keyCode) || Screen.isPaste(keyCode) ||
+                List.of(GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER,
+                        GLFW.GLFW_KEY_BACKSPACE, GLFW.GLFW_KEY_DELETE).contains(keyCode)) {
+            EditCommand command = new EditCommand(this.getRichEditBox(),
+                    (editBox) -> editBox.handleSpecialKey(keyCode));
+            command.executeEdit(this.getRichEditBox());
+            this.pushHistory(command);
+            return true;
+        }
+
+
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
@@ -193,16 +232,23 @@ public class RichEditBoxWidget extends EditBoxWidget {
                 this.getMessage(), getRichEditBox().getRichText().getPlainText()));
     }
 
-    private RichEditBox getRichEditBox() {
+    public RichEditBox getRichEditBox() {
         return (RichEditBox) editBox;
     }
 
     public static class Builder extends EditBoxWidget.Builder {
         @Nullable
         private Runnable onInvalidateFormat = null;
+        @Nullable
+        private Consumer<EditCommand> onHistoryPush = null;
 
         public Builder onInvalidateFormat(Runnable onInvalidateFormat) {
             this.onInvalidateFormat = onInvalidateFormat;
+            return this;
+        }
+
+        public Builder onHistoryPush(Consumer<EditCommand> onHistoryPush) {
+            this.onHistoryPush = onHistoryPush;
             return this;
         }
 
@@ -212,7 +258,7 @@ public class RichEditBoxWidget extends EditBoxWidget {
                     this.x, this.y, width, height,
                     this.placeholder, message, this.textColor,
                     this.textShadow, this.cursorColor, this.hasBackground,
-                    this.hasOverlay, this.onInvalidateFormat);
+                    this.hasOverlay, this.onInvalidateFormat, this.onHistoryPush);
         }
     }
 }
