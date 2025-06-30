@@ -476,7 +476,7 @@ public class RichText implements StringVisitable {
             modifiersToRemove.removeAll(segment.modifiers);
             boolean shouldReapply = colorChanged || !modifiersToRemove.isEmpty();
 
-            Set<Formatting> modifiersToAdd = new HashSet<>(segment.modifiers);
+            List<Formatting> modifiersToAdd = new ArrayList<>(segment.modifiers);
             if (!shouldReapply) {
                 modifiersToAdd.removeAll(currentModifiers);
             }
@@ -485,6 +485,8 @@ public class RichText implements StringVisitable {
                 out.append(segment.color);
             }
 
+            // Sort the modifiers so they're always in the same order, so the output is predictable.
+            modifiersToAdd.sort(Comparator.comparingInt(Formatting::getCode));
             for (Formatting format : modifiersToAdd) {
                 out.append(format);
             }
