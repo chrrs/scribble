@@ -1,4 +1,4 @@
-import dev.kikugie.stonecutter.StonecutterProject
+import dev.kikugie.stonecutter.data.StonecutterProject
 
 plugins {
     id("dev.kikugie.stonecutter")
@@ -48,7 +48,7 @@ for (node in stonecutter.tree.nodes) {
     if (node.metadata != stonecutter.current || node.branch.id.isEmpty()) continue
 
     val loader = node.branch.id.replaceFirstChar { it.uppercase() }
-    node.tasks.register("runActive$loader") {
+    node.project.tasks.register("runActive$loader") {
         dependsOn("runClient")
         group = "project"
     }

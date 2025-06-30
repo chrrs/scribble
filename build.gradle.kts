@@ -16,8 +16,8 @@ base.archivesName.set(prop("mod", "name"))
 architectury.injectInjectables = false
 architectury.common(stonecutter.tree.branches.mapNotNull {
     if (stonecutter.current.project !in it) null
-    else if (!it.hasProp("loom", "platform")) null
-    else it.prop("loom", "platform")
+    else if (!it.project.hasProp("loom", "platform")) null
+    else it.project.prop("loom", "platform")
 })
 
 repositories {

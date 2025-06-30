@@ -10,7 +10,7 @@ plugins {
 fun Project.hasProp(namespace: String, key: String) = hasProperty("$namespace.$key")
 fun Project.prop(namespace: String, key: String) = property("$namespace.$key") as String
 
-val common = requireNotNull(stonecutter.node.sibling(""))
+val common = requireNotNull(stonecutter.node.sibling("")).project
 
 val current = stonecutter.current.version
 val minecraft = common.prop("minecraft", "version")
