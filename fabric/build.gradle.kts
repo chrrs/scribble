@@ -99,15 +99,8 @@ tasks {
         }
     }
 
-    build {
-        group = "versioned"
-        description = "Must run through `chiseledBuild`"
-    }
-
     register<Copy>("buildAndCollect") {
-        group = "versioned"
-        description = "Must run through `chiseledBuild`"
-
+        group = "build"
         from(remapJar.get().archiveFile)
         into(rootProject.layout.buildDirectory.file("libs"))
         dependsOn(build)

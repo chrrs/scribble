@@ -45,9 +45,4 @@ tasks {
     jar {
         from("LICENSE")
     }
-
-    build {
-        group = "versioned"
-        description = "Must run through `chiseledBuild`"
-    }
 }
