@@ -6,7 +6,7 @@ plugins {
     id("me.modmuss50.mod-publish-plugin") version "0.5.1" apply false
 }
 
-stonecutter active "1.21.6" /* [SC] DO NOT EDIT */
+stonecutter active "1.21.7" /* [SC] DO NOT EDIT */
 
 for (node in stonecutter.tree.nodes) {
     if (node.metadata != stonecutter.current || node.branch.id.isEmpty()) continue

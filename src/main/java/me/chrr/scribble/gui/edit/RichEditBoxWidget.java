@@ -168,7 +168,10 @@ public class RichEditBoxWidget extends EditBoxWidget {
                                 ? this.width - this.getTextMargin()
                                 : this.textRenderer.getWidth(text.subText(line.beginIndex(), selection.endIndex()));
 
-                        this.drawSelection(context, x + start, y, x + end, y + textRenderer.fontHeight);
+                        //? if <1.21.7 {
+                        /*this.drawSelection(context, x + start, y, x + end, y + textRenderer.fontHeight);
+                        *///?} else
+                        context.drawSelection(x + start, y, x + end, y + textRenderer.fontHeight);
                     }
                 }
 
