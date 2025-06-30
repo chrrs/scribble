@@ -2,10 +2,11 @@ name: Publish Specific
 
 on:
   workflow_dispatch:
-    version:
-      description: 'Minecraft version'
-      required: true
-      type: string
+    inputs:
+      version:
+        description: 'Minecraft version'
+        required: true
+        type: string
 
 
 jobs:
