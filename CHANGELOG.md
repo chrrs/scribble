@@ -1,3 +1,7 @@
+## 1.6.1
+
+- Update to 1.21.7.
+
 ## 1.6.0
 
 - Update to 1.21.6 and drop support for older versions.
