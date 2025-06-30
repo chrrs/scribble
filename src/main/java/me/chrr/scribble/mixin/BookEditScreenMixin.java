@@ -6,6 +6,7 @@ import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.BookFile;
 import me.chrr.scribble.book.FileChooser;
 import me.chrr.scribble.book.RichText;
+import me.chrr.scribble.config.Config;
 import me.chrr.scribble.gui.button.ColorSwatchWidget;
 import me.chrr.scribble.gui.button.IconButtonWidget;
 import me.chrr.scribble.gui.button.ModifierButtonWidget;
@@ -299,21 +300,27 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
                 },
                 ax, ay + 12, 36, 90, 12, 12));
 
-        addDrawableChild(new IconButtonWidget(
-                Text.translatable("text.scribble.action.save_book_to_file"),
-                () -> FileChooser.chooseBook(true, this::scribble$saveTo),
-                ax, ay + 12 * 2 + 4, 48, 90, 12, 12));
-        addDrawableChild(new IconButtonWidget(
-                Text.translatable("text.scribble.action.load_book_from_file"),
-                () -> this.scribble$confirmIf(true, "overwrite_warning",
-                        () -> FileChooser.chooseBook(false, this::scribble$loadFrom)),
-                ax, ay + 12 * 3 + 4, 60, 90, 12, 12));
+        if (Scribble.CONFIG_MANAGER.getConfig().showActionButtons != Config.ShowActionButtons.NEVER) {
+            addDrawableChild(new IconButtonWidget(
+                    Text.translatable("text.scribble.action.save_book_to_file"),
+                    () -> FileChooser.chooseBook(true, this::scribble$saveTo),
+                    ax, ay + 12 * 2 + 4, 48, 90, 12, 12));
+            addDrawableChild(new IconButtonWidget(
+                    Text.translatable("text.scribble.action.load_book_from_file"),
+                    () -> this.scribble$confirmIf(true, "overwrite_warning",
+                            () -> FileChooser.chooseBook(false, this::scribble$loadFrom)),
+                    ax, ay + 12 * 3 + 4, 60, 90, 12, 12));
+        }
 
         scribble$invalidateActionButtons();
     }
 
     @Unique
     private void scribble$invalidateActionButtons() {
+        boolean show = Scribble.CONFIG_MANAGER.getConfig().showActionButtons != Config.ShowActionButtons.NEVER;
+        scribble$undoButton.visible = show;
+        scribble$redoButton.visible = show;
+
         scribble$undoButton.active = scribble$commandManager.canUndo();
         scribble$redoButton.active = scribble$commandManager.canRedo();
     }
