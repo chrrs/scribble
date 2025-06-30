@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.BookFile;
 import me.chrr.scribble.book.FileChooser;
+import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.gui.button.ColorSwatchWidget;
 import me.chrr.scribble.gui.button.IconButtonWidget;
 import me.chrr.scribble.gui.button.ModifierButtonWidget;
@@ -13,6 +14,8 @@ import me.chrr.scribble.gui.edit.RichEditBoxWidget;
 import me.chrr.scribble.history.CommandManager;
 import me.chrr.scribble.history.HistoryListener;
 import me.chrr.scribble.history.command.EditCommand;
+import me.chrr.scribble.history.command.PageDeleteCommand;
+import me.chrr.scribble.history.command.PageInsertCommand;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
@@ -251,26 +254,25 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
 
     @Unique
     private void scribble$deletePage() {
-        // FIXME: add a history command for deleting pages.
         if (this.pages.size() > 1) {
-            this.pages.remove(this.currentPage);
-            if (this.currentPage == this.pages.size()) {
-                this.currentPage -= 1;
-            }
+            // See scribble$history$deletePage for implementation.
+            PageDeleteCommand command = new PageDeleteCommand(this.currentPage,
+                    this.scribble$getRichEditBoxWidget().getRichEditBox().getRichText());
+            command.execute(this);
 
-            this.updatePage();
-            this.updatePreviousPageButtonVisibility();
+            scribble$commandManager.push(command);
             this.scribble$dirty = true;
         }
     }
 
     @Unique
     private void scribble$insertPage() {
-        // FIXME: add a history command for inserting pages.
         if (this.pages.size() < 100) {
-            this.pages.add(this.currentPage, "");
-            this.updatePage();
-            this.updatePreviousPageButtonVisibility();
+            // See scribble$history$insertPage for implementation.
+            PageInsertCommand command = new PageInsertCommand(this.currentPage);
+            command.execute(this);
+
+            scribble$commandManager.push(command);
             this.scribble$dirty = true;
         }
     }
@@ -348,6 +350,32 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
         editBox.color = color;
         editBox.modifiers = new HashSet<>(modifiers);
         this.scribble$invalidateFormattingButtons();
+    }
+
+    @Override
+    public void scribble$history$insertPage(int page, @Nullable RichText content) {
+        this.scribble$history$switchPage(page);
+
+        String text = "";
+        if (content != null)
+            text = content.getAsFormattedString();
+
+        this.pages.add(page, text);
+        this.updatePage();
+        this.updatePreviousPageButtonVisibility();
+    }
+
+    @Override
+    public void scribble$history$deletePage(int page) {
+        this.scribble$history$switchPage(page);
+
+        this.pages.remove(page);
+        if (this.currentPage == this.pages.size()) {
+            this.currentPage -= 1;
+        }
+
+        this.updatePage();
+        this.updatePreviousPageButtonVisibility();
     }
 
     @Override
