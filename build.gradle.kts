@@ -20,12 +20,6 @@ architectury.common(stonecutter.tree.branches.mapNotNull {
     else it.prop("loom", "platform")
 })
 
-stonecutter {
-    // `renderButton` was changed to renderWidget after 1.20.3.
-    val method = if (eval(current.version, ">=1.20.3")) "renderWidget" else "renderButton"
-    swaps["renderWidget"] = "protected void $method(DrawContext context, int mouseX, int mouseY, float delta) {"
-}
-
 repositories {
     maven("https://maven.shedaniel.me/")
 }
@@ -36,11 +30,6 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:${prop("fabric", "loaderVersion")}")
 
     modCompileOnly("me.shedaniel.cloth:cloth-config-fabric:${prop("clothconfig", "version")}")
-
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.3")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.3")
-    testImplementation("org.mockito:mockito-core:5.14.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.3")
 }
 
 loom {
@@ -48,20 +37,13 @@ loom {
 }
 
 java {
-    val java = if (stonecutter.eval(current, ">=1.20.5"))
-        JavaVersion.VERSION_21 else JavaVersion.VERSION_17
-    targetCompatibility = java
-    sourceCompatibility = java
+    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_21
 }
 
 tasks {
     jar {
         from("LICENSE")
-    }
-
-    test {
-        useJUnitPlatform()
-        testLogging { events("passed", "skipped", "failed") }
     }
 
     build {

@@ -1,5 +1,6 @@
 package me.chrr.scribble;
 
+import me.chrr.scribble.book.FileChooser;
 import me.chrr.scribble.config.ConfigManager;
 import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.LogManager;
@@ -22,6 +23,12 @@ public class Scribble {
             CONFIG_MANAGER.load();
         } catch (IOException e) {
             LOGGER.error("failed to load config", e);
+        }
+
+        try {
+            FileChooser.convertLegacyBooks();
+        } catch (IOException e) {
+            LOGGER.error("failed to convert legacy NBT-based book files to JSON", e);
         }
     }
 
