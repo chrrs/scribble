@@ -1,0 +1,48 @@
+name: Publish Specific
+
+on:
+  workflow_dispatch:
+    version:
+      description: 'Minecraft version'
+      required: true
+      type: string
+
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Run Build
+        run: ./gradlew buildAndCollect
+
+      - name: Fetch changelog
+        run: |
+          {
+            echo "CHANGELOG<<EOF"
+            tr -d '\r' < CHANGELOG.md | awk -vver="${GITHUB_REF_NAME#v}" '/^## / { if (p) { exit }; if ($2 == ver) { p=1; next } } p'
+            echo "EOF"
+          } >> $GITHUB_ENV
+
+      - run: ./gradlew :fabric:${{ inputs.version }}:publishMods :neoforge:${{ inputs.version }}:publishMods
+        env:
+          CHANGELOG: ${{ env.CHANGELOG }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          body: ${{ env.CHANGELOG }}
+          files: build/libs/*.jar
