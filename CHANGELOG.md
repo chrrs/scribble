@@ -1,3 +1,11 @@
+## 1.6.0
+
+- Update to 1.21.6 and drop support for older versions.
+- Export books in a JSON-based format from now on.
+    - All books saved to `.minecraft/books` will be converted automatically on startup.
+    - NBT-based books will still be readable forever.
+- Improve accessibility by a lot!
+
 ## 1.5.2
 
 - Update Russian translation (Thanks to @FaNToMaSikkk for contributing!)
