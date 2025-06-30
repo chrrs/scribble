@@ -75,7 +75,7 @@ tasks {
     }
 
     remapJar {
-        atAccessWideners.add("scribble.accesswidener")
+        atAccessWideners.add("aw/${common.prop("mod", "accesswidener")}.accesswidener")
         inputFile.set(shadowJar.get().archiveFile)
         archiveClassifier = null
         dependsOn(shadowJar)

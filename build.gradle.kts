@@ -33,7 +33,7 @@ dependencies {
 }
 
 loom {
-    accessWidenerPath = rootProject.file("src/main/resources/scribble.accesswidener")
+    accessWidenerPath = rootProject.file("src/main/resources/aw/${prop("mod", "accesswidener")}.accesswidener")
 }
 
 java {
