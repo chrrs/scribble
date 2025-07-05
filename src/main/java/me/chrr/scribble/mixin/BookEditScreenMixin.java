@@ -2,6 +2,7 @@ package me.chrr.scribble.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import me.chrr.scribble.KeyboardUtil;
 import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.BookFile;
 import me.chrr.scribble.book.FileChooser;
@@ -29,7 +30,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -329,10 +329,10 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
     public void onActionKeyPressed(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
         if (Screen.hasControlDown() && !Screen.hasAltDown()) {
             boolean shift = Screen.hasShiftDown();
-            if ((keyCode == GLFW.GLFW_KEY_Z && !shift && scribble$undoButton.active)) {
+            if ((KeyboardUtil.isKey(keyCode, "Z") && !shift && scribble$undoButton.active)) {
                 scribble$undoButton.onPress();
                 cir.setReturnValue(true);
-            } else if (((keyCode == GLFW.GLFW_KEY_Z && shift) || (keyCode == GLFW.GLFW_KEY_Y && !shift)) && scribble$redoButton.active) {
+            } else if (((KeyboardUtil.isKey(keyCode, "Z") && shift) || (KeyboardUtil.isKey(keyCode, "Y") && !shift)) && scribble$redoButton.active) {
                 scribble$redoButton.onPress();
                 cir.setReturnValue(true);
             }

@@ -1,5 +1,6 @@
 package me.chrr.scribble.gui.edit;
 
+import me.chrr.scribble.KeyboardUtil;
 import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.RichText;
 import net.minecraft.client.MinecraftClient;
@@ -13,7 +14,6 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.math.MathHelper;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -169,13 +169,13 @@ public class RichEditBox extends EditBox {
         // Override copy/cut/paste to remove formatting codes if the config option is set or SHIFT is held down.
         boolean keepFormatting = Scribble.CONFIG_MANAGER.getConfig().copyFormattingCodes ^ Screen.hasShiftDown();
         boolean ctrlNoAlt = Screen.hasControlDown() && !Screen.hasAltDown();
-        if (ctrlNoAlt && (keyCode == GLFW.GLFW_KEY_C || keyCode == GLFW.GLFW_KEY_X)) {
+        if (ctrlNoAlt && (KeyboardUtil.isKey(keyCode, "C") || KeyboardUtil.isKey(keyCode, "X"))) {
             String text = this.getSelectedText();
             if (!keepFormatting) text = Formatting.strip(text);
             MinecraftClient.getInstance().keyboard.setClipboard(text);
-            if (keyCode == GLFW.GLFW_KEY_X) this.replaceSelection("");
+            if (KeyboardUtil.isKey(keyCode, "X")) this.replaceSelection("");
             return true;
-        } else if (ctrlNoAlt && keyCode == GLFW.GLFW_KEY_V) {
+        } else if (ctrlNoAlt && KeyboardUtil.isKey(keyCode, "V")) {
             String text = MinecraftClient.getInstance().keyboard.getClipboard();
             if (!keepFormatting) text = Formatting.strip(text);
             this.replaceSelection(text);
