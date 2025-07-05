@@ -85,6 +85,10 @@ public class RichText implements StringVisitable {
 
                     if (formatting.isModifier()) {
                         modifiers.add(formatting);
+                    } else if (formatting == Formatting.RESET) {
+                        // We get rid of any RESET color codes, as they act weirdly in books.
+                        color = Formatting.BLACK;
+                        modifiers.clear();
                     } else {
                         color = formatting;
                         modifiers.clear();
