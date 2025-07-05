@@ -75,11 +75,11 @@ public class RichEditBox extends EditBox {
     }
 
     @Override
-    public void setText(String text, boolean bl) {
+    public void setText(String text, boolean allowOverflow) {
         String truncated = this.truncateForReplacement(text);
         RichText richText = RichText.fromFormattedString(truncated);
 
-        if (bl || !this.exceedsMaxLines(richText)) {
+        if (allowOverflow || !this.exceedsMaxLines(richText)) {
             this.richText = richText;
             this.text = richText.getPlainText();
 
@@ -227,7 +227,7 @@ public class RichEditBox extends EditBox {
     }
 
     private boolean exceedsMaxLines(RichText text) {
-        return this.hasMaxLines() && this.textRenderer.getTextHandler().wrapLines(text, this.width, Style.EMPTY).size() + (text.getPlainText().endsWith("\n") ? 1 : 0) > this.maxLines;
+        return this.hasMaxLines() && this.textRenderer.getTextHandler().wrapLines(text, this.width, Style.EMPTY).size() > this.maxLines;
     }
 
     public RichText getRichText() {
