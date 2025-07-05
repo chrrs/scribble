@@ -1,3 +1,14 @@
+## 1.6.2
+
+- Make sure the text cursor is always positioned correctly (and visible).
+- Re-fix keyboard shortcuts on alternate keyboard layouts.
+- Better differentiate between hover and disabled action buttons.
+- Make the 14th line accessible to write.
+- Reset focus to the text edit box after turning the page.
+- Replace reset (&r) color codes with black to prevent crashes.
+
+Thanks to @J4PC for the bug reports!
+
 ## 1.6.1
 
 - Update to 1.21.7.
