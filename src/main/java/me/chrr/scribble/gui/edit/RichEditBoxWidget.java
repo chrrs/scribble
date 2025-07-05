@@ -115,7 +115,6 @@ public class RichEditBoxWidget extends EditBoxWidget {
             int x = this.getTextX();
             if (blink && cursorInText && cursor >= line.beginIndex() && cursor < line.endIndex()) {
                 // If the cursor is in the current line, draw the first and second half separately.
-                // FIXME: vanilla bug: MC-298732 (cursor isn't visible at the end of a line).
                 if (visible) {
                     RichText beforeCursor = text.subText(line.beginIndex(), cursor);
                     RichText afterCursor = text.subText(cursor, line.endIndex());
@@ -136,6 +135,12 @@ public class RichEditBoxWidget extends EditBoxWidget {
                 }
 
                 lastY = y;
+            }
+
+            // FIXME: Fix for vanilla bug: MC-298732 (cursor isn't visible at the end of a line).
+            //        This should be matched with Mojang's fix when it's merged.
+            if (blink && cursorInText && cursor == line.endIndex()) {
+                context.fill(lastX, y - 1, lastX + 1, y + 1 + textRenderer.fontHeight, this.getCursorColor());
             }
 
             y += textRenderer.fontHeight;
@@ -170,7 +175,7 @@ public class RichEditBoxWidget extends EditBoxWidget {
 
                         //? if <1.21.7 {
                         /*this.drawSelection(context, x + start, y, x + end, y + textRenderer.fontHeight);
-                        *///?} else
+                         *///?} else
                         context.drawSelection(x + start, y, x + end, y + textRenderer.fontHeight);
                     }
                 }

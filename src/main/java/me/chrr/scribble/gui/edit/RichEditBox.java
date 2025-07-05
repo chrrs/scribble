@@ -218,10 +218,6 @@ public class RichEditBox extends EditBox {
 
             current.setValue(end);
         });
-
-        if (this.text.charAt(this.text.length() - 1) == '\n') {
-            this.lines.add(new Substring(this.text.length(), this.text.length()));
-        }
     }
 
     @Override
