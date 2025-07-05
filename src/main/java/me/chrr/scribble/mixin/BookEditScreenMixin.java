@@ -25,6 +25,7 @@ import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
 import net.minecraft.client.gui.widget.EditBoxWidget;
+import net.minecraft.client.gui.widget.PageTurnWidget;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
@@ -197,7 +198,9 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
 
         // FIXME: is there not a better way to do this?
         Element focused = getFocused();
-        if (focused instanceof ModifierButtonWidget || focused instanceof ColorSwatchWidget) {
+        if (focused instanceof ModifierButtonWidget
+                || focused instanceof ColorSwatchWidget
+                || focused instanceof PageTurnWidget) {
             this.setFocused(editBox);
         }
 
