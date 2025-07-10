@@ -100,11 +100,6 @@ public abstract class BookScreenMixin extends Screen {
         context.getMatrices().translate(0f, Scribble.getBookScreenYOffset(height));
     }
 
-    @ModifyArg(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawHoverEvent(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/Style;II)V"), index = 3)
-    public int shiftHoverTooltipY(int y) {
-        return y - Scribble.getBookScreenYOffset(height);
-    }
-
     // At the end of rendering, we need to pop those matrices we pushed.
     @Inject(method = "render", at = @At(value = "RETURN"))
     public void popRender(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
