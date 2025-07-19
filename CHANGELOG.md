@@ -1,3 +1,7 @@
+## 1.6.3
+
+- Update to 1.21.8.
+
 ## 1.6.2
 
 - Make sure the text cursor is always positioned correctly (and visible).
