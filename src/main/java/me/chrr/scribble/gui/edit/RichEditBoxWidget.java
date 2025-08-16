@@ -109,11 +109,12 @@ public class RichEditBoxWidget extends EditBoxWidget {
         int lastY = 0;
 
         int y = this.getTextY();
+        boolean hasDrawnCursor = false;
         for (EditBox.Substring line : this.editBox.getLines()) {
             boolean visible = this.isVisible(y, y + textRenderer.fontHeight);
 
             int x = this.getTextX();
-            if (blink && cursorInText && cursor >= line.beginIndex() && cursor < line.endIndex()) {
+            if (blink && cursorInText && cursor >= line.beginIndex() && cursor <= line.endIndex()) {
                 // If the cursor is in the current line, draw the first and second half separately.
                 if (visible) {
                     RichText beforeCursor = text.subText(line.beginIndex(), cursor);
@@ -122,7 +123,10 @@ public class RichEditBoxWidget extends EditBoxWidget {
                     context.drawText(this.textRenderer, beforeCursor.getAsMutableText(), x, y, this.textColor, this.textShadow);
                     lastX = x + this.textRenderer.getWidth(beforeCursor);
 
-                    context.fill(lastX, y - 1, lastX + 1, y + 1 + textRenderer.fontHeight, this.getCursorColor());
+                    if (!hasDrawnCursor) {
+                        context.fill(lastX, y - 1, lastX + 1, y + 1 + textRenderer.fontHeight, this.getCursorColor());
+                        hasDrawnCursor = true;
+                    }
 
                     context.drawText(this.textRenderer, afterCursor.getAsMutableText(), lastX, y, this.textColor, this.textShadow);
                 }
@@ -137,19 +141,13 @@ public class RichEditBoxWidget extends EditBoxWidget {
                 lastY = y;
             }
 
-            // FIXME: Fix for vanilla bug: MC-298732 (cursor isn't visible at the end of a line).
-            //        This should be matched with Mojang's fix when it's merged.
-            if (blink && cursorInText && cursor == line.endIndex()) {
-                context.fill(lastX, y - 1, lastX + 1, y + 1 + textRenderer.fontHeight, this.getCursorColor());
-            }
-
             y += textRenderer.fontHeight;
         }
 
         // If we haven't drawn the cursor yet, it should be a '_' at the last draw position.
         if (blink && !cursorInText) {
             if (this.isVisible(lastY, lastY + textRenderer.fontHeight)) {
-                context.drawText(this.textRenderer, "_", lastX, lastY, this.getCursorColor(), this.textShadow);
+                context.drawText(this.textRenderer, "_", lastX + 1, lastY, this.getCursorColor(), this.textShadow);
             }
         }
 
