@@ -197,6 +197,7 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
         boolean handled = super.mouseClicked(mouseX, mouseY, button);
 
         // FIXME: is there not a better way to do this?
+        //        now there is! method_72784 in 25w31a (1.21.9).
         Element focused = getFocused();
         if (focused instanceof ModifierButtonWidget
                 || focused instanceof ColorSwatchWidget
@@ -243,11 +244,11 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
         scribble$deletePageButton = addDrawableChild(new IconButtonWidget(
                 Text.translatable("text.scribble.action.delete_page"),
                 this::scribble$deletePage,
-                x + 78, y + 148, 0, 90, 12, 12));
+                x + 94, y + 148, 0, 90, 12, 12));
         scribble$insertPageButton = addDrawableChild(new IconButtonWidget(
                 Text.translatable("text.scribble.action.insert_new_page"),
                 this::scribble$insertPage,
-                x + 94, y + 148, 12, 90, 12, 12));
+                x + 78, y + 148, 12, 90, 12, 12));
     }
 
     @Inject(method = "updatePreviousPageButtonVisibility", at = @At(value = "HEAD"))
