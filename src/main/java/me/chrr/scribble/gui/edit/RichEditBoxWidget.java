@@ -115,20 +115,18 @@ public class RichEditBoxWidget extends EditBoxWidget {
 
             int x = this.getTextX();
             if (blink && cursorInText && cursor >= line.beginIndex() && cursor <= line.endIndex()) {
-                // If the cursor is in the current line, draw the first and second half separately.
                 if (visible) {
-                    RichText beforeCursor = text.subText(line.beginIndex(), cursor);
-                    RichText afterCursor = text.subText(cursor, line.endIndex());
+                    // AD-HOC: Draw the entire line in one call. Vanilla does this differently, I don't know why
+                    RichText lineText = text.subText(line.beginIndex(), line.endIndex());
+                    context.drawText(this.textRenderer, lineText.getAsMutableText(), x, y, this.textColor, this.textShadow);
 
-                    context.drawText(this.textRenderer, beforeCursor.getAsMutableText(), x, y, this.textColor, this.textShadow);
+                    RichText beforeCursor = text.subText(line.beginIndex(), cursor);
                     lastX = x + this.textRenderer.getWidth(beforeCursor);
 
                     if (!hasDrawnCursor) {
                         context.fill(lastX, y - 1, lastX + 1, y + 1 + textRenderer.fontHeight, this.getCursorColor());
                         hasDrawnCursor = true;
                     }
-
-                    context.drawText(this.textRenderer, afterCursor.getAsMutableText(), lastX, y, this.textColor, this.textShadow);
                 }
             } else {
                 // Otherwise, just draw the line normally.
