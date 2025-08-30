@@ -8,6 +8,7 @@ import me.chrr.scribble.book.BookFile;
 import me.chrr.scribble.book.FileChooser;
 import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.config.Config;
+import me.chrr.scribble.gui.PageNumberWidget;
 import me.chrr.scribble.gui.button.ColorSwatchWidget;
 import me.chrr.scribble.gui.button.IconButtonWidget;
 import me.chrr.scribble.gui.button.ModifierButtonWidget;
@@ -18,6 +19,8 @@ import me.chrr.scribble.history.HistoryListener;
 import me.chrr.scribble.history.command.EditCommand;
 import me.chrr.scribble.history.command.PageDeleteCommand;
 import me.chrr.scribble.history.command.PageInsertCommand;
+import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
@@ -110,6 +113,9 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
     private IconButtonWidget scribble$undoButton;
     @Unique
     private IconButtonWidget scribble$redoButton;
+
+    @Unique
+    private PageNumberWidget scribble$pageNumberWidget;
 
     @Unique
     private boolean scribble$dirty = false;
@@ -340,6 +346,34 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
                 cir.setReturnValue(true);
             }
         }
+    }
+    //endregion
+
+    //region Page Number Widget
+    @Inject(method = "init", at = @At(value = "HEAD"))
+    public void initPageNumberWidget(CallbackInfo ci) {
+        int x = (this.width - 192) / 2;
+        int y = Scribble.getBookScreenYOffset(height);
+
+        this.scribble$pageNumberWidget = addDrawableChild(
+                new PageNumberWidget(
+                        (page) -> {
+                            this.currentPage = Math.clamp(page - 1, 0, this.pages.size() - 1);
+                            this.updatePage();
+                            this.updatePreviousPageButtonVisibility();
+                            this.setFocused(editBox);
+                        },
+                        x + 192 - 44, y + 18, this.textRenderer));
+    }
+
+    @Inject(method = "updatePage", at = @At(value = "HEAD"))
+    public void updatePageNumber(CallbackInfo ci) {
+        this.scribble$pageNumberWidget.setPageNumber(this.currentPage + 1, this.pages.size());
+    }
+
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawText(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/Text;IIIZ)V"))
+    public void drawIndicatorText(DrawContext instance, TextRenderer textRenderer, Text text, int x, int y, int color, boolean shadow) {
+        // Do nothing: this is replaced by scribble$pageNumberWidget.
     }
     //endregion
 
