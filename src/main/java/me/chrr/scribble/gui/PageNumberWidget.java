@@ -126,14 +126,12 @@ public class PageNumberWidget extends ClickableWidget {
             return true;
         } else if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
             if (!this.input.isEmpty()) {
-                this.onPageChange.accept(Integer.parseInt(this.input));
-
                 MinecraftClient.getInstance().getSoundManager()
                         .play(PositionedSoundInstance.master(SoundEvents.ITEM_BOOK_PAGE_TURN, 1.0F));
-            } else {
-                this.setFocused(false);
+                this.onPageChange.accept(Integer.parseInt(this.input));
             }
 
+            this.setFocused(false);
             return true;
         } else if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             this.setFocused(false);

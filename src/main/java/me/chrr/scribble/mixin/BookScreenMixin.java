@@ -7,7 +7,9 @@ import me.chrr.scribble.book.BookFile;
 import me.chrr.scribble.book.FileChooser;
 import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.config.Config;
+import me.chrr.scribble.gui.PageNumberWidget;
 import me.chrr.scribble.gui.button.IconButtonWidget;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
@@ -18,6 +20,7 @@ import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -25,15 +28,26 @@ import java.util.List;
 
 @Mixin(BookScreen.class)
 public abstract class BookScreenMixin extends Screen {
+    //region @Shadow declarations
     @Shadow
     private BookScreen.Contents contents;
+
+    @Shadow
+    private int pageIndex;
+
+    @Shadow
+    public abstract boolean setPage(int index);
+    //endregion
+
+    @Unique
+    private PageNumberWidget scribble$pageNumberWidget;
 
     // Dummy constructor to match super class.
     private BookScreenMixin() {
         super(null);
     }
 
-    // Add save book button.
+    //region Action Buttons
     @Inject(method = "init", at = @At(value = "TAIL"))
     public void initButtons(CallbackInfo info) {
         if (Scribble.CONFIG_MANAGER.getConfig().showActionButtons == Config.ShowActionButtons.ALWAYS) {
@@ -59,7 +73,32 @@ public abstract class BookScreenMixin extends Screen {
                     x, y, 48, 90, 12, 12));
         }
     }
+    //endregion
 
+    //region Page Number Widget
+    @Inject(method = "init", at = @At(value = "HEAD"))
+    public void initPageNumberWidget(CallbackInfo ci) {
+        int x = (this.width - 192) / 2;
+        int y = Scribble.getBookScreenYOffset(height);
+
+        this.scribble$pageNumberWidget = addDrawableChild(
+                new PageNumberWidget(
+                        (page) -> setPage(page - 1),
+                        x + 192 - 44, y + 18, this.textRenderer));
+    }
+
+    @Inject(method = "updatePageButtons", at = @At(value = "HEAD"))
+    public void updatePageNumber(CallbackInfo ci) {
+        this.scribble$pageNumberWidget.setPageNumber(this.pageIndex + 1, this.contents.getPageCount());
+    }
+
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawText(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/Text;IIIZ)V"))
+    public void drawIndicatorText(DrawContext instance, TextRenderer textRenderer, Text text, int x, int y, int color, boolean shadow) {
+        // Do nothing: this is replaced by scribble$pageNumberWidget.
+    }
+    //endregion
+
+    //region GUI Centering
     // If we need to center the GUI, we shift the Y of the texture draw call down.
     @ModifyArg(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/util/Identifier;IIFFIIII)V"), index = 3)
     public int shiftBackgroundY(int y) {
@@ -105,4 +144,5 @@ public abstract class BookScreenMixin extends Screen {
     public void popRender(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         context.getMatrices().popMatrix();
     }
+    //endregion
 }
