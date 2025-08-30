@@ -24,8 +24,7 @@ import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
-import net.minecraft.client.gui.widget.EditBoxWidget;
-import net.minecraft.client.gui.widget.PageTurnWidget;
+import net.minecraft.client.gui.widget.*;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
@@ -191,13 +190,12 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
         return addDrawableChild(button);
     }
 
-    // Un-focus modifier and swatch buttons after they've been clicked, so you can continue typing.
+    //? if <1.21.9 {
+    /*// Un-focus modifier and swatch buttons after they've been clicked, so you can continue typing.
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         boolean handled = super.mouseClicked(mouseX, mouseY, button);
 
-        // FIXME: is there not a better way to do this?
-        //        now there is! method_72784 in 25w31a (1.21.9).
         Element focused = getFocused();
         if (focused instanceof ModifierButtonWidget
                 || focused instanceof ColorSwatchWidget
@@ -207,6 +205,7 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
 
         return handled;
     }
+    *///?}
 
     @Unique
     private void scribble$invalidateFormattingButtons() {
@@ -436,7 +435,7 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
     @Unique
     private void scribble$saveTo(Path path) {
         try {
-            BookFile bookFile = new BookFile(this.player.getGameProfile().getName(), this.pages);
+            BookFile bookFile = new BookFile(this.player.getName().getString(), this.pages);
             bookFile.writeJson(path);
         } catch (Exception e) {
             Scribble.LOGGER.error("could not save book to file", e);

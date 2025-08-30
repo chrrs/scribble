@@ -1,5 +1,6 @@
 package me.chrr.scribble.book;
 
+import com.mojang.serialization.MapCodec;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Pair;
@@ -523,12 +524,19 @@ public class RichText implements StringVisitable {
                 return text.visit(visitor);
             }
 
-            @Override
+            // This is not accurate, but this TextContent is never sent to the
+            // server, so it doesn't need to be.
+            //? if <1.21.9 {
+            /*@Override
             public Type<?> getType() {
-                // This is not accurate, but this TextContent is never sent to the
-                // server, so it doesn't need to be.
                 return PlainTextContent.TYPE;
             }
+            *///?} else {
+            @Override
+            public MapCodec<? extends TextContent> getCodec() {
+                return PlainTextContent.CODEC;
+            }
+            //?}
         });
     }
 

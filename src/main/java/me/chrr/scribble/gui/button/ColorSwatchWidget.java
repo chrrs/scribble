@@ -36,6 +36,13 @@ public class ColorSwatchWidget extends PressableWidget {
         context.fill(getX() + 1, getY() + 1, getX() + width - 1, getY() + height - 1, color);
     }
 
+    //? if >=1.21.9 {
+    @Override
+    public boolean method_72784() {
+        return false;
+    }
+    //?}
+
     @Override
     protected void appendClickableNarrations(NarrationMessageBuilder builder) {
         this.appendDefaultNarrations(builder);

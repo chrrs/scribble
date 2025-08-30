@@ -32,6 +32,13 @@ public class IconButtonWidget extends PressableWidget {
         context.drawTexture(RenderPipelines.GUI_TEXTURED, WIDGETS_TEXTURE, getX(), getY(), this.u, v, this.width, this.height, 128, 128);
     }
 
+    //? if >=1.21.9 {
+    @Override
+    public boolean method_72784() {
+        return false;
+    }
+    //?}
+
     @Override
     protected void appendClickableNarrations(NarrationMessageBuilder builder) {
         this.appendDefaultNarrations(builder);
