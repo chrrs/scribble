@@ -17,8 +17,8 @@ import java.util.Optional;
  * A record of the data saved to a book file.
  * <p>
  * Because of legacy reasons, book files come in two formats:
- * <li> NBT files (.book): For Scribble <2.0, was a bad idea, but still readable for backwards compatibility.
- * <li> JSON files (.json): For Scribble 2.0+, are a lot easier to work with and make.
+ * <li> NBT files (.book): For Scribble <1.6, was a bad idea, but still readable for backwards compatibility.
+ * <li> JSON files (.json): For Scribble 1.6+, are a lot easier to work with and make.
  *
  * @param author the author of the book file. Usually equal to a username.
  * @param pages  the rich-text pages of the book.
