@@ -1,3 +1,10 @@
+## 1.6.4
+
+- Fix compatibility with Debugify.
+- Fix double cursor at the end of a line.
+- Update Chinese Simplified translation. (Thanks to @Andypsl8!)
+- Make the page number clickable to jump to another page.
+
 ## 1.6.3
 
 - Update to 1.21.8.
