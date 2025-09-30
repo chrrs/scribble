@@ -6,8 +6,8 @@ import me.chrr.scribble.book.RichText;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.EditBox;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.CursorMovement;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Style;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Pair;
@@ -165,17 +165,17 @@ public class RichEditBox extends EditBox {
     }
 
     @Override
-    public boolean handleSpecialKey(int keyCode) {
+    public boolean handleSpecialKey(KeyInput input) {
         // Override copy/cut/paste to remove formatting codes if the config option is set or SHIFT is held down.
-        boolean keepFormatting = Scribble.CONFIG_MANAGER.getConfig().copyFormattingCodes ^ Screen.hasShiftDown();
-        boolean ctrlNoAlt = Screen.hasControlDown() && !Screen.hasAltDown();
-        if (ctrlNoAlt && (KeyboardUtil.isKey(keyCode, "C") || KeyboardUtil.isKey(keyCode, "X"))) {
+        boolean keepFormatting = Scribble.CONFIG_MANAGER.getConfig().copyFormattingCodes ^ input.hasShift();
+        boolean ctrlNoAlt = input.hasCtrl() && !input.hasAlt();
+        if (ctrlNoAlt && (KeyboardUtil.isKey(input.key(), "C") || KeyboardUtil.isKey(input.key(), "X"))) {
             String text = this.getSelectedText();
             if (!keepFormatting) text = Formatting.strip(text);
             MinecraftClient.getInstance().keyboard.setClipboard(text);
-            if (KeyboardUtil.isKey(keyCode, "X")) this.replaceSelection("");
+            if (KeyboardUtil.isKey(input.key(), "X")) this.replaceSelection("");
             return true;
-        } else if (ctrlNoAlt && KeyboardUtil.isKey(keyCode, "V")) {
+        } else if (ctrlNoAlt && KeyboardUtil.isKey(input.key(), "V")) {
             String text = MinecraftClient.getInstance().keyboard.getClipboard();
             if (!keepFormatting) text = Formatting.strip(text);
             this.replaceSelection(text);
@@ -183,13 +183,13 @@ public class RichEditBox extends EditBox {
         }
 
         // FIXME: vanilla bug? cursor update callback isn't called on select all.
-        if (Screen.isSelectAll(keyCode)) {
-            boolean handled = super.handleSpecialKey(keyCode);
+        if (input.isSelectAll()) {
+            boolean handled = super.handleSpecialKey(input);
             this.sendUpdateFormat();
             return handled;
         }
 
-        return super.handleSpecialKey(keyCode);
+        return super.handleSpecialKey(input);
     }
 
     @Override

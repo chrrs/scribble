@@ -6,6 +6,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.PressableWidget;
+import net.minecraft.client.input.AbstractInput;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
@@ -32,12 +33,10 @@ public class IconButtonWidget extends PressableWidget {
         context.drawTexture(RenderPipelines.GUI_TEXTURED, WIDGETS_TEXTURE, getX(), getY(), this.u, v, this.width, this.height, 128, 128);
     }
 
-    //? if >=1.21.9 {
     @Override
-    public boolean method_72784() {
+    public boolean isClickable() {
         return false;
     }
-    //?}
 
     @Override
     protected void appendClickableNarrations(NarrationMessageBuilder builder) {
@@ -45,7 +44,7 @@ public class IconButtonWidget extends PressableWidget {
     }
 
     @Override
-    public void onPress() {
+    public void onPress(AbstractInput input) {
         this.onPress.run();
     }
 }

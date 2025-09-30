@@ -2,10 +2,12 @@ package me.chrr.scribble.gui;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.input.CharInput;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.sound.SoundManager;
 import net.minecraft.screen.ScreenTexts;
@@ -71,11 +73,9 @@ public class PageNumberWidget extends ClickableWidget {
             context.drawText(this.textRenderer, text, this.getX() + this.width - textWidth, this.getY(), Colors.BLACK, false);
         }
 
-        //? if >=1.21.9 {
         if (this.isHovered()) {
             context.setCursor(net.minecraft.client.gui.cursor.StandardCursors.IBEAM);
         }
-        //?}
     }
 
     @Override
@@ -84,15 +84,15 @@ public class PageNumberWidget extends ClickableWidget {
     }
 
     @Override
-    public boolean charTyped(char chr, int modifiers) {
-        if (modifiers != 0)
+    public boolean charTyped(CharInput input) {
+        if (input.modifiers() != 0)
             return false;
-        if (chr < '0' || chr > '9')
+        if (input.codepoint() < '0' || input.codepoint() > '9')
             return false;
-        if (this.input.length() >= 2 && !(this.input.equals("10") && chr == '0'))
+        if (this.input.length() >= 2 && !(this.input.equals("10") && input.codepoint() == '0'))
             return false;
 
-        this.input += chr;
+        this.input += input.asString();
         return true;
     }
 
@@ -107,24 +107,24 @@ public class PageNumberWidget extends ClickableWidget {
     }
 
     @Override
-    public void onClick(double mouseX, double mouseY/*? if >=1.21.9 {*/, boolean doubleClick /*?}*/) {
+    public void onClick(Click click, boolean doubled) {
         setFocused(true);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyInput input) {
         if (!isFocused())
-            return super.keyPressed(keyCode, scanCode, modifiers);
+            return super.keyPressed(input);
 
-        if (!this.input.isEmpty() && keyCode == GLFW.GLFW_KEY_BACKSPACE) {
-            if (Screen.hasControlDown()) {
+        if (!this.input.isEmpty() && input.key() == GLFW.GLFW_KEY_BACKSPACE) {
+            if (input.hasCtrl()) {
                 this.input = "";
             } else {
                 this.input = this.input.substring(0, this.input.length() - 1);
             }
 
             return true;
-        } else if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
+        } else if (input.key() == GLFW.GLFW_KEY_ENTER || input.key() == GLFW.GLFW_KEY_KP_ENTER) {
             if (!this.input.isEmpty()) {
                 MinecraftClient.getInstance().getSoundManager()
                         .play(PositionedSoundInstance.master(SoundEvents.ITEM_BOOK_PAGE_TURN, 1.0F));
@@ -133,15 +133,15 @@ public class PageNumberWidget extends ClickableWidget {
 
             this.setFocused(false);
             return true;
-        } else if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+        } else if (input.key() == GLFW.GLFW_KEY_ESCAPE) {
             this.setFocused(false);
             return true;
-        } else if (keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT) {
+        } else if (input.key() == GLFW.GLFW_KEY_LEFT || input.key() == GLFW.GLFW_KEY_RIGHT) {
             // Mark arrows as handled to prevent focus changes.
             return true;
         }
 
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(input);
     }
 
     @Override

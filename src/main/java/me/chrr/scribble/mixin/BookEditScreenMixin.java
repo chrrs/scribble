@@ -20,15 +20,13 @@ import me.chrr.scribble.history.command.EditCommand;
 import me.chrr.scribble.history.command.PageDeleteCommand;
 import me.chrr.scribble.history.command.PageInsertCommand;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.Selectable;
+import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.BookEditScreen;
 import net.minecraft.client.gui.widget.*;
 import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -196,23 +194,6 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
         return addDrawableChild(button);
     }
 
-    //? if <1.21.9 {
-    /*// Un-focus modifier and swatch buttons after they've been clicked, so you can continue typing.
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        boolean handled = super.mouseClicked(mouseX, mouseY, button);
-
-        Element focused = getFocused();
-        if (focused instanceof ModifierButtonWidget
-                || focused instanceof ColorSwatchWidget
-                || focused instanceof PageTurnWidget) {
-            this.setFocused(editBox);
-        }
-
-        return handled;
-    }
-    *///?}
-
     @Unique
     private void scribble$invalidateFormattingButtons() {
         RichEditBoxWidget editBox = scribble$getRichEditBoxWidget();
@@ -335,14 +316,13 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
     }
 
     @Inject(method = "keyPressed", at = @At(value = "HEAD"), cancellable = true)
-    public void onActionKeyPressed(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
-        if (Screen.hasControlDown() && !Screen.hasAltDown()) {
-            boolean shift = Screen.hasShiftDown();
-            if ((KeyboardUtil.isKey(keyCode, "Z") && !shift && scribble$undoButton.active)) {
-                scribble$undoButton.onPress();
+    public void onActionKeyPressed(KeyInput input, CallbackInfoReturnable<Boolean> cir) {
+        if (input.hasCtrl() && !input.hasAlt()) {
+            if ((KeyboardUtil.isKey(input.key(), "Z") && !input.hasShift() && scribble$undoButton.active)) {
+                scribble$undoButton.onPress(input);
                 cir.setReturnValue(true);
-            } else if (((KeyboardUtil.isKey(keyCode, "Z") && shift) || (KeyboardUtil.isKey(keyCode, "Y") && !shift)) && scribble$redoButton.active) {
-                scribble$redoButton.onPress();
+            } else if (((KeyboardUtil.isKey(input.key(), "Z") && input.hasShift()) || (KeyboardUtil.isKey(input.key(), "Y") && !input.hasShift())) && scribble$redoButton.active) {
+                scribble$redoButton.onPress(input);
                 cir.setReturnValue(true);
             }
         }
@@ -445,7 +425,7 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
     @Inject(method = "openNextPage", at = @At(value = "HEAD"), cancellable = true)
     public void openNextPage(CallbackInfo ci) {
         int lastPage = this.pages.size() - 1;
-        if (this.currentPage < lastPage && Screen.hasShiftDown()) {
+        if (this.currentPage < lastPage && KeyboardUtil.hasShiftDown()) {
             this.currentPage = lastPage;
             this.updatePage();
             this.updatePreviousPageButtonVisibility();
@@ -456,7 +436,7 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
     // When shift is held down, skip to the first page.
     @Inject(method = "openPreviousPage", at = @At(value = "HEAD"), cancellable = true)
     public void openPreviousPage(CallbackInfo ci) {
-        if (Screen.hasShiftDown()) {
+        if (KeyboardUtil.hasShiftDown()) {
             this.currentPage = 0;
             this.updatePage();
             this.updatePreviousPageButtonVisibility();
@@ -558,11 +538,11 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
     //region Bug fixes
     // We cancel any drags outside the width of the book interface.
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if (mouseX < (this.width - 152) / 2.0 || mouseX > (this.width + 152) / 2.0) {
+    public boolean mouseDragged(Click click, double offsetX, double offsetY) {
+        if (click.x() < (this.width - 152) / 2.0 || click.x() > (this.width + 152) / 2.0) {
             return true;
         } else {
-            return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+            return super.mouseDragged(click, offsetX, offsetY);
         }
     }
     //endregion

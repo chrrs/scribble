@@ -5,10 +5,11 @@ import me.chrr.scribble.history.command.EditCommand;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.EditBox;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.screen.narration.NarrationPart;
 import net.minecraft.client.gui.widget.EditBoxWidget;
+import net.minecraft.client.input.CharInput;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Text;
 import net.minecraft.util.*;
 import org.jetbrains.annotations.Nullable;
@@ -169,9 +170,6 @@ public class RichEditBoxWidget extends EditBoxWidget {
                                 ? this.width - this.getTextMargin()
                                 : this.textRenderer.getWidth(text.subText(line.beginIndex(), selection.endIndex()));
 
-                        //? if <1.21.7 {
-                        /*this.drawSelection(context, x + start, y, x + end, y + textRenderer.fontHeight);
-                         *///?} else
                         context.drawSelection(x + start, y, x + end, y + textRenderer.fontHeight);
                     }
                 }
@@ -183,10 +181,10 @@ public class RichEditBoxWidget extends EditBoxWidget {
     }
 
     @Override
-    public boolean charTyped(char chr, int modifiers) {
-        if (this.visible && this.isFocused() && StringHelper.isValidChar(chr)) {
+    public boolean charTyped(CharInput input) {
+        if (this.visible && this.isFocused() && input.isValidChar()) {
             EditCommand command = new EditCommand(this.getRichEditBox(),
-                    (editBox) -> editBox.replaceSelection(Character.toString(chr)));
+                    (editBox) -> editBox.replaceSelection(input.asString()));
             command.executeEdit(this.getRichEditBox());
             this.pushHistory(command);
             return true;
@@ -196,10 +194,10 @@ public class RichEditBoxWidget extends EditBoxWidget {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyInput input) {
         // Respond to common hotkeys for toggling modifiers, such as Ctrl-B for bold.
-        if (Screen.hasControlDown() && !Screen.hasShiftDown() && !Screen.hasAltDown()) {
-            Formatting modifier = switch (keyCode) {
+        if (input.hasCtrl() && !input.hasShift() && !input.hasAlt()) {
+            Formatting modifier = switch (input.key()) {
                 case GLFW.GLFW_KEY_B -> Formatting.BOLD;
                 case GLFW.GLFW_KEY_I -> Formatting.ITALIC;
                 case GLFW.GLFW_KEY_U -> Formatting.UNDERLINE;
@@ -215,18 +213,18 @@ public class RichEditBoxWidget extends EditBoxWidget {
         }
 
         // Wrap the operation with an edit command if it edits the text.
-        if (Screen.isCut(keyCode) || Screen.isPaste(keyCode) ||
+        if (input.isCut() || input.isPaste() ||
                 List.of(GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER,
-                        GLFW.GLFW_KEY_BACKSPACE, GLFW.GLFW_KEY_DELETE).contains(keyCode)) {
+                        GLFW.GLFW_KEY_BACKSPACE, GLFW.GLFW_KEY_DELETE).contains(input.key())) {
             EditCommand command = new EditCommand(this.getRichEditBox(),
-                    (editBox) -> editBox.handleSpecialKey(keyCode));
+                    (editBox) -> editBox.handleSpecialKey(input));
             command.executeEdit(this.getRichEditBox());
             this.pushHistory(command);
             return true;
         }
 
 
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(input);
     }
 
     @Override

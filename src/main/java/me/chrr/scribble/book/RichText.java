@@ -526,17 +526,10 @@ public class RichText implements StringVisitable {
 
             // This is not accurate, but this TextContent is never sent to the
             // server, so it doesn't need to be.
-            //? if <1.21.9 {
-            /*@Override
-            public Type<?> getType() {
-                return PlainTextContent.TYPE;
-            }
-            *///?} else {
             @Override
             public MapCodec<? extends TextContent> getCodec() {
                 return PlainTextContent.CODEC;
             }
-            //?}
         });
     }
 
