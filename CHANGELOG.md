@@ -1,3 +1,8 @@
+## 1.6.5
+
+- Update to 1.21.9.
+- Drop support for previous versions.
+
 ## 1.6.4
 
 - Fix compatibility with Debugify.
