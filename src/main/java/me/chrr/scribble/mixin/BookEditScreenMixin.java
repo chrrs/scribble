@@ -1,5 +1,6 @@
 package me.chrr.scribble.mixin;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import me.chrr.scribble.KeyboardUtil;
@@ -351,9 +352,10 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
         this.scribble$pageNumberWidget.setPageNumber(this.currentPage + 1, this.pages.size());
     }
 
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawText(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/Text;IIIZ)V"))
-    public void drawIndicatorText(DrawContext instance, TextRenderer textRenderer, Text text, int x, int y, int color, boolean shadow) {
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawText(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/Text;IIIZ)V"))
+    public boolean drawIndicatorText(DrawContext instance, TextRenderer textRenderer, Text text, int x, int y, int color, boolean shadow) {
         // Do nothing: this is replaced by scribble$pageNumberWidget.
+        return false;
     }
     //endregion
 
