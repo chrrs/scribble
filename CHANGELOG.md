@@ -1,3 +1,7 @@
+## 1.6.6
+
+- Mark 1.21.9 as compatible with 1.21.10.
+
 ## 1.6.5
 
 - Update to 1.21.9.
