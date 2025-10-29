@@ -2,10 +2,10 @@ package me.chrr.scribble.book;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.Tag;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -46,16 +46,16 @@ public record BookFile(String author, Collection<String> pages) {
     }
 
     private static BookFile readNbt(Path path) throws IOException {
-        NbtCompound root = NbtIo.read(path);
+        CompoundTag root = NbtIo.read(path);
 
         if (root == null) {
             throw new IOException("could not read book nbt file");
         }
 
         String author = root.getString("author").orElse("<unknown>");
-        Collection<String> pages = root.getList("pages").orElse(new NbtList())
+        Collection<String> pages = root.getList("pages").orElse(new ListTag())
                 .stream()
-                .map(NbtElement::asString)
+                .map(Tag::asString)
                 .map(Optional::orElseThrow)
                 .toList();
 

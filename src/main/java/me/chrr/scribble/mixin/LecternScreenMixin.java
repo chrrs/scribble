@@ -3,12 +3,12 @@ package me.chrr.scribble.mixin;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import me.chrr.scribble.Scribble;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.Selectable;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.LecternScreen;
-import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.LecternScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -20,12 +20,12 @@ public abstract class LecternScreenMixin extends Screen {
     }
 
     // If we need to center the GUI, we shift the Y of the close buttons down.
-    @WrapOperation(method = "addCloseButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/LecternScreen;addDrawableChild(Lnet/minecraft/client/gui/Element;)Lnet/minecraft/client/gui/Element;"))
-    public <T extends Element & Drawable & Selectable> T shiftCloseButtonY(LecternScreen instance, Element element, Operation<T> original) {
-        if (element instanceof Widget widget) {
+    @WrapOperation(method = "createMenuControls", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/inventory/LecternScreen;addRenderableWidget(Lnet/minecraft/client/gui/components/events/GuiEventListener;)Lnet/minecraft/client/gui/components/events/GuiEventListener;"))
+    public <T extends GuiEventListener & Renderable & NarratableEntry> T shiftCloseButtonY(LecternScreen instance, T guiEventListener, Operation<T> original) {
+        if (guiEventListener instanceof AbstractWidget widget) {
             widget.setY(widget.getY() + Scribble.getBookScreenYOffset(height));
         }
 
-        return original.call(instance, element);
+        return original.call(instance, guiEventListener);
     }
 }

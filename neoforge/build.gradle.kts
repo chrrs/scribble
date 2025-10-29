@@ -38,13 +38,7 @@ repositories {
 
 dependencies {
     minecraft("com.mojang:minecraft:$minecraft")
-
-    @Suppress("UnstableApiUsage")
-    mappings(loom.layered {
-        mappings("net.fabricmc:yarn:${common.prop("fabric", "yarnVersion")}:v2")
-        mappings("dev.architectury:yarn-mappings-patch-neoforge:${common.prop("neoforge", "yarnPatch")}")
-    })
-
+    mappings(loom.officialMojangMappings())
     neoForge("net.neoforged:neoforge:${common.prop("neoforge", "version")}")
 
     commonBundle(project(common.path, "namedElements")) { isTransitive = false }

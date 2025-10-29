@@ -39,7 +39,7 @@ repositories {
 
 dependencies {
     minecraft("com.mojang:minecraft:$minecraft")
-    mappings("net.fabricmc:yarn:${common.prop("fabric", "yarnVersion")}:v2")
+    mappings(loom.officialMojangMappings())
     modImplementation("net.fabricmc:fabric-loader:${common.prop("fabric", "loaderVersion")}")
 
     fun fabricApiModule(name: String) =
