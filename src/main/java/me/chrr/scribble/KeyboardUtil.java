@@ -1,8 +1,8 @@
 package me.chrr.scribble;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.util.Window;
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.platform.Window;
+import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
 
 public class KeyboardUtil {
@@ -22,8 +22,8 @@ public class KeyboardUtil {
     }
 
     public static boolean hasShiftDown() {
-        Window window = MinecraftClient.getInstance().getWindow();
-        return InputUtil.isKeyPressed(window, GLFW.GLFW_KEY_LEFT_SHIFT)
-                || InputUtil.isKeyPressed(window, GLFW.GLFW_KEY_RIGHT_SHIFT);
+        Window window = Minecraft.getInstance().getWindow();
+        return InputConstants.isKeyDown(window, GLFW.GLFW_KEY_LEFT_SHIFT)
+                || InputConstants.isKeyDown(window, GLFW.GLFW_KEY_RIGHT_SHIFT);
     }
 }

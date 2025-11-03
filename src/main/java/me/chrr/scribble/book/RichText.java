@@ -1,9 +1,10 @@
 package me.chrr.scribble.book;
 
 import com.mojang.serialization.MapCodec;
-import net.minecraft.text.*;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Pair;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.*;
+import net.minecraft.network.chat.contents.PlainTextContents;
+import net.minecraft.util.Tuple;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,13 +21,13 @@ import java.util.stream.Collectors;
  * Note that a RichText instance is immutable, and every method will create a
  * new instance. Treat this class as a sort of `String` alternative.
  * <br>
- * We could've used {@link net.minecraft.text.MutableText} for this, but we
- * need something more flexible to easily edit portions, and make sure the
+ * We could've used {@link net.minecraft.network.chat.MutableComponent} for this,
+ * but we need something more flexible to easily edit portions, and make sure the
  * amount of segments doesn't spiral out of control.
  *
  * @author chrrrs
  */
-public class RichText implements StringVisitable {
+public class RichText implements FormattedText {
     private final List<Segment> segments;
 
     /**
@@ -45,7 +46,7 @@ public class RichText implements StringVisitable {
      * @param color     color of the segment.
      * @param modifiers modifiers of the segment.
      */
-    public RichText(String text, Formatting color, Set<Formatting> modifiers) {
+    public RichText(String text, ChatFormatting color, Set<ChatFormatting> modifiers) {
         this(List.of(new Segment(text, color, modifiers)));
     }
 
@@ -62,8 +63,8 @@ public class RichText implements StringVisitable {
         List<Segment> segments = new ArrayList<>();
 
         StringBuilder text = new StringBuilder();
-        Formatting color = Formatting.BLACK;
-        Set<Formatting> modifiers = new HashSet<>();
+        ChatFormatting color = ChatFormatting.BLACK;
+        Set<ChatFormatting> modifiers = new HashSet<>();
 
         for (int i = 0; i < input.length(); ) {
             int codePoint = input.codePointAt(i);
@@ -77,18 +78,18 @@ public class RichText implements StringVisitable {
                 char code = input.charAt(i);
                 i++;
 
-                Formatting formatting = Formatting.byCode(code);
+                ChatFormatting formatting = ChatFormatting.getByCode(code);
                 if (formatting != null) {
                     if (!text.isEmpty()) {
                         segments.add(new Segment(text.toString(), color, new HashSet<>(modifiers)));
                         text = new StringBuilder();
                     }
 
-                    if (formatting.isModifier()) {
+                    if (formatting.isFormat()) {
                         modifiers.add(formatting);
-                    } else if (formatting == Formatting.RESET) {
+                    } else if (formatting == ChatFormatting.RESET) {
                         // We get rid of any RESET color codes, as they act weirdly in books.
-                        color = Formatting.BLACK;
+                        color = ChatFormatting.BLACK;
                         modifiers.clear();
                     } else {
                         color = formatting;
@@ -108,33 +109,33 @@ public class RichText implements StringVisitable {
     }
 
     /**
-     * Create a RichText best representing the given StringVisitable object. This
+     * Create a RichText best representing the given formatted text object. This
      * operation is lossy, as not every style that JSON-based text can contain is
      * possible to be represented as formatting codes. For RGB-colors, the closest
      * available color is chosen. Hover events, click events and fonts are discarded.
      *
-     * @param stringVisitable the StringVisitable to represent.
-     * @return the closest approximation of the given StringVisitable.
+     * @param text the formatted text to represent.
+     * @return the closest approximation of the given formatted text.
      */
-    public static RichText fromStringVisitableLossy(StringVisitable stringVisitable) {
+    public static RichText fromFormattedTextLossy(FormattedText text) {
         List<Segment> segments = new ArrayList<>();
 
-        AtomicReference<Formatting> color = new AtomicReference<>(Formatting.BLACK);
-        stringVisitable.visit((style, string) -> {
+        AtomicReference<ChatFormatting> color = new AtomicReference<>(ChatFormatting.BLACK);
+        text.visit((style, string) -> {
             if (style.getColor() != null) {
                 color.set(formattingFromTextColor(style.getColor()));
             }
 
-            Set<Formatting> modifiers = new HashSet<>();
-            if (style.isBold()) modifiers.add(Formatting.BOLD);
-            if (style.isItalic()) modifiers.add(Formatting.ITALIC);
-            if (style.isUnderlined()) modifiers.add(Formatting.UNDERLINE);
-            if (style.isObfuscated()) modifiers.add(Formatting.OBFUSCATED);
-            if (style.isStrikethrough()) modifiers.add(Formatting.STRIKETHROUGH);
+            Set<ChatFormatting> modifiers = new HashSet<>();
+            if (style.isBold()) modifiers.add(ChatFormatting.BOLD);
+            if (style.isItalic()) modifiers.add(ChatFormatting.ITALIC);
+            if (style.isUnderlined()) modifiers.add(ChatFormatting.UNDERLINE);
+            if (style.isObfuscated()) modifiers.add(ChatFormatting.OBFUSCATED);
+            if (style.isStrikethrough()) modifiers.add(ChatFormatting.STRIKETHROUGH);
 
             segments.add(new Segment(string, color.get(), modifiers));
             return Optional.empty();
-        }, Style.EMPTY.withFormatting(Formatting.BLACK));
+        }, Style.EMPTY.applyFormat(ChatFormatting.BLACK));
 
         return new RichText(segments);
     }
@@ -145,26 +146,26 @@ public class RichText implements StringVisitable {
      * @param color the TextColor to convert. This can be any RGB color.
      * @return the formatting code best representing the given text color.
      */
-    private static Formatting formattingFromTextColor(TextColor color) {
+    private static ChatFormatting formattingFromTextColor(TextColor color) {
         // If the color has a name, we can look it up directly.
-        Formatting byName = Formatting.byName(color.getName());
+        ChatFormatting byName = ChatFormatting.getByName(color.serialize());
         if (byName != null) {
             return byName;
         }
 
         // Otherwise, let's find the closest matching color.
-        Formatting closest = Formatting.BLACK;
+        ChatFormatting closest = ChatFormatting.BLACK;
         int distance = Integer.MAX_VALUE;
-        for (Formatting formatting : Formatting.values()) {
-            Integer colorValue = formatting.getColorValue();
+        for (ChatFormatting formatting : ChatFormatting.values()) {
+            Integer colorValue = formatting.getColor();
             if (colorValue == null) {
                 continue;
             }
 
             // Find the Euclidean distance between the two colors (without taking the square root).
-            int dr = Math.abs((colorValue >> 16 & 0xff) - (color.getRgb() >> 16 & 0xff));
-            int dg = Math.abs((colorValue >> 8 & 0xff) - (color.getRgb() >> 8 & 0xff));
-            int db = Math.abs((colorValue & 0xff) - (color.getRgb() & 0xff));
+            int dr = Math.abs((colorValue >> 16 & 0xff) - (color.getValue() >> 16 & 0xff));
+            int dg = Math.abs((colorValue >> 8 & 0xff) - (color.getValue() >> 8 & 0xff));
+            int db = Math.abs((colorValue & 0xff) - (color.getValue() & 0xff));
 
             int dist = dr + dg + db;
             if (dist < distance) {
@@ -402,9 +403,9 @@ public class RichText implements StringVisitable {
      */
     public RichText applyFormatting(
             int start, int end,
-            @Nullable Formatting newColor,
-            Set<Formatting> addModifiers,
-            Set<Formatting> removeModifiers
+            @Nullable ChatFormatting newColor,
+            Set<ChatFormatting> addModifiers,
+            Set<ChatFormatting> removeModifiers
     ) {
         if (start == end) {
             return this;
@@ -440,8 +441,8 @@ public class RichText implements StringVisitable {
             String modifiedText = segment.text.substring(localStart, localEnd);
 
             // Let's calculate the final color and modifiers.
-            Formatting color = Optional.ofNullable(newColor).orElse(segment.color);
-            Set<Formatting> modifiers = new HashSet<>(segment.modifiers);
+            ChatFormatting color = Optional.ofNullable(newColor).orElse(segment.color);
+            Set<ChatFormatting> modifiers = new HashSet<>(segment.modifiers);
             modifiers.addAll(addModifiers);
             modifiers.removeAll(removeModifiers);
 
@@ -467,8 +468,8 @@ public class RichText implements StringVisitable {
     public String getAsFormattedString() {
         StringBuilder out = new StringBuilder();
 
-        Formatting currentColor = Formatting.BLACK;
-        Set<Formatting> currentModifiers = new HashSet<>();
+        ChatFormatting currentColor = ChatFormatting.BLACK;
+        Set<ChatFormatting> currentModifiers = new HashSet<>();
 
         for (Segment segment : segments) {
             if (segment.text.isEmpty()) {
@@ -477,11 +478,11 @@ public class RichText implements StringVisitable {
 
             boolean colorChanged = !segment.color.equals(currentColor);
 
-            Set<Formatting> modifiersToRemove = new HashSet<>(currentModifiers);
+            Set<ChatFormatting> modifiersToRemove = new HashSet<>(currentModifiers);
             modifiersToRemove.removeAll(segment.modifiers);
             boolean shouldReapply = colorChanged || !modifiersToRemove.isEmpty();
 
-            List<Formatting> modifiersToAdd = new ArrayList<>(segment.modifiers);
+            List<ChatFormatting> modifiersToAdd = new ArrayList<>(segment.modifiers);
             if (!shouldReapply) {
                 modifiersToAdd.removeAll(currentModifiers);
             }
@@ -491,8 +492,8 @@ public class RichText implements StringVisitable {
             }
 
             // Sort the modifiers so they're always in the same order, so the output is predictable.
-            modifiersToAdd.sort(Comparator.comparingInt(Formatting::getCode));
-            for (Formatting format : modifiersToAdd) {
+            modifiersToAdd.sort(Comparator.comparingInt(ChatFormatting::getChar));
+            for (ChatFormatting format : modifiersToAdd) {
                 out.append(format);
             }
 
@@ -506,29 +507,29 @@ public class RichText implements StringVisitable {
     }
 
     /**
-     * Get the rich text as a vanilla {@link MutableText}. Note that this text content is valid for
+     * Get the rich text as a vanilla {@link MutableComponent}. Note that this text content is valid for
      * this client only!
      *
      * @return this rich-text as mutable text.
      */
-    public MutableText getAsMutableText() {
+    public MutableComponent getAsMutableComponent() {
         RichText text = this;
-        return MutableText.of(new TextContent() {
+        return MutableComponent.create(new ComponentContents() {
             @Override
-            public <T> Optional<T> visit(StringVisitable.StyledVisitor<T> visitor, Style style) {
-                return text.visit(visitor, style);
+            public <T> @NotNull Optional<T> visit(FormattedText.StyledContentConsumer<T> consumer, Style style) {
+                return text.visit(consumer, style);
             }
 
             @Override
-            public <T> Optional<T> visit(StringVisitable.Visitor<T> visitor) {
-                return text.visit(visitor);
+            public <T> @NotNull Optional<T> visit(FormattedText.ContentConsumer<T> consumer) {
+                return text.visit(consumer);
             }
 
-            // This is not accurate, but this TextContent is never sent to the
+            // This is not accurate, but these contents are never sent to the
             // server, so it doesn't need to be.
             @Override
-            public MapCodec<? extends TextContent> getCodec() {
-                return PlainTextContent.CODEC;
+            public @NotNull MapCodec<? extends ComponentContents> codec() {
+                return PlainTextContents.MAP_CODEC;
             }
         });
     }
@@ -541,10 +542,10 @@ public class RichText implements StringVisitable {
      * @param end   end of text range (exclusive).
      * @return a pair with the common color and modifiers.
      */
-    public Pair<@Nullable Formatting, Set<Formatting>> getCommonFormat(int start, int end) {
+    public Tuple<@Nullable ChatFormatting, Set<ChatFormatting>> getCommonFormat(int start, int end) {
         boolean first = true;
-        Set<Formatting> modifiers = Set.of();
-        Formatting color = Formatting.BLACK;
+        Set<ChatFormatting> modifiers = Set.of();
+        ChatFormatting color = ChatFormatting.BLACK;
 
         int current = 0;
         for (Segment segment : segments) {
@@ -553,7 +554,7 @@ public class RichText implements StringVisitable {
             // If we have a zero-width selection, we want the formatting of
             // the segment before it.
             if (start == end && start <= current + length) {
-                return new Pair<>(segment.color, segment.modifiers);
+                return new Tuple<>(segment.color, segment.modifiers);
             }
 
             // We're before the segment we're searching for
@@ -585,13 +586,13 @@ public class RichText implements StringVisitable {
             current += length;
         }
 
-        return new Pair<>(color, modifiers);
+        return new Tuple<>(color, modifiers);
     }
 
     @Override
-    public <T> Optional<T> visit(Visitor<T> visitor) {
+    public <T> @NotNull Optional<T> visit(ContentConsumer<T> consumer) {
         for (Segment segment : segments) {
-            Optional<T> out = visitor.accept(segment.text);
+            Optional<T> out = consumer.accept(segment.text);
             if (out.isPresent()) {
                 return out;
             }
@@ -601,12 +602,12 @@ public class RichText implements StringVisitable {
     }
 
     @Override
-    public <T> Optional<T> visit(StyledVisitor<T> styledVisitor, Style baseStyle) {
+    public <T> @NotNull Optional<T> visit(StyledContentConsumer<T> consumer, Style baseStyle) {
         for (Segment segment : segments) {
             Style style = baseStyle
-                    .withFormatting(segment.modifiers.toArray(new Formatting[0]))
-                    .withColor(segment.color);
-            Optional<T> out = styledVisitor.accept(style, segment.text);
+                    .applyFormats(segment.modifiers.toArray(new ChatFormatting[0]))
+                    .applyFormat(segment.color);
+            Optional<T> out = consumer.accept(style, segment.text);
             if (out.isPresent()) {
                 return out;
             }
@@ -616,7 +617,7 @@ public class RichText implements StringVisitable {
     }
 
     @Override
-    public String getString() {
+    public @NotNull String getString() {
         return this.getPlainText();
     }
 
@@ -648,6 +649,6 @@ public class RichText implements StringVisitable {
      * @param color     the color of the segment.
      * @param modifiers the list of formatting modifiers for the segment.
      */
-    public record Segment(String text, Formatting color, Set<Formatting> modifiers) {
+    public record Segment(String text, ChatFormatting color, Set<ChatFormatting> modifiers) {
     }
 }

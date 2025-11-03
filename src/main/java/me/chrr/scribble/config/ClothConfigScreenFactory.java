@@ -4,8 +4,8 @@ import me.chrr.scribble.Scribble;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 import java.io.IOException;
 
@@ -16,7 +16,7 @@ public class ClothConfigScreenFactory {
     public static Screen create(Screen parent) {
         ConfigBuilder builder = ConfigBuilder.create()
                 .setParentScreen(parent)
-                .setTitle(Text.translatable("config.scribble.title"));
+                .setTitle(Component.translatable("config.scribble.title"));
 
         builder.setSavingRunnable(() -> {
             try {
@@ -28,20 +28,20 @@ public class ClothConfigScreenFactory {
 
         Config config = Scribble.CONFIG_MANAGER.getConfig();
 
-        ConfigCategory category = builder.getOrCreateCategory(Text.empty());
+        ConfigCategory category = builder.getOrCreateCategory(Component.empty());
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
         category.addEntry(entryBuilder.startBooleanToggle(
-                        Text.translatable("config.scribble.option.copy_formatting_codes"),
+                        Component.translatable("config.scribble.option.copy_formatting_codes"),
                         config.copyFormattingCodes
                 )
                 .setDefaultValue(Config.DEFAULT.copyFormattingCodes)
-                .setTooltip(Text.translatable("config.scribble.description.copy_formatting_codes"))
+                .setTooltip(Component.translatable("config.scribble.description.copy_formatting_codes"))
                 .setSaveConsumer((value) -> config.copyFormattingCodes = value)
                 .build());
 
         category.addEntry(entryBuilder.startBooleanToggle(
-                        Text.translatable("config.scribble.option.center_book_gui"),
+                        Component.translatable("config.scribble.option.center_book_gui"),
                         config.centerBookGui
                 )
                 .setDefaultValue(Config.DEFAULT.centerBookGui)
@@ -49,17 +49,17 @@ public class ClothConfigScreenFactory {
                 .build());
 
         category.addEntry(entryBuilder.startEnumSelector(
-                        Text.translatable("config.scribble.option.show_action_buttons"),
+                        Component.translatable("config.scribble.option.show_action_buttons"),
                         Config.ShowActionButtons.class, config.showActionButtons
                 )
                 .setEnumNameProvider((opt) ->
-                        Text.translatable("config.scribble.option.show_action_buttons." + opt.name().toLowerCase()))
+                        Component.translatable("config.scribble.option.show_action_buttons." + opt.name().toLowerCase()))
                 .setDefaultValue(Config.DEFAULT.showActionButtons)
                 .setSaveConsumer((value) -> config.showActionButtons = value)
                 .build());
 
         category.addEntry(entryBuilder.startIntSlider(
-                        Text.translatable("config.scribble.option.edit_history_size"),
+                        Component.translatable("config.scribble.option.edit_history_size"),
                         config.editHistorySize, 8, 128
                 )
                 .setDefaultValue(Config.DEFAULT.editHistorySize)

@@ -2,16 +2,20 @@ package me.chrr.scribble.gui.edit;
 
 import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.history.command.EditCommand;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.EditBox;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.gui.screen.narration.NarrationPart;
-import net.minecraft.client.gui.widget.EditBoxWidget;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.text.Text;
-import net.minecraft.util.*;
+import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.MultiLineEditBox;
+import net.minecraft.client.gui.components.MultilineTextField;
+import net.minecraft.client.gui.narration.NarratedElementType;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.CommonColors;
+import net.minecraft.util.Tuple;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -21,27 +25,27 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
-public class RichEditBoxWidget extends EditBoxWidget {
+public class RichEditBoxWidget extends MultiLineEditBox {
     @Nullable
     private final Runnable onInvalidateFormat;
     @Nullable
     private final Consumer<EditCommand> onHistoryPush;
 
     @Nullable
-    public Formatting color = Formatting.BLACK;
-    public Set<Formatting> modifiers = new HashSet<>();
+    public ChatFormatting color = ChatFormatting.BLACK;
+    public Set<ChatFormatting> modifiers = new HashSet<>();
 
-    private RichEditBoxWidget(TextRenderer textRenderer, int x, int y, int width, int height,
-                              Text placeholder, Text message, int textColor, boolean textShadow, int cursorColor,
+    private RichEditBoxWidget(Font font, int x, int y, int width, int height,
+                              Component placeholder, Component message, int textColor, boolean textShadow, int cursorColor,
                               boolean hasBackground, boolean hasOverlay,
                               @Nullable Runnable onInvalidateFormat, @Nullable Consumer<EditCommand> onHistoryPush) {
-        super(textRenderer, x, y, width, height, placeholder, message, textColor, textShadow, cursorColor, hasBackground, hasOverlay);
+        super(font, x, y, width, height, placeholder, message, textColor, textShadow, cursorColor, hasBackground, hasOverlay);
         this.onInvalidateFormat = onInvalidateFormat;
         this.onHistoryPush = onHistoryPush;
 
-        this.editBox = new RichEditBox(
-                textRenderer, width - this.getPadding(),
-                () -> new Pair<>(Optional.ofNullable(color).orElse(Formatting.BLACK), modifiers),
+        this.textField = new RichMultiLineTextField(
+                font, width - this.totalInnerPadding(),
+                () -> new Tuple<>(Optional.ofNullable(color).orElse(ChatFormatting.BLACK), modifiers),
                 (color, modifiers) -> {
                     this.color = color;
                     this.modifiers = new HashSet<>(modifiers);
@@ -61,15 +65,15 @@ public class RichEditBoxWidget extends EditBoxWidget {
         }
     }
 
-    public void applyFormatting(Formatting formatting, boolean active) {
-        RichEditBox editBox = this.getRichEditBox();
+    public void applyFormatting(ChatFormatting formatting, boolean active) {
+        RichMultiLineTextField editBox = this.getRichTextField();
 
         if (editBox.hasSelection()) {
             EditCommand command = new EditCommand(editBox, (box) -> box.applyFormatting(formatting, active));
             command.executeEdit(editBox);
             this.pushHistory(command);
         } else {
-            if (formatting.isModifier()) {
+            if (formatting.isFormat()) {
                 if (active) {
                     this.modifiers.add(formatting);
                 } else {
@@ -85,47 +89,47 @@ public class RichEditBoxWidget extends EditBoxWidget {
 
     private int getCursorColor() {
         if (this.color == null) {
-            return Colors.BLACK;
+            return CommonColors.BLACK;
         } else {
             //noinspection DataFlowIssue: the color variable is never a modifier.
-            return 0xff000000 | this.color.getColorValue();
+            return 0xff000000 | this.color.getColor();
         }
     }
 
     @Override
-    protected void renderContents(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        RichText text = getRichEditBox().getRichText();
+    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
+        RichText text = getRichTextField().getRichText();
 
         // Draw the placeholder text if there's no content.
         if (text.isEmpty() && !this.isFocused()) {
-            context.drawWrappedTextWithShadow(this.textRenderer, this.placeholder, this.getTextX(), this.getTextY(), this.width - this.getPadding(), -857677600);
+            graphics.drawWordWrap(this.font, this.placeholder, this.getInnerLeft(), this.getInnerTop(), this.width - this.totalInnerPadding(), -857677600);
             return;
         }
 
-        int cursor = this.editBox.getCursor();
-        boolean blink = this.isFocused() && (Util.getMeasuringTimeMs() - this.lastSwitchFocusTime) / 300L % 2L == 0L;
+        int cursor = this.textField.cursor();
+        boolean blink = this.isFocused() && (Util.getMillis() - this.focusedTime) / 300L % 2L == 0L;
         boolean cursorInText = cursor < text.getLength();
 
         int lastX = 0;
         int lastY = 0;
 
-        int y = this.getTextY();
+        int y = this.getInnerTop();
         boolean hasDrawnCursor = false;
-        for (EditBox.Substring line : this.editBox.getLines()) {
-            boolean visible = this.isVisible(y, y + textRenderer.fontHeight);
+        for (MultilineTextField.StringView line : this.textField.iterateLines()) {
+            boolean visible = this.withinContentAreaTopBottom(y, y + font.lineHeight);
 
-            int x = this.getTextX();
+            int x = this.getInnerLeft();
             if (blink && cursorInText && cursor >= line.beginIndex() && cursor <= line.endIndex()) {
                 if (visible) {
                     // AD-HOC: Draw the entire line in one call. Vanilla does this differently, I don't know why
                     RichText lineText = text.subText(line.beginIndex(), line.endIndex());
-                    context.drawText(this.textRenderer, lineText.getAsMutableText(), x, y, this.textColor, this.textShadow);
+                    graphics.drawString(this.font, lineText.getAsMutableComponent(), x, y, this.textColor, this.textShadow);
 
                     RichText beforeCursor = text.subText(line.beginIndex(), cursor);
-                    lastX = x + this.textRenderer.getWidth(beforeCursor);
+                    lastX = x + this.font.width(beforeCursor);
 
                     if (!hasDrawnCursor) {
-                        context.fill(lastX, y - 1, lastX + 1, y + 1 + textRenderer.fontHeight, this.getCursorColor());
+                        graphics.fill(lastX, y - 1, lastX + 1, y + 1 + this.font.lineHeight, this.getCursorColor());
                         hasDrawnCursor = true;
                     }
                 }
@@ -133,59 +137,59 @@ public class RichEditBoxWidget extends EditBoxWidget {
                 // Otherwise, just draw the line normally.
                 if (visible) {
                     RichText lineText = text.subText(line.beginIndex(), line.endIndex());
-                    context.drawText(this.textRenderer, lineText.getAsMutableText(), x, y, this.textColor, this.textShadow);
-                    lastX = x + this.textRenderer.getWidth(lineText) - 1;
+                    graphics.drawString(this.font, lineText.getAsMutableComponent(), x, y, this.textColor, this.textShadow);
+                    lastX = x + this.font.width(lineText) - 1;
                 }
 
                 lastY = y;
             }
 
-            y += textRenderer.fontHeight;
+            y += this.font.lineHeight;
         }
 
         // If we haven't drawn the cursor yet, it should be a '_' at the last draw position.
         if (blink && !cursorInText) {
-            if (this.isVisible(lastY, lastY + textRenderer.fontHeight)) {
-                context.drawText(this.textRenderer, "_", lastX + 1, lastY, this.getCursorColor(), this.textShadow);
+            if (this.withinContentAreaTopBottom(lastY, lastY + this.font.lineHeight)) {
+                graphics.drawString(this.font, "_", lastX + 1, lastY, this.getCursorColor(), this.textShadow);
             }
         }
 
         // If we have a selection, we want to draw it.
-        if (this.editBox.hasSelection()) {
-            EditBox.Substring selection = this.editBox.getSelection();
-            int x = this.getTextX();
-            y = this.getTextY();
+        if (this.textField.hasSelection()) {
+            MultilineTextField.StringView selection = this.textField.getSelected();
+            int x = this.getInnerLeft();
+            y = this.getInnerTop();
 
             // Loop through the lines, and draw selection boxes for each line.
-            for (EditBox.Substring line : this.editBox.getLines()) {
+            for (MultilineTextField.StringView line : this.textField.iterateLines()) {
                 if (selection.beginIndex() <= line.endIndex()) {
                     if (line.beginIndex() > selection.endIndex()) {
                         break;
                     }
 
-                    if (this.isVisible(y, y + textRenderer.fontHeight)) {
-                        int start = this.textRenderer.getWidth(text.subText(line.beginIndex(), Math.max(selection.beginIndex(), line.beginIndex())));
+                    if (this.withinContentAreaTopBottom(y, y + this.font.lineHeight)) {
+                        int start = this.font.width(text.subText(line.beginIndex(), Math.max(selection.beginIndex(), line.beginIndex())));
 
                         int end = selection.endIndex() > line.endIndex()
-                                ? this.width - this.getTextMargin()
-                                : this.textRenderer.getWidth(text.subText(line.beginIndex(), selection.endIndex()));
+                                ? this.width - this.innerPadding()
+                                : this.font.width(text.subText(line.beginIndex(), selection.endIndex()));
 
-                        context.drawSelection(x + start, y, x + end, y + textRenderer.fontHeight);
+                        graphics.textHighlight(x + start, y, x + end, y + this.font.lineHeight);
                     }
                 }
 
-                y += textRenderer.fontHeight;
+                y += this.font.lineHeight;
             }
 
         }
     }
 
     @Override
-    public boolean charTyped(CharInput input) {
-        if (this.visible && this.isFocused() && input.isValidChar()) {
-            EditCommand command = new EditCommand(this.getRichEditBox(),
-                    (editBox) -> editBox.replaceSelection(input.asString()));
-            command.executeEdit(this.getRichEditBox());
+    public boolean charTyped(CharacterEvent event) {
+        if (this.visible && this.isFocused() && event.isAllowedChatCharacter()) {
+            EditCommand command = new EditCommand(this.getRichTextField(),
+                    (editBox) -> editBox.insertText(event.codepointAsString()));
+            command.executeEdit(this.getRichTextField());
             this.pushHistory(command);
             return true;
         } else {
@@ -194,15 +198,15 @@ public class RichEditBoxWidget extends EditBoxWidget {
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
+    public boolean keyPressed(KeyEvent event) {
         // Respond to common hotkeys for toggling modifiers, such as Ctrl-B for bold.
-        if (input.hasCtrl() && !input.hasShift() && !input.hasAlt()) {
-            Formatting modifier = switch (input.key()) {
-                case GLFW.GLFW_KEY_B -> Formatting.BOLD;
-                case GLFW.GLFW_KEY_I -> Formatting.ITALIC;
-                case GLFW.GLFW_KEY_U -> Formatting.UNDERLINE;
-                case GLFW.GLFW_KEY_MINUS -> Formatting.STRIKETHROUGH;
-                case GLFW.GLFW_KEY_K -> Formatting.OBFUSCATED;
+        if (event.hasControlDown() && !event.hasShiftDown() && !event.hasAltDown()) {
+            ChatFormatting modifier = switch (event.key()) {
+                case GLFW.GLFW_KEY_B -> ChatFormatting.BOLD;
+                case GLFW.GLFW_KEY_I -> ChatFormatting.ITALIC;
+                case GLFW.GLFW_KEY_U -> ChatFormatting.UNDERLINE;
+                case GLFW.GLFW_KEY_MINUS -> ChatFormatting.STRIKETHROUGH;
+                case GLFW.GLFW_KEY_K -> ChatFormatting.OBFUSCATED;
                 default -> null;
             };
 
@@ -213,32 +217,32 @@ public class RichEditBoxWidget extends EditBoxWidget {
         }
 
         // Wrap the operation with an edit command if it edits the text.
-        if (input.isCut() || input.isPaste() ||
+        if (event.isCut() || event.isPaste() ||
                 List.of(GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER,
-                        GLFW.GLFW_KEY_BACKSPACE, GLFW.GLFW_KEY_DELETE).contains(input.key())) {
-            EditCommand command = new EditCommand(this.getRichEditBox(),
-                    (editBox) -> editBox.handleSpecialKey(input));
-            command.executeEdit(this.getRichEditBox());
+                        GLFW.GLFW_KEY_BACKSPACE, GLFW.GLFW_KEY_DELETE).contains(event.key())) {
+            EditCommand command = new EditCommand(this.getRichTextField(),
+                    (editBox) -> editBox.keyPressed(event));
+            command.executeEdit(this.getRichTextField());
             this.pushHistory(command);
             return true;
         }
 
 
-        return super.keyPressed(input);
+        return super.keyPressed(event);
     }
 
     @Override
-    public void appendClickableNarrations(NarrationMessageBuilder builder) {
+    public void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
         // Make sure the narrator narrates the plain text, not the formatting codes.
-        builder.put(NarrationPart.TITLE, Text.translatable("gui.narrate.editBox",
-                this.getMessage(), getRichEditBox().getRichText().getPlainText()));
+        narrationElementOutput.add(NarratedElementType.TITLE, Component.translatable("gui.narrate.editBox",
+                this.getMessage(), getRichTextField().getRichText().getPlainText()));
     }
 
-    public RichEditBox getRichEditBox() {
-        return (RichEditBox) editBox;
+    public RichMultiLineTextField getRichTextField() {
+        return (RichMultiLineTextField) textField;
     }
 
-    public static class Builder extends EditBoxWidget.Builder {
+    public static class Builder extends MultiLineEditBox.Builder {
         @Nullable
         private Runnable onInvalidateFormat = null;
         @Nullable
@@ -255,12 +259,12 @@ public class RichEditBoxWidget extends EditBoxWidget {
         }
 
         @Override
-        public EditBoxWidget build(TextRenderer textRenderer, int width, int height, Text message) {
-            return new RichEditBoxWidget(textRenderer,
+        public @NotNull MultiLineEditBox build(Font font, int width, int height, Component message) {
+            return new RichEditBoxWidget(font,
                     this.x, this.y, width, height,
                     this.placeholder, message, this.textColor,
-                    this.textShadow, this.cursorColor, this.hasBackground,
-                    this.hasOverlay, this.onInvalidateFormat, this.onHistoryPush);
+                    this.textShadow, this.cursorColor, this.showBackground,
+                    this.showDecorations, this.onInvalidateFormat, this.onHistoryPush);
         }
     }
 }

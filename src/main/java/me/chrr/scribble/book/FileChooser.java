@@ -1,8 +1,8 @@
 package me.chrr.scribble.book;
 
 import me.chrr.scribble.Scribble;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.Language;
+import net.minecraft.client.Minecraft;
+import net.minecraft.locale.Language;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
@@ -40,7 +40,7 @@ public class FileChooser {
                     filter.flip();
 
                     path = TinyFileDialogs.tinyfd_saveFileDialog(
-                            Language.getInstance().get("text.scribble.action.save_book_to_file"), defaultPath,
+                            Language.getInstance().getOrDefault("text.scribble.action.save_book_to_file"), defaultPath,
                             filter, "Scribble Book (.json)");
                 } else {
                     // FIXME: For macOS, we don't set a file filter on open.
@@ -55,7 +55,7 @@ public class FileChooser {
                     }
 
                     path = TinyFileDialogs.tinyfd_openFileDialog(
-                            Language.getInstance().get("text.scribble.action.load_book_from_file"), defaultPath,
+                            Language.getInstance().getOrDefault("text.scribble.action.load_book_from_file"), defaultPath,
                             filter, "Scribble Book (.book, .json)", false);
                 }
 
@@ -66,7 +66,7 @@ public class FileChooser {
 
                 try {
                     Path p = Path.of(path);
-                    MinecraftClient.getInstance().execute(() -> pathConsumer.accept(p));
+                    Minecraft.getInstance().execute(() -> pathConsumer.accept(p));
                 } catch (InvalidPathException e) {
                     Scribble.LOGGER.error("failed to choose path", e);
                 }
@@ -108,7 +108,7 @@ public class FileChooser {
         Files.walkFileTree(rootDir, new SimpleFileVisitor<>() {
             @Override
             @NotNull
-            public FileVisitResult preVisitDirectory(Path dir, @NotNull BasicFileAttributes attrs) {
+            public FileVisitResult preVisitDirectory(@NotNull Path dir, @NotNull BasicFileAttributes attrs) {
                 if (dir.getFileName().toString().equals("_legacy")) {
                     return FileVisitResult.SKIP_SUBTREE;
                 } else {
@@ -118,7 +118,7 @@ public class FileChooser {
 
             @Override
             @NotNull
-            public FileVisitResult visitFile(Path file, @NotNull BasicFileAttributes attrs) {
+            public FileVisitResult visitFile(@NotNull Path file, @NotNull BasicFileAttributes attrs) {
                 if (file.toString().endsWith(".book")) {
                     Scribble.LOGGER.info("converting legacy NBT-based book file at {} to JSON.", file);
 

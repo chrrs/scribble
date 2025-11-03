@@ -1,7 +1,7 @@
 package me.chrr.scribble.config;
 
 public class Config {
-    public static Config DEFAULT = new Config();
+    public static final Config DEFAULT = new Config();
 
     public int version = 3;
     public boolean copyFormattingCodes = true;

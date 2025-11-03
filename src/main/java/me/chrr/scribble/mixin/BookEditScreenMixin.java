@@ -13,24 +13,28 @@ import me.chrr.scribble.gui.PageNumberWidget;
 import me.chrr.scribble.gui.button.ColorSwatchWidget;
 import me.chrr.scribble.gui.button.IconButtonWidget;
 import me.chrr.scribble.gui.button.ModifierButtonWidget;
-import me.chrr.scribble.gui.edit.RichEditBox;
+import me.chrr.scribble.gui.edit.RichMultiLineTextField;
 import me.chrr.scribble.gui.edit.RichEditBoxWidget;
 import me.chrr.scribble.history.CommandManager;
 import me.chrr.scribble.history.HistoryListener;
 import me.chrr.scribble.history.command.EditCommand;
 import me.chrr.scribble.history.command.PageDeleteCommand;
 import me.chrr.scribble.history.command.PageInsertCommand;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.*;
-import net.minecraft.client.gui.screen.ConfirmScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.BookEditScreen;
-import net.minecraft.client.gui.widget.*;
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.MultiLineEditBox;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.screens.ConfirmScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.BookEditScreen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -54,21 +58,21 @@ import java.util.function.Consumer;
 public abstract class BookEditScreenMixin extends Screen implements HistoryListener {
     //region Constants
     @Unique
-    private static final Formatting[] scribble$COLORS = new Formatting[]{
-            Formatting.BLACK, Formatting.DARK_GRAY,
-            Formatting.GRAY, Formatting.WHITE,
-            Formatting.DARK_RED, Formatting.RED,
-            Formatting.GOLD, Formatting.YELLOW,
-            Formatting.DARK_GREEN, Formatting.GREEN,
-            Formatting.DARK_AQUA, Formatting.AQUA,
-            Formatting.DARK_BLUE, Formatting.BLUE,
-            Formatting.DARK_PURPLE, Formatting.LIGHT_PURPLE,
+    private static final ChatFormatting[] scribble$COLORS = new ChatFormatting[]{
+            ChatFormatting.BLACK, ChatFormatting.DARK_GRAY,
+            ChatFormatting.GRAY, ChatFormatting.WHITE,
+            ChatFormatting.DARK_RED, ChatFormatting.RED,
+            ChatFormatting.GOLD, ChatFormatting.YELLOW,
+            ChatFormatting.DARK_GREEN, ChatFormatting.GREEN,
+            ChatFormatting.DARK_AQUA, ChatFormatting.AQUA,
+            ChatFormatting.DARK_BLUE, ChatFormatting.BLUE,
+            ChatFormatting.DARK_PURPLE, ChatFormatting.LIGHT_PURPLE,
     };
     //endregion
 
     //region @Shadow declarations
     @Shadow
-    private EditBoxWidget editBox;
+    private MultiLineEditBox page;
 
     @Shadow
     @Final
@@ -79,13 +83,13 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
 
     @Shadow
     @Final
-    private PlayerEntity player;
+    private Player owner;
 
     @Shadow
-    protected abstract void updatePage();
+    protected abstract void updatePageContent();
 
     @Shadow
-    protected abstract void updatePreviousPageButtonVisibility();
+    protected abstract void updateButtonVisibility();
     //endregion
 
     //region Variables
@@ -127,8 +131,8 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
         super(null);
     }
 
-    @Redirect(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/widget/EditBoxWidget;builder()Lnet/minecraft/client/gui/widget/EditBoxWidget$Builder;"))
-    public EditBoxWidget.Builder buildEditBoxWidget() {
+    @Redirect(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/MultiLineEditBox;builder()Lnet/minecraft/client/gui/components/MultiLineEditBox$Builder;"))
+    public MultiLineEditBox.Builder buildEditBoxWidget() {
         return new RichEditBoxWidget.Builder()
                 .onInvalidateFormat(this::scribble$invalidateFormattingButtons)
                 .onHistoryPush(this::scribble$pushEditCommand);
@@ -136,7 +140,7 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
 
     @Unique
     private RichEditBoxWidget scribble$getRichEditBoxWidget() {
-        return (RichEditBoxWidget) this.editBox;
+        return (RichEditBoxWidget) this.page;
     }
 
     //region Formatting Buttons
@@ -147,38 +151,38 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
 
         // Modifier buttons
         scribble$boldButton = scribble$addModifierButton(
-                Formatting.BOLD, Text.translatable("text.scribble.modifier.bold"),
+                ChatFormatting.BOLD, Component.translatable("text.scribble.modifier.bold"),
                 x, y, 0, 0, 22, 19);
         scribble$italicButton = scribble$addModifierButton(
-                Formatting.ITALIC, Text.translatable("text.scribble.modifier.italic"),
+                ChatFormatting.ITALIC, Component.translatable("text.scribble.modifier.italic"),
                 x, y + 19, 0, 19, 22, 17);
         scribble$underlineButton = scribble$addModifierButton(
-                Formatting.UNDERLINE, Text.translatable("text.scribble.modifier.underline"),
+                ChatFormatting.UNDERLINE, Component.translatable("text.scribble.modifier.underline"),
                 x, y + 36, 0, 36, 22, 17);
         scribble$strikethroughButton = scribble$addModifierButton(
-                Formatting.STRIKETHROUGH, Text.translatable("text.scribble.modifier.strikethrough"),
+                ChatFormatting.STRIKETHROUGH, Component.translatable("text.scribble.modifier.strikethrough"),
                 x, y + 53, 0, 53, 22, 17);
         scribble$obfuscatedButton = scribble$addModifierButton(
-                Formatting.OBFUSCATED, Text.translatable("text.scribble.modifier.obfuscated"),
+                ChatFormatting.OBFUSCATED, Component.translatable("text.scribble.modifier.obfuscated"),
                 x, y + 70, 0, 70, 22, 18);
 
         // Color swatches
         RichEditBoxWidget editBox = scribble$getRichEditBoxWidget();
         scribble$colorSwatches = new ArrayList<>(scribble$COLORS.length);
         for (int i = 0; i < scribble$COLORS.length; i++) {
-            Formatting color = scribble$COLORS[i];
+            ChatFormatting color = scribble$COLORS[i];
 
             int dx = (i % 2) * 8;
             int dy = (i / 2) * 8;
 
             ColorSwatchWidget swatch = new ColorSwatchWidget(
-                    Text.translatable("text.scribble.color." + color.getName()), color,
+                    Component.translatable("text.scribble.color." + color.getName()), color,
                     () -> editBox.applyFormatting(color, true),
                     x + 3 + dx, y + 95 + dy, 8, 8,
                     editBox.color == color
             );
 
-            ColorSwatchWidget widget = addDrawableChild(swatch);
+            ColorSwatchWidget widget = addRenderableWidget(swatch);
             scribble$colorSwatches.add(widget);
         }
 
@@ -186,13 +190,13 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
     }
 
     @Unique
-    private ModifierButtonWidget scribble$addModifierButton(Formatting modifier, Text tooltip, int x, int y, int u, int v, int width, int height) {
+    private ModifierButtonWidget scribble$addModifierButton(ChatFormatting modifier, Component tooltip, int x, int y, int u, int v, int width, int height) {
         RichEditBoxWidget editBox = scribble$getRichEditBoxWidget();
         ModifierButtonWidget button = new ModifierButtonWidget(
                 tooltip, (toggled) -> editBox.applyFormatting(modifier, toggled),
                 x, y, u, v, width, height,
                 editBox.modifiers.contains(modifier));
-        return addDrawableChild(button);
+        return addRenderableWidget(button);
     }
 
     @Unique
@@ -205,17 +209,17 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
             return;
         }
 
-        scribble$boldButton.toggled = editBox.modifiers.contains(Formatting.BOLD);
-        scribble$italicButton.toggled = editBox.modifiers.contains(Formatting.ITALIC);
-        scribble$underlineButton.toggled = editBox.modifiers.contains(Formatting.UNDERLINE);
-        scribble$strikethroughButton.toggled = editBox.modifiers.contains(Formatting.STRIKETHROUGH);
-        scribble$obfuscatedButton.toggled = editBox.modifiers.contains(Formatting.OBFUSCATED);
+        scribble$boldButton.toggled = editBox.modifiers.contains(ChatFormatting.BOLD);
+        scribble$italicButton.toggled = editBox.modifiers.contains(ChatFormatting.ITALIC);
+        scribble$underlineButton.toggled = editBox.modifiers.contains(ChatFormatting.UNDERLINE);
+        scribble$strikethroughButton.toggled = editBox.modifiers.contains(ChatFormatting.STRIKETHROUGH);
+        scribble$obfuscatedButton.toggled = editBox.modifiers.contains(ChatFormatting.OBFUSCATED);
 
         scribble$setSwatchColor(editBox.color);
     }
 
     @Unique
-    private void scribble$setSwatchColor(Formatting color) {
+    private void scribble$setSwatchColor(ChatFormatting color) {
         for (ColorSwatchWidget swatch : scribble$colorSwatches) {
             swatch.setToggled(swatch.getColor() == color);
         }
@@ -228,17 +232,17 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
         int x = this.width / 2 - 96;
         int y = Scribble.getBookScreenYOffset(height) + 12;
 
-        scribble$deletePageButton = addDrawableChild(new IconButtonWidget(
-                Text.translatable("text.scribble.action.delete_page"),
+        scribble$deletePageButton = addRenderableWidget(new IconButtonWidget(
+                Component.translatable("text.scribble.action.delete_page"),
                 this::scribble$deletePage,
                 x + 94, y + 148, 0, 90, 12, 12));
-        scribble$insertPageButton = addDrawableChild(new IconButtonWidget(
-                Text.translatable("text.scribble.action.insert_new_page"),
+        scribble$insertPageButton = addRenderableWidget(new IconButtonWidget(
+                Component.translatable("text.scribble.action.insert_new_page"),
                 this::scribble$insertPage,
                 x + 78, y + 148, 12, 90, 12, 12));
     }
 
-    @Inject(method = "updatePreviousPageButtonVisibility", at = @At(value = "HEAD"))
+    @Inject(method = "updateButtonVisibility", at = @At(value = "HEAD"))
     public void invalidatePageButtons(CallbackInfo ci) {
         scribble$deletePageButton.visible = this.pages.size() > 1;
         scribble$insertPageButton.visible = this.pages.size() < 100;
@@ -249,7 +253,7 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
         if (this.pages.size() > 1) {
             // See scribble$history$deletePage for implementation.
             PageDeleteCommand command = new PageDeleteCommand(this.currentPage,
-                    this.scribble$getRichEditBoxWidget().getRichEditBox().getRichText());
+                    this.scribble$getRichEditBoxWidget().getRichTextField().getRichText());
             command.execute(this);
 
             scribble$commandManager.push(command);
@@ -276,15 +280,15 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
         int ax = this.width / 2 - 78 - 7 - 12;
         int ay = Scribble.getBookScreenYOffset(height) + 12 + 4;
 
-        scribble$undoButton = addDrawableChild(new IconButtonWidget(
-                Text.translatable("text.scribble.action.undo"),
+        scribble$undoButton = addRenderableWidget(new IconButtonWidget(
+                Component.translatable("text.scribble.action.undo"),
                 () -> {
                     scribble$commandManager.tryUndo();
                     this.scribble$invalidateActionButtons();
                 },
                 ax, ay, 24, 90, 12, 12));
-        scribble$redoButton = addDrawableChild(new IconButtonWidget(
-                Text.translatable("text.scribble.action.redo"),
+        scribble$redoButton = addRenderableWidget(new IconButtonWidget(
+                Component.translatable("text.scribble.action.redo"),
                 () -> {
                     scribble$commandManager.tryRedo();
                     this.scribble$invalidateActionButtons();
@@ -292,12 +296,12 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
                 ax, ay + 12, 36, 90, 12, 12));
 
         if (Scribble.CONFIG_MANAGER.getConfig().showActionButtons != Config.ShowActionButtons.NEVER) {
-            addDrawableChild(new IconButtonWidget(
-                    Text.translatable("text.scribble.action.save_book_to_file"),
+            addRenderableWidget(new IconButtonWidget(
+                    Component.translatable("text.scribble.action.save_book_to_file"),
                     () -> FileChooser.chooseBook(true, this::scribble$saveTo),
                     ax, ay + 12 * 2 + 4, 48, 90, 12, 12));
-            addDrawableChild(new IconButtonWidget(
-                    Text.translatable("text.scribble.action.load_book_from_file"),
+            addRenderableWidget(new IconButtonWidget(
+                    Component.translatable("text.scribble.action.load_book_from_file"),
                     () -> this.scribble$confirmIf(true, "overwrite_warning",
                             () -> FileChooser.chooseBook(false, this::scribble$loadFrom)),
                     ax, ay + 12 * 3 + 4, 60, 90, 12, 12));
@@ -317,13 +321,13 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
     }
 
     @Inject(method = "keyPressed", at = @At(value = "HEAD"), cancellable = true)
-    public void onActionKeyPressed(KeyInput input, CallbackInfoReturnable<Boolean> cir) {
-        if (input.hasCtrl() && !input.hasAlt()) {
-            if ((KeyboardUtil.isKey(input.key(), "Z") && !input.hasShift() && scribble$undoButton.active)) {
-                scribble$undoButton.onPress(input);
+    public void onActionKeyPressed(KeyEvent event, CallbackInfoReturnable<Boolean> cir) {
+        if (event.hasControlDown() && !event.hasAltDown()) {
+            if ((KeyboardUtil.isKey(event.key(), "Z") && !event.hasShiftDown() && scribble$undoButton.active)) {
+                scribble$undoButton.onPress(event);
                 cir.setReturnValue(true);
-            } else if (((KeyboardUtil.isKey(input.key(), "Z") && input.hasShift()) || (KeyboardUtil.isKey(input.key(), "Y") && !input.hasShift())) && scribble$redoButton.active) {
-                scribble$redoButton.onPress(input);
+            } else if (((KeyboardUtil.isKey(event.key(), "Z") && event.hasShiftDown()) || (KeyboardUtil.isKey(event.key(), "Y") && !event.hasShiftDown())) && scribble$redoButton.active) {
+                scribble$redoButton.onPress(event);
                 cir.setReturnValue(true);
             }
         }
@@ -336,24 +340,24 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
         int x = (this.width - 192) / 2;
         int y = Scribble.getBookScreenYOffset(height);
 
-        this.scribble$pageNumberWidget = addDrawableChild(
+        this.scribble$pageNumberWidget = addRenderableWidget(
                 new PageNumberWidget(
                         (page) -> {
                             this.currentPage = Math.clamp(page - 1, 0, this.pages.size() - 1);
-                            this.updatePage();
-                            this.updatePreviousPageButtonVisibility();
-                            this.setFocused(editBox);
+                            this.updatePageContent();
+                            this.updateButtonVisibility();
+                            this.setFocused(this.page);
                         },
-                        x + 192 - 44, y + 18, this.textRenderer));
+                        x + 192 - 44, y + 18, this.font));
     }
 
-    @Inject(method = "updatePage", at = @At(value = "HEAD"))
+    @Inject(method = "updatePageContent", at = @At(value = "HEAD"))
     public void updatePageNumber(CallbackInfo ci) {
         this.scribble$pageNumberWidget.setPageNumber(this.currentPage + 1, this.pages.size());
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawText(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/Text;IIIZ)V"))
-    public boolean drawIndicatorText(DrawContext instance, TextRenderer textRenderer, Text text, int x, int y, int color, boolean shadow) {
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;IIIZ)V"))
+    public boolean drawIndicatorText(GuiGraphics instance, Font font, Component component, int x, int y, int color, boolean shadow) {
         // Do nothing: this is replaced by scribble$pageNumberWidget.
         return false;
     }
@@ -366,12 +370,12 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
             return;
 
         this.currentPage = page;
-        this.updatePage();
-        this.updatePreviousPageButtonVisibility();
+        this.updatePageContent();
+        this.updateButtonVisibility();
     }
 
     @Override
-    public void scribble$history$setFormat(@Nullable Formatting color, Set<Formatting> modifiers) {
+    public void scribble$history$setFormat(@Nullable ChatFormatting color, Set<ChatFormatting> modifiers) {
         RichEditBoxWidget editBox = this.scribble$getRichEditBoxWidget();
         editBox.color = color;
         editBox.modifiers = new HashSet<>(modifiers);
@@ -387,8 +391,8 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
             text = content.getAsFormattedString();
 
         this.pages.add(page, text);
-        this.updatePage();
-        this.updatePreviousPageButtonVisibility();
+        this.updatePageContent();
+        this.updateButtonVisibility();
     }
 
     @Override
@@ -400,13 +404,13 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
             this.currentPage -= 1;
         }
 
-        this.updatePage();
-        this.updatePreviousPageButtonVisibility();
+        this.updatePageContent();
+        this.updateButtonVisibility();
     }
 
     @Override
-    public RichEditBox scribble$history$getRichEditBox() {
-        return this.scribble$getRichEditBoxWidget().getRichEditBox();
+    public RichMultiLineTextField scribble$history$getRichEditBox() {
+        return this.scribble$getRichEditBoxWidget().getRichTextField();
     }
 
     @Unique
@@ -424,24 +428,24 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
 
     //region Skip to first/last page
     // When shift is held down, skip to the last page.
-    @Inject(method = "openNextPage", at = @At(value = "HEAD"), cancellable = true)
-    public void openNextPage(CallbackInfo ci) {
+    @Inject(method = "pageForward", at = @At(value = "HEAD"), cancellable = true)
+    public void pageForward(CallbackInfo ci) {
         int lastPage = this.pages.size() - 1;
         if (this.currentPage < lastPage && KeyboardUtil.hasShiftDown()) {
             this.currentPage = lastPage;
-            this.updatePage();
-            this.updatePreviousPageButtonVisibility();
+            this.updatePageContent();
+            this.updateButtonVisibility();
             ci.cancel();
         }
     }
 
     // When shift is held down, skip to the first page.
-    @Inject(method = "openPreviousPage", at = @At(value = "HEAD"), cancellable = true)
-    public void openPreviousPage(CallbackInfo ci) {
+    @Inject(method = "pageBack", at = @At(value = "HEAD"), cancellable = true)
+    public void pageBack(CallbackInfo ci) {
         if (KeyboardUtil.hasShiftDown()) {
             this.currentPage = 0;
-            this.updatePage();
-            this.updatePreviousPageButtonVisibility();
+            this.updatePageContent();
+            this.updateButtonVisibility();
             ci.cancel();
         }
     }
@@ -451,7 +455,7 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
     @Unique
     private void scribble$saveTo(Path path) {
         try {
-            BookFile bookFile = new BookFile(this.player.getName().getString(), this.pages);
+            BookFile bookFile = new BookFile(this.owner.getName().getString(), this.pages);
             bookFile.writeJson(path);
         } catch (Exception e) {
             Scribble.LOGGER.error("could not save book to file", e);
@@ -467,8 +471,8 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
             this.pages.addAll(bookFile.pages());
             this.currentPage = 0;
 
-            this.updatePage();
-            this.updatePreviousPageButtonVisibility();
+            this.updatePageContent();
+            this.updateButtonVisibility();
             this.scribble$dirty = true;
         } catch (Exception e) {
             Scribble.LOGGER.error("could not load book from file", e);
@@ -478,28 +482,28 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
 
     //region Overwrite / Close confirmations
     // We want to keep track of if the book has been edited (i.e. if it's "dirty").
-    @ModifyArg(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/widget/EditBoxWidget;setChangeListener(Ljava/util/function/Consumer;)V"), index = 0)
-    public Consumer<String> modifyChangeListener(Consumer<String> changeListener) {
+    @ModifyArg(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/MultiLineEditBox;setValueListener(Ljava/util/function/Consumer;)V"), index = 0)
+    public Consumer<String> modifyValueListener(Consumer<String> valueListener) {
         return (text) -> {
             if (!text.equals(this.pages.get(this.currentPage))) {
                 this.scribble$dirty = true;
             }
 
-            changeListener.accept(text);
+            valueListener.accept(text);
         };
     }
 
     // Show a confirmation dialog if passed condition is true, otherwise run the runnable immediately.
     @Unique
     public void scribble$confirmIf(boolean condition, String name, Runnable runnable) {
-        if (condition && this.client != null) {
-            this.client.setScreen(new ConfirmScreen(
+        if (condition && this.minecraft != null) {
+            this.minecraft.setScreen(new ConfirmScreen(
                     confirmed -> {
-                        this.client.setScreen(this);
+                        this.minecraft.setScreen(this);
                         if (confirmed) runnable.run();
                     },
-                    Text.translatable("text.scribble." + name + ".title"),
-                    Text.translatable("text.scribble." + name + ".description")
+                    Component.translatable("text.scribble." + name + ".title"),
+                    Component.translatable("text.scribble." + name + ".description")
             ));
         } else {
             runnable.run();
@@ -508,43 +512,37 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
 
     // Show a confirmation dialog when trying to exit the screen if the book has been edited
     @Override
-    public void close() {
-        this.scribble$confirmIf(this.scribble$dirty, "quit_without_saving", super::close);
+    public void onClose() {
+        this.scribble$confirmIf(this.scribble$dirty, "quit_without_saving", super::onClose);
     }
     //endregion
 
     //region GUI Centering
     // If we need to center the GUI, we shift the Y of the texture draw call down.
-    @ModifyArg(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/util/Identifier;IIFFIIII)V"), index = 3)
+    @ModifyArg(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/ResourceLocation;IIFFIIII)V"), index = 3)
     public int shiftBackgroundY(int y) {
         return Scribble.getBookScreenYOffset(height) + y;
     }
 
     // If we need to center the GUI, we shift the Y of the buttons down.
-    @WrapOperation(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/BookEditScreen;addDrawableChild(Lnet/minecraft/client/gui/Element;)Lnet/minecraft/client/gui/Element;"))
-    public <T extends Element & Drawable & Selectable> T shiftButtonY(BookEditScreen instance, Element element, Operation<T> original) {
-        if (element instanceof Widget widget) {
+    @WrapOperation(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/inventory/BookEditScreen;addRenderableWidget(Lnet/minecraft/client/gui/components/events/GuiEventListener;)Lnet/minecraft/client/gui/components/events/GuiEventListener;"))
+    public <T extends GuiEventListener & Renderable & NarratableEntry> T shiftButtonY(BookEditScreen instance, T guiEventListener, Operation<T> original) {
+        if (guiEventListener instanceof AbstractWidget widget) {
             widget.setY(widget.getY() + Scribble.getBookScreenYOffset(height));
         }
 
-        return original.call(instance, element);
-    }
-
-    // If we need to center the GUI, we shift the Y of the page number down.
-    @ModifyArg(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawText(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/Text;IIIZ)V"), index = 3)
-    public int shiftPageNumberY(int y) {
-        return Scribble.getBookScreenYOffset(height) + y;
+        return original.call(instance, guiEventListener);
     }
     //endregion
 
     //region Bug fixes
     // We cancel any drags outside the width of the book interface.
     @Override
-    public boolean mouseDragged(Click click, double offsetX, double offsetY) {
-        if (click.x() < (this.width - 152) / 2.0 || click.x() > (this.width + 152) / 2.0) {
+    public boolean mouseDragged(MouseButtonEvent event, double offsetX, double offsetY) {
+        if (event.x() < (this.width - 152) / 2.0 || event.x() > (this.width + 152) / 2.0) {
             return true;
         } else {
-            return super.mouseDragged(click, offsetX, offsetY);
+            return super.mouseDragged(event, offsetX, offsetY);
         }
     }
     //endregion

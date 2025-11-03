@@ -1,98 +1,98 @@
 package me.chrr.scribble.gui;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.client.sound.SoundManager;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.text.Texts;
-import net.minecraft.util.Colors;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Util;
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
+import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.sounds.SoundManager;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentUtils;
+import net.minecraft.network.chat.Style;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.CommonColors;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
 
-public class PageNumberWidget extends ClickableWidget {
-    private final TextRenderer textRenderer;
+public class PageNumberWidget extends AbstractWidget {
+    private final Font font;
     private final Consumer<Integer> onPageChange;
     private final int anchorX;
 
-    private Text text;
-    private Text hoverText;
+    private Component text;
+    private Component hoverText;
 
-    private Text beforeCursor;
-    private Text afterCursor;
+    private Component beforeCursor;
+    private Component afterCursor;
 
-    public long lastSwitchFocusTime = Util.getMeasuringTimeMs();
+    public long lastSwitchFocusTime = Util.getMillis();
     private String input = "";
 
-    public PageNumberWidget(Consumer<Integer> onPageChange, int x, int y, TextRenderer textRenderer) {
-        super(x, y, 0, textRenderer.fontHeight, Text.empty());
+    public PageNumberWidget(Consumer<Integer> onPageChange, int x, int y, Font font) {
+        super(x, y, 0, font.lineHeight, Component.empty());
         this.onPageChange = onPageChange;
         this.anchorX = x;
 
-        this.textRenderer = textRenderer;
+        this.font = font;
 
-        this.text = ScreenTexts.EMPTY;
-        this.hoverText = ScreenTexts.EMPTY;
+        this.text = Component.empty();
+        this.hoverText = Component.empty();
 
-        this.beforeCursor = ScreenTexts.EMPTY;
-        this.afterCursor = ScreenTexts.EMPTY;
+        this.beforeCursor = Component.empty();
+        this.afterCursor = Component.empty();
     }
 
-    public void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
         if (this.isFocused()) {
             int x = this.getX() + this.width;
 
-            x -= this.textRenderer.getWidth(this.afterCursor);
-            context.drawText(this.textRenderer, this.afterCursor, x, this.getY(), Colors.BLACK, false);
+            x -= this.font.width(this.afterCursor);
+            graphics.drawString(this.font, this.afterCursor, x, this.getY(), CommonColors.BLACK, false);
 
             int cursorX = x;
-            x -= this.textRenderer.getWidth(this.input);
-            context.drawText(this.textRenderer, this.input, x, this.getY(), Colors.BLACK, false);
+            x -= this.font.width(this.input);
+            graphics.drawString(this.font, this.input, x, this.getY(), CommonColors.BLACK, false);
 
-            x -= this.textRenderer.getWidth(this.beforeCursor);
-            context.drawText(this.textRenderer, this.beforeCursor, x, this.getY(), Colors.BLACK, false);
+            x -= this.font.width(this.beforeCursor);
+            graphics.drawString(this.font, this.beforeCursor, x, this.getY(), CommonColors.BLACK, false);
 
-            if ((Util.getMeasuringTimeMs() - this.lastSwitchFocusTime) / 300L % 2L == 0L) {
-                context.fill(cursorX, this.getY() - 1, cursorX + 1, this.getY() + 1 + textRenderer.fontHeight, Colors.BLACK);
+            if ((Util.getMillis() - this.lastSwitchFocusTime) / 300L % 2L == 0L) {
+                graphics.fill(cursorX, this.getY() - 1, cursorX + 1, this.getY() + 1 + font.lineHeight, CommonColors.BLACK);
             }
         } else {
-            Text text = this.isHovered() ? this.hoverText : this.text;
-            int textWidth = textRenderer.getWidth(text);
-            context.drawText(this.textRenderer, text, this.getX() + this.width - textWidth, this.getY(), Colors.BLACK, false);
+            Component text = this.isHovered() ? this.hoverText : this.text;
+            int textWidth = font.width(text);
+            graphics.drawString(this.font, text, this.getX() + this.width - textWidth, this.getY(), CommonColors.BLACK, false);
         }
 
         if (this.isHovered()) {
-            context.setCursor(net.minecraft.client.gui.cursor.StandardCursors.IBEAM);
+            graphics.requestCursor(CursorTypes.IBEAM);
         }
     }
 
     @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
-        this.appendDefaultNarrations(builder);
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
+        this.defaultButtonNarrationText(narrationElementOutput);
     }
 
     @Override
-    public boolean charTyped(CharInput input) {
-        if (input.modifiers() != 0)
+    public boolean charTyped(CharacterEvent event) {
+        if (event.modifiers() != 0)
             return false;
-        if (input.codepoint() < '0' || input.codepoint() > '9')
+        if (event.codepoint() < '0' || event.codepoint() > '9')
             return false;
-        if (this.input.length() >= 2 && !(this.input.equals("10") && input.codepoint() == '0'))
+        if (this.input.length() >= 2 && !(this.input.equals("10") && event.codepoint() == '0'))
             return false;
 
-        this.input += input.asString();
+        this.input += event.codepointAsString();
         return true;
     }
 
@@ -101,47 +101,47 @@ public class PageNumberWidget extends ClickableWidget {
         super.setFocused(focused);
 
         if (focused) {
-            this.lastSwitchFocusTime = Util.getMeasuringTimeMs();
+            this.lastSwitchFocusTime = Util.getMillis();
             this.input = "";
         }
     }
 
     @Override
-    public void onClick(Click click, boolean doubled) {
+    public void onClick(MouseButtonEvent mouseButtonEvent, boolean bl) {
         setFocused(true);
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
+    public boolean keyPressed(KeyEvent event) {
         if (!isFocused())
-            return super.keyPressed(input);
+            return super.keyPressed(event);
 
-        if (!this.input.isEmpty() && input.key() == GLFW.GLFW_KEY_BACKSPACE) {
-            if (input.hasCtrl()) {
+        if (!this.input.isEmpty() && event.key() == GLFW.GLFW_KEY_BACKSPACE) {
+            if (event.hasControlDown()) {
                 this.input = "";
             } else {
                 this.input = this.input.substring(0, this.input.length() - 1);
             }
 
             return true;
-        } else if (input.key() == GLFW.GLFW_KEY_ENTER || input.key() == GLFW.GLFW_KEY_KP_ENTER) {
+        } else if (event.key() == GLFW.GLFW_KEY_ENTER || event.key() == GLFW.GLFW_KEY_KP_ENTER) {
             if (!this.input.isEmpty()) {
-                MinecraftClient.getInstance().getSoundManager()
-                        .play(PositionedSoundInstance.master(SoundEvents.ITEM_BOOK_PAGE_TURN, 1.0F));
+                Minecraft.getInstance().getSoundManager()
+                        .play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F));
                 this.onPageChange.accept(Integer.parseInt(this.input));
             }
 
             this.setFocused(false);
             return true;
-        } else if (input.key() == GLFW.GLFW_KEY_ESCAPE) {
+        } else if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
             this.setFocused(false);
             return true;
-        } else if (input.key() == GLFW.GLFW_KEY_LEFT || input.key() == GLFW.GLFW_KEY_RIGHT) {
+        } else if (event.key() == GLFW.GLFW_KEY_LEFT || event.key() == GLFW.GLFW_KEY_RIGHT) {
             // Mark arrows as handled to prevent focus changes.
             return true;
         }
 
-        return super.keyPressed(input);
+        return super.keyPressed(event);
     }
 
     @Override
@@ -149,18 +149,18 @@ public class PageNumberWidget extends ClickableWidget {
     }
 
     public void setPageNumber(int page, int total) {
-        this.text = Text.translatable("book.pageIndicator", page, total);
-        this.hoverText = Texts.setStyleIfAbsent(this.text.copy(), Style.EMPTY.withUnderline(true));
+        this.text = Component.translatable("book.pageIndicator", page, total);
+        this.hoverText = ComponentUtils.mergeStyles(this.text.copy(), Style.EMPTY.withUnderlined(true));
 
         // FIXME: surely there's a better way to do this.
-        Text indicator = Text.translatable("book.pageIndicator", "--INDICATOR--", total);
+        Component indicator = Component.translatable("book.pageIndicator", "--INDICATOR--", total);
         String[] parts = indicator.getString().split("--INDICATOR--", 2);
 
-        Style gray = Style.EMPTY.withColor(Formatting.DARK_GRAY);
-        this.beforeCursor = Text.literal(parts[0]).setStyle(gray);
-        this.afterCursor = parts.length > 1 ? Text.literal(parts[1]).setStyle(gray) : ScreenTexts.EMPTY;
+        Style gray = Style.EMPTY.withColor(ChatFormatting.DARK_GRAY);
+        this.beforeCursor = Component.literal(parts[0]).setStyle(gray);
+        this.afterCursor = parts.length > 1 ? Component.literal(parts[1]).setStyle(gray) : Component.empty();
 
-        this.width = this.textRenderer.getWidth(this.text);
+        this.width = this.font.width(this.text);
         this.setX(this.anchorX - this.width);
     }
 }
