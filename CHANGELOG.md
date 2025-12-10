@@ -1,3 +1,9 @@
+## 1.6.7
+
+- Update to 1.21.11.
+- Drop support for previous versions.
+- Fix mouse cursor not being an I-beam when editing a book.
+
 ## 1.6.6
 
 - Mark 1.21.9 as compatible with 1.21.10.
