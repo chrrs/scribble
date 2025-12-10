@@ -21,8 +21,8 @@ import me.chrr.scribble.history.command.EditCommand;
 import me.chrr.scribble.history.command.PageDeleteCommand;
 import me.chrr.scribble.history.command.PageInsertCommand;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.ActiveTextCollector;
+import net.minecraft.client.gui.TextAlignment;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.Renderable;
@@ -356,8 +356,8 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
         this.scribble$pageNumberWidget.setPageNumber(this.currentPage + 1, this.pages.size());
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;IIIZ)V"))
-    public boolean drawIndicatorText(GuiGraphics instance, Font font, Component component, int x, int y, int color, boolean shadow) {
+    @WrapWithCondition(method = "visitText", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/ActiveTextCollector;accept(Lnet/minecraft/client/gui/TextAlignment;IILnet/minecraft/network/chat/Component;)V"))
+    public boolean drawIndicatorText(ActiveTextCollector instance, TextAlignment textAlignment, int i, int j, Component component) {
         // Do nothing: this is replaced by scribble$pageNumberWidget.
         return false;
     }
@@ -519,7 +519,7 @@ public abstract class BookEditScreenMixin extends Screen implements HistoryListe
 
     //region GUI Centering
     // If we need to center the GUI, we shift the Y of the texture draw call down.
-    @ModifyArg(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/ResourceLocation;IIFFIIII)V"), index = 3)
+    @ModifyArg(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"), index = 3)
     public int shiftBackgroundY(int y) {
         return Scribble.getBookScreenYOffset(height) + y;
     }

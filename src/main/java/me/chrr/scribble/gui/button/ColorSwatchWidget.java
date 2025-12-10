@@ -23,7 +23,7 @@ public class ColorSwatchWidget extends AbstractButton {
     }
 
     @Override
-    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         if (isHoveredOrFocused() || toggled) {
             graphics.fill(getX(), getY(), getX() + width, getY() + height, isHoveredOrFocused() ? 0xffffffff : 0xffa0a0a0);
         }

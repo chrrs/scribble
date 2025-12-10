@@ -4,7 +4,6 @@ import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.history.command.EditCommand;
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.MultiLineEditBox;
@@ -16,6 +15,7 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.CommonColors;
 import net.minecraft.util.Tuple;
+import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -175,7 +175,7 @@ public class RichEditBoxWidget extends MultiLineEditBox {
                                 ? this.width - this.innerPadding()
                                 : this.font.width(text.subText(line.beginIndex(), selection.endIndex()));
 
-                        graphics.textHighlight(x + start, y, x + end, y + this.font.lineHeight);
+                        graphics.textHighlight(x + start, y, x + end, y + this.font.lineHeight, true);
                     }
                 }
 

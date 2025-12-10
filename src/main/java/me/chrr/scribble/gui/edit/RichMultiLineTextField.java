@@ -206,7 +206,7 @@ public class RichMultiLineTextField extends MultilineTextField {
         this.font.getSplitter().splitLines(this.richText, this.width, Style.EMPTY, (line, continued) -> {
             String content = line.getString();
 
-            int start = current.getValue();
+            int start = current.get().intValue();
             int end = start + content.length();
 
             this.displayLines.add(new StringView(start, end));

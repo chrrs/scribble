@@ -10,14 +10,16 @@ import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.config.Config;
 import me.chrr.scribble.gui.PageNumberWidget;
 import me.chrr.scribble.gui.button.IconButtonWidget;
-import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.ActiveTextCollector;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.TextAlignment;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.BookViewScreen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -93,8 +95,8 @@ public abstract class BookViewScreenMixin extends Screen {
         this.scribble$pageNumberWidget.setPageNumber(this.currentPage + 1, this.bookAccess.getPageCount());
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;IIIZ)V"))
-    public boolean drawIndicatorText(GuiGraphics instance, Font font, Component component, int i, int j, int k, boolean bl) {
+    @WrapWithCondition(method = "visitText", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/ActiveTextCollector;accept(Lnet/minecraft/client/gui/TextAlignment;IILnet/minecraft/network/chat/Component;)V"))
+    public boolean drawIndicatorText(ActiveTextCollector instance, TextAlignment textAlignment, int i, int j, Component component) {
         // Do nothing: this is replaced by scribble$pageNumberWidget.
         return false;
     }
@@ -102,7 +104,7 @@ public abstract class BookViewScreenMixin extends Screen {
 
     //region GUI Centering
     // If we need to center the GUI, we shift the Y of the texture draw call down.
-    @ModifyArg(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/ResourceLocation;IIFFIIII)V"), index = 3)
+    @ModifyArg(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"), index = 3)
     public int shiftBackgroundY(int y) {
         return Scribble.getBookScreenYOffset(height) + y;
     }
@@ -128,9 +130,9 @@ public abstract class BookViewScreenMixin extends Screen {
     }
 
     // If we need to center the GUI, modify the coordinates to check.
-    @ModifyVariable(method = "getClickedComponentStyleAt", at = @At(value = "HEAD"), ordinal = 1, argsOnly = true)
-    public double shiftTextStyleY(double y) {
-        return y - Scribble.getBookScreenYOffset(height);
+    @WrapOperation(method = "mouseClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/input/MouseButtonEvent;y()D"))
+    public double shiftTextStyleY(MouseButtonEvent instance, Operation<Double> original) {
+        return original.call(instance) - Scribble.getBookScreenYOffset(height);
     }
 
     // When rendering, we translate the matrices of the draw context to draw the text further down if needed.

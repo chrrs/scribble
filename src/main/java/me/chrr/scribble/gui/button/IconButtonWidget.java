@@ -8,10 +8,10 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class IconButtonWidget extends AbstractButton {
-    private static final ResourceLocation WIDGETS_TEXTURE = Scribble.resource("textures/gui/scribble_widgets.png");
+    private static final Identifier WIDGETS_TEXTURE = Scribble.id("textures/gui/scribble_widgets.png");
 
     private final Runnable onPress;
 
@@ -28,7 +28,7 @@ public class IconButtonWidget extends AbstractButton {
     }
 
     @Override
-    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         int v = this.v + (!this.active ? 2 : (this.isHoveredOrFocused() ? 1 : 0)) * this.height;
         graphics.blit(RenderPipelines.GUI_TEXTURED, WIDGETS_TEXTURE, getX(), getY(), this.u, v, this.width, this.height, 128, 128);
     }

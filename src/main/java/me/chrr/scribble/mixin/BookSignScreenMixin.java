@@ -22,7 +22,7 @@ public abstract class BookSignScreenMixin extends Screen {
     }
 
     // If we need to center the GUI, we shift the Y of the texture draw call down.
-    @ModifyArg(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/ResourceLocation;IIFFIIII)V"), index = 3)
+    @ModifyArg(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"), index = 3)
     public int shiftBackgroundY(int y) {
         return Scribble.getBookScreenYOffset(height) + y;
     }

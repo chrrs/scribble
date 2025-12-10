@@ -8,7 +8,7 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.function.Consumer;
 
@@ -17,7 +17,7 @@ import java.util.function.Consumer;
  * text modifiers. It always uses `gui/scribble_widgets.png` as texture.
  */
 public class ModifierButtonWidget extends AbstractButton {
-    private static final ResourceLocation WIDGETS_TEXTURE = Scribble.resource("textures/gui/scribble_widgets.png");
+    private static final Identifier WIDGETS_TEXTURE = Scribble.id("textures/gui/scribble_widgets.png");
 
     private final int u;
     private final int v;
@@ -36,7 +36,7 @@ public class ModifierButtonWidget extends AbstractButton {
     }
 
     @Override
-    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         // If the button is hovered or focused, we want it to be in front, so we shift the Z.
         if (this.isHoveredOrFocused()) {
             // FIXME: shift Z +1.
