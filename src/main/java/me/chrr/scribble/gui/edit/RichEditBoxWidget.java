@@ -1,5 +1,6 @@
 package me.chrr.scribble.gui.edit;
 
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.history.command.EditCommand;
 import net.minecraft.ChatFormatting;
@@ -180,7 +181,11 @@ public class RichEditBoxWidget extends MultiLineEditBox {
 
                 y += this.font.lineHeight;
             }
+        }
 
+        // Switch the cursor to an I-beam when we're hovering.
+        if (this.isHovered()) {
+            graphics.requestCursor(CursorTypes.IBEAM);
         }
     }
 
