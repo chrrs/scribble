@@ -2,7 +2,7 @@ package me.chrr.scribble.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import me.chrr.scribble.Scribble;
+import me.chrr.scribble.ScribbleConfig;
 import me.chrr.scribble.SetReturnScreen;
 import me.chrr.scribble.screen.ScribbleBookScreen;
 import net.minecraft.client.Minecraft;
@@ -78,7 +78,7 @@ public abstract class BookSignScreenMixin extends Screen implements SetReturnScr
 
     @Unique
     private int scribble$getYOffset() {
-        if (Scribble.config().centerBookGui) {
+        if (ScribbleConfig.INSTANCE.centerBookGui) {
             // See ScribbleBookScreen#getBackgroundY().
             return this.height / 3 - ScribbleBookScreen.getMenuHeight() / 3;
         } else {

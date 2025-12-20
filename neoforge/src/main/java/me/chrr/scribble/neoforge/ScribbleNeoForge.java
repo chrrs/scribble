@@ -17,15 +17,8 @@ public class ScribbleNeoForge extends Scribble.Platform {
     public ScribbleNeoForge(ModContainer mod) {
         Scribble.init(this);
 
-        if (Scribble.platform().HAS_YACL) {
-            mod.registerExtensionPoint(IConfigScreenFactory.class,
-                    (container, parent) -> Scribble.buildConfigScreen(parent));
-        }
-    }
-
-    @Override
-    protected boolean isModLoaded(String modId) {
-        return ModList.get().isLoaded(modId);
+        mod.registerExtensionPoint(IConfigScreenFactory.class,
+                (container, parent) -> Scribble.buildConfigScreen(parent));
     }
 
     @Override

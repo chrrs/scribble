@@ -15,11 +15,6 @@ public class ScribbleFabric extends Scribble.Platform implements ClientModInitia
     }
 
     @Override
-    protected boolean isModLoaded(String modId) {
-        return FabricLoader.getInstance().isModLoaded(modId);
-    }
-
-    @Override
     protected String getModVersion() {
         return FabricLoader.getInstance().getModContainer(Scribble.MOD_ID)
                 .orElseThrow().getMetadata().getVersion().getFriendlyString();

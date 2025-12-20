@@ -1,9 +1,7 @@
 package me.chrr.scribble;
 
 import me.chrr.scribble.book.FileChooser;
-import me.chrr.scribble.config.Config;
-import me.chrr.scribble.config.ConfigManager;
-import me.chrr.scribble.config.YACLConfigScreenFactory;
+import me.chrr.tapestry.config.gui.TapestryConfigScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
@@ -13,24 +11,18 @@ import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Optional;
+import java.util.Objects;
 
 @NullMarked
 public class Scribble {
     public static final String MOD_ID = "scribble";
     public static final Logger LOGGER = LogManager.getLogger();
 
-    private static final ConfigManager CONFIG_MANAGER = new ConfigManager();
     private static @Nullable Platform PLATFORM;
 
     public static void init(Platform platform) {
         PLATFORM = platform;
-
-        try {
-            CONFIG_MANAGER.load();
-        } catch (IOException e) {
-            LOGGER.error("failed to load config", e);
-        }
+        ScribbleConfig.INSTANCE.ensureLoaded();
 
         try {
             FileChooser.convertLegacyBooks();
@@ -40,15 +32,11 @@ public class Scribble {
     }
 
     public static Screen buildConfigScreen(Screen parent) {
-        return YACLConfigScreenFactory.create(CONFIG_MANAGER, parent);
+        return new TapestryConfigScreen(ScribbleConfig.INSTANCE, parent);
     }
 
     public static Platform platform() {
-        return Optional.ofNullable(PLATFORM).orElseThrow();
-    }
-
-    public static Config config() {
-        return CONFIG_MANAGER.getConfig();
+        return Objects.requireNonNull(PLATFORM);
     }
 
     public static Identifier id(String path) {
@@ -60,9 +48,6 @@ public class Scribble {
         public final Path BOOK_DIR = getGameDir().resolve("books");
 
         public final String VERSION = getModVersion();
-        public final boolean HAS_YACL = isModLoaded("yet_another_config_lib_v3");
-
-        protected abstract boolean isModLoaded(String modId);
 
         protected abstract String getModVersion();
 
