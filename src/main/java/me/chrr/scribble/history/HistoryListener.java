@@ -3,18 +3,18 @@ package me.chrr.scribble.history;
 import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.gui.edit.RichMultiLineTextField;
 import net.minecraft.ChatFormatting;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Set;
 
+@NullMarked
 public interface HistoryListener {
-    void scribble$history$switchPage(int page);
+    RichMultiLineTextField switchAndFocusPage(int page);
 
-    void scribble$history$setFormat(@Nullable ChatFormatting color, Set<ChatFormatting> modifiers);
+    void setFormat(@Nullable ChatFormatting color, Set<ChatFormatting> modifiers);
 
-    void scribble$history$insertPage(int page, @Nullable RichText content);
+    void insertPageAt(int page, @Nullable RichText content);
 
-    void scribble$history$deletePage(int page);
-
-    RichMultiLineTextField scribble$history$getRichEditBox();
+    void deletePage(int page);
 }

@@ -1,12 +1,12 @@
 package me.chrr.scribble.book;
 
+import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.*;
 import net.minecraft.network.chat.contents.PlainTextContents;
-import net.minecraft.util.Tuple;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -27,7 +27,10 @@ import java.util.stream.Collectors;
  *
  * @author chrrrs
  */
+@NullMarked
 public class RichText implements FormattedText {
+    public static final RichText EMPTY = new RichText(List.of());
+
     private final List<Segment> segments;
 
     /**
@@ -182,7 +185,6 @@ public class RichText implements FormattedText {
      *
      * @return a new {@link RichText} object that has the same contents in potentially fewer segments.
      */
-    @NotNull
     private RichText mergeSimilarSegments() {
         if (this.segments.isEmpty()) {
             return this;
@@ -516,19 +518,19 @@ public class RichText implements FormattedText {
         RichText text = this;
         return MutableComponent.create(new ComponentContents() {
             @Override
-            public <T> @NotNull Optional<T> visit(FormattedText.StyledContentConsumer<T> consumer, Style style) {
+            public <T> Optional<T> visit(FormattedText.StyledContentConsumer<T> consumer, Style style) {
                 return text.visit(consumer, style);
             }
 
             @Override
-            public <T> @NotNull Optional<T> visit(FormattedText.ContentConsumer<T> consumer) {
+            public <T> Optional<T> visit(FormattedText.ContentConsumer<T> consumer) {
                 return text.visit(consumer);
             }
 
             // This is not accurate, but these contents are never sent to the
             // server, so it doesn't need to be.
             @Override
-            public @NotNull MapCodec<? extends ComponentContents> codec() {
+            public MapCodec<? extends ComponentContents> codec() {
                 return PlainTextContents.MAP_CODEC;
             }
         });
@@ -542,7 +544,7 @@ public class RichText implements FormattedText {
      * @param end   end of text range (exclusive).
      * @return a pair with the common color and modifiers.
      */
-    public Tuple<@Nullable ChatFormatting, Set<ChatFormatting>> getCommonFormat(int start, int end) {
+    public Pair<@Nullable ChatFormatting, Set<ChatFormatting>> getCommonFormat(int start, int end) {
         boolean first = true;
         Set<ChatFormatting> modifiers = Set.of();
         ChatFormatting color = ChatFormatting.BLACK;
@@ -554,7 +556,7 @@ public class RichText implements FormattedText {
             // If we have a zero-width selection, we want the formatting of
             // the segment before it.
             if (start == end && start <= current + length) {
-                return new Tuple<>(segment.color, segment.modifiers);
+                return new Pair<>(segment.color, segment.modifiers);
             }
 
             // We're before the segment we're searching for
@@ -586,11 +588,11 @@ public class RichText implements FormattedText {
             current += length;
         }
 
-        return new Tuple<>(color, modifiers);
+        return new Pair<>(color, modifiers);
     }
 
     @Override
-    public <T> @NotNull Optional<T> visit(ContentConsumer<T> consumer) {
+    public <T> Optional<T> visit(ContentConsumer<T> consumer) {
         for (Segment segment : segments) {
             Optional<T> out = consumer.accept(segment.text);
             if (out.isPresent()) {
@@ -602,7 +604,7 @@ public class RichText implements FormattedText {
     }
 
     @Override
-    public <T> @NotNull Optional<T> visit(StyledContentConsumer<T> consumer, Style baseStyle) {
+    public <T> Optional<T> visit(StyledContentConsumer<T> consumer, Style baseStyle) {
         for (Segment segment : segments) {
             Style style = baseStyle
                     .applyFormats(segment.modifiers.toArray(new ChatFormatting[0]))
@@ -617,7 +619,7 @@ public class RichText implements FormattedText {
     }
 
     @Override
-    public @NotNull String getString() {
+    public String getString() {
         return this.getPlainText();
     }
 

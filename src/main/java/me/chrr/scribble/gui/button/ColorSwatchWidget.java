@@ -7,19 +7,20 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.network.chat.Component;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public class ColorSwatchWidget extends AbstractButton {
     private final ChatFormatting color;
     private final Runnable onClick;
 
-    private boolean toggled;
+    private boolean toggled = false;
 
-    public ColorSwatchWidget(Component tooltip, ChatFormatting color, Runnable onClick, int x, int y, int width, int height, boolean toggled) {
+    public ColorSwatchWidget(Component tooltip, ChatFormatting color, Runnable onClick, int x, int y, int width, int height) {
         super(x, y, width, height, tooltip);
         this.setTooltip(Tooltip.create(tooltip));
         this.color = color;
         this.onClick = onClick;
-        this.toggled = toggled;
     }
 
     @Override

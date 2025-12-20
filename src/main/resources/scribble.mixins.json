@@ -4,11 +4,10 @@
     "package": "me.chrr.scribble.mixin",
     "compatibilityLevel": "JAVA_17",
     "client": [
-        "BookEditScreenMixin",
-        "BookViewScreenMixin",
         "BookSignScreenMixin",
+        "ClientPacketListenerMixin",
         "KeyboardHandlerMixin",
-        "LecternScreenMixin"
+        "LocalPlayerMixin"
     ],
     "injectors": {
         "defaultRequire": 1

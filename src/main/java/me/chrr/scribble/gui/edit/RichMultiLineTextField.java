@@ -1,5 +1,6 @@
 package me.chrr.scribble.gui.edit;
 
+import com.mojang.datafixers.util.Pair;
 import me.chrr.scribble.KeyboardUtil;
 import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.RichText;
@@ -11,25 +12,28 @@ import net.minecraft.client.gui.components.Whence;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
-import net.minecraft.util.Tuple;
 import org.apache.commons.lang3.mutable.MutableInt;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@NullMarked
 public class RichMultiLineTextField extends MultilineTextField {
-    private final Supplier<Tuple<ChatFormatting, Set<ChatFormatting>>> formatSupplier;
-    private final BiConsumer<@Nullable ChatFormatting, Set<ChatFormatting>> formatListener;
+    // These assignments are used, as super() in the constructor calls functions before they are assigned.
+    @SuppressWarnings("UnusedAssignment")
+    private @Nullable Supplier<Pair<ChatFormatting, Set<ChatFormatting>>> formatSupplier = null;
+    @SuppressWarnings("UnusedAssignment")
+    private @Nullable BiConsumer<@Nullable ChatFormatting, Set<ChatFormatting>> formatListener = null;
 
-    private RichText richText;
+    private RichText richText = RichText.EMPTY;
 
     public RichMultiLineTextField(
             Font font, int width,
-            Supplier<Tuple<ChatFormatting, Set<ChatFormatting>>> formatSupplier,
+            Supplier<Pair<ChatFormatting, Set<ChatFormatting>>> formatSupplier,
             BiConsumer<@Nullable ChatFormatting, Set<ChatFormatting>> formatListener
     ) {
         super(font, width);
@@ -43,11 +47,15 @@ public class RichMultiLineTextField extends MultilineTextField {
         super.setValueListener((text) -> valueListener.accept(value()));
     }
 
+    public void setRichValueListener(Consumer<RichText> valueListener) {
+        super.setValueListener((text) -> valueListener.accept(getRichText()));
+    }
+
     public void sendUpdateFormat() {
         if (this.formatListener != null) {
             StringView selection = this.getSelected();
-            Tuple<@Nullable ChatFormatting, Set<ChatFormatting>> format = this.richText.getCommonFormat(selection.beginIndex(), selection.endIndex());
-            this.formatListener.accept(format.getA(), format.getB());
+            Pair<@Nullable ChatFormatting, Set<ChatFormatting>> format = this.richText.getCommonFormat(selection.beginIndex(), selection.endIndex());
+            this.formatListener.accept(format.getFirst(), format.getSecond());
         }
     }
 
@@ -79,10 +87,12 @@ public class RichMultiLineTextField extends MultilineTextField {
     public void setValue(String text, boolean allowOverflow) {
         String truncated = this.truncateFullText(text);
         RichText richText = RichText.fromFormattedString(truncated);
+        this.setValue(richText, allowOverflow);
+    }
 
+    public void setValue(RichText richText, boolean allowOverflow) {
         if (allowOverflow || !this.overflowsLineLimit(richText)) {
-            this.richText = richText;
-            this.value = richText.getPlainText();
+            this.setValueWithoutUpdating(richText);
 
             this.cursor = this.value.length();
             this.selectCursor = this.cursor;
@@ -92,14 +102,17 @@ public class RichMultiLineTextField extends MultilineTextField {
         }
     }
 
-    @Override
-    public @NotNull String value() {
-        return richText.getAsFormattedString();
-    }
-
-    public void setRichTextWithoutUpdating(RichText richText) {
+    public void setValueWithoutUpdating(RichText richText) {
         this.richText = richText;
         this.value = richText.getPlainText();
+    }
+
+    public void resetCursor(boolean update) {
+        this.cursor = this.value.length();
+        this.selectCursor = this.cursor;
+
+        if (update)
+            this.sendUpdateFormat();
     }
 
     @Override
@@ -113,9 +126,10 @@ public class RichMultiLineTextField extends MultilineTextField {
 
         // If the string contains formatting codes, we keep them in. Otherwise,
         // we just type in the current color and modifiers.
-        Tuple<ChatFormatting, Set<ChatFormatting>> style = this.formatSupplier.get();
+        assert this.formatSupplier != null;
+        Pair<ChatFormatting, Set<ChatFormatting>> style = this.formatSupplier.get();
         RichText replacement = ChatFormatting.stripFormatting(string).equals(string)
-                ? new RichText(string, style.getA(), style.getB())
+                ? new RichText(string, style.getFirst(), style.getSecond())
                 : RichText.fromFormattedString(string);
 
         StringView substring = this.getSelected();
@@ -168,7 +182,7 @@ public class RichMultiLineTextField extends MultilineTextField {
     @Override
     public boolean keyPressed(KeyEvent event) {
         // Override copy/cut/paste to remove formatting codes if the config option is set or SHIFT is held down.
-        boolean keepFormatting = Scribble.CONFIG_MANAGER.getConfig().copyFormattingCodes ^ event.hasShiftDown();
+        boolean keepFormatting = Scribble.config().copyFormattingCodes ^ event.hasShiftDown();
         boolean ctrlNoAlt = event.hasControlDown() && !event.hasAltDown();
         if (ctrlNoAlt && (KeyboardUtil.isKey(event.key(), "C") || KeyboardUtil.isKey(event.key(), "X"))) {
             String text = this.getSelectedText();
@@ -222,16 +236,21 @@ public class RichMultiLineTextField extends MultilineTextField {
     }
 
     @Override
-    public @NotNull String getSelectedText() {
+    public String getSelectedText() {
         StringView substring = this.getSelected();
         return this.richText.subText(substring.beginIndex(), substring.endIndex()).getAsFormattedString();
     }
 
-    private boolean overflowsLineLimit(RichText text) {
-        return this.hasLineLimit() && this.font.getSplitter().splitLines(text, this.width, Style.EMPTY).size() > this.lineLimit;
-    }
-
     public RichText getRichText() {
         return richText;
+    }
+
+    @Override
+    public String value() {
+        return richText.getAsFormattedString();
+    }
+
+    private boolean overflowsLineLimit(RichText text) {
+        return this.hasLineLimit() && this.font.getSplitter().splitLines(text, this.width, Style.EMPTY).size() > this.lineLimit;
     }
 }

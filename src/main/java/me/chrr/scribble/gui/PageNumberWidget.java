@@ -18,10 +18,12 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.CommonColors;
 import net.minecraft.util.Util;
+import org.jspecify.annotations.NullMarked;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
 
+@NullMarked
 public class PageNumberWidget extends AbstractWidget {
     private final Font font;
     private final Consumer<Integer> onPageChange;

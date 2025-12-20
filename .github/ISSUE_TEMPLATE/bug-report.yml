@@ -1,0 +1,52 @@
+name: Bug Report
+description: Report a bug with the mod.
+labels: [ "bug" ]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening an issue, please briefly look through the [open issues](https://github.com/chrrs/scribble/issues)
+        to see if a similar bug report already exists.
+
+  - type: textarea
+    id: description
+    validations:
+      required: true
+    attributes:
+      label: Describe the issue
+      description: |
+        What's the problem? Describe the bug, what doesn't work, and what did you expect to happen? If you have any log
+        files, make sure to include them. If a screenshot would help to describe the problem, please include that too!
+
+  - type: input
+    id: minecraftVersion
+    validations:
+      required: true
+    attributes:
+      label: Minecraft Version
+      placeholder: ex. "1.20.1"
+
+  - type: input
+    id: modVersion
+    validations:
+      required: true
+    attributes:
+      label: Scribble Version
+      description: |
+        If you're not sure, it will show up by default if the feather icon is hovered in the bottom left of the book
+        editing screen. Alternatively, the version can be found in a mod menu, or the file name of the downloaded mod.
+      placeholder: ex. "2.3.4"
+
+  - type: dropdown
+    id: loader
+    validations:
+      required: true
+    attributes:
+      label: Mod Loader
+      description: |
+        If the issue applies to multiple loaders, please select the loader that it was encountered on.
+      options:
+        - Fabric / Quilt
+        - NeoForge
+        - Forge

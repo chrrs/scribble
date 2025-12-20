@@ -1,5 +1,8 @@
 package me.chrr.scribble.config;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 public class Config {
     public static final Config DEFAULT = new Config();
 
@@ -8,6 +11,7 @@ public class Config {
     public boolean centerBookGui = true;
     public ShowActionButtons showActionButtons = ShowActionButtons.WHEN_EDITING;
     public int editHistorySize = 32;
+    public int pagesToShow = 1;
 
     @DeprecatedConfigOption
     private boolean showSaveLoadButtons = true;

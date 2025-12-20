@@ -2,11 +2,13 @@ package me.chrr.scribble.config;
 
 import com.google.gson.*;
 import me.chrr.scribble.Scribble;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+@NullMarked
 public class ConfigManager {
     private static final Gson GSON = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
@@ -35,13 +37,14 @@ public class ConfigManager {
     }
 
     private Path getConfigPath() {
-        return Scribble.CONFIG_DIR.resolve("scribble.json");
+        return Scribble.platform().CONFIG_DIR.resolve("scribble.json");
     }
 
     /// Exclusion strategy to skip all fields that are annotated with {@link DeprecatedConfigOption}.
     private static class SkipDeprecatedStrategy implements ExclusionStrategy {
         @Override
         public boolean shouldSkipField(FieldAttributes f) {
+            //noinspection ConstantValue: this inspection is a false-positive.
             return f.getAnnotation(DeprecatedConfigOption.class) != null;
         }
 

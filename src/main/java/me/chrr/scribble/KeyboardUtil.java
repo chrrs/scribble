@@ -1,10 +1,9 @@
 package me.chrr.scribble;
 
-import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.platform.Window;
-import net.minecraft.client.Minecraft;
+import org.jspecify.annotations.NullMarked;
 import org.lwjgl.glfw.GLFW;
 
+@NullMarked
 public class KeyboardUtil {
     private KeyboardUtil() {
     }
@@ -19,11 +18,5 @@ public class KeyboardUtil {
         } else {
             return keyName.equalsIgnoreCase(GLFW.glfwGetKeyName(keyCode, 0));
         }
-    }
-
-    public static boolean hasShiftDown() {
-        Window window = Minecraft.getInstance().getWindow();
-        return InputConstants.isKeyDown(window, GLFW.GLFW_KEY_LEFT_SHIFT)
-                || InputConstants.isKeyDown(window, GLFW.GLFW_KEY_RIGHT_SHIFT);
     }
 }

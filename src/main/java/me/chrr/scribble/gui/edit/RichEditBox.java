@@ -1,7 +1,10 @@
 package me.chrr.scribble.gui.edit;
 
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
+import com.mojang.datafixers.util.Pair;
 import me.chrr.scribble.book.RichText;
+import me.chrr.scribble.gui.TextArea;
+import me.chrr.scribble.history.command.Command;
 import me.chrr.scribble.history.command.EditCommand;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
@@ -14,10 +17,9 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.CommonColors;
-import net.minecraft.util.Tuple;
 import net.minecraft.util.Util;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.HashSet;
@@ -26,27 +28,26 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
-public class RichEditBoxWidget extends MultiLineEditBox {
-    @Nullable
-    private final Runnable onInvalidateFormat;
-    @Nullable
-    private final Consumer<EditCommand> onHistoryPush;
+@NullMarked
+public class RichEditBox extends MultiLineEditBox implements TextArea<RichText> {
+    private final @Nullable Runnable onInvalidateFormat;
+    private final @Nullable Consumer<Command> onHistoryPush;
 
-    @Nullable
-    public ChatFormatting color = ChatFormatting.BLACK;
+    public @Nullable ChatFormatting color = ChatFormatting.BLACK;
     public Set<ChatFormatting> modifiers = new HashSet<>();
 
-    private RichEditBoxWidget(Font font, int x, int y, int width, int height,
-                              Component placeholder, Component message, int textColor, boolean textShadow, int cursorColor,
-                              boolean hasBackground, boolean hasOverlay,
-                              @Nullable Runnable onInvalidateFormat, @Nullable Consumer<EditCommand> onHistoryPush) {
+    private RichEditBox(Font font, int x, int y, int width, int height,
+                        Component placeholder, Component message, int textColor, boolean textShadow, int cursorColor,
+                        boolean hasBackground, boolean hasOverlay,
+                        @Nullable Runnable onInvalidateFormat, @Nullable Consumer<Command> onHistoryPush) {
         super(font, x, y, width, height, placeholder, message, textColor, textShadow, cursorColor, hasBackground, hasOverlay);
+
         this.onInvalidateFormat = onInvalidateFormat;
         this.onHistoryPush = onHistoryPush;
 
         this.textField = new RichMultiLineTextField(
                 font, width - this.totalInnerPadding(),
-                () -> new Tuple<>(Optional.ofNullable(color).orElse(ChatFormatting.BLACK), modifiers),
+                () -> new Pair<>(Optional.ofNullable(color).orElse(ChatFormatting.BLACK), modifiers),
                 (color, modifiers) -> {
                     this.color = color;
                     this.modifiers = new HashSet<>(modifiers);
@@ -66,12 +67,16 @@ public class RichEditBoxWidget extends MultiLineEditBox {
         }
     }
 
-    public void applyFormatting(ChatFormatting formatting, boolean active) {
-        RichMultiLineTextField editBox = this.getRichTextField();
+    public void setRichValueListener(Consumer<RichText> valueListener) {
+        this.getRichTextField().setRichValueListener(valueListener);
+    }
 
-        if (editBox.hasSelection()) {
-            EditCommand command = new EditCommand(editBox, (box) -> box.applyFormatting(formatting, active));
-            command.executeEdit(editBox);
+    public void applyFormat(ChatFormatting formatting, boolean active) {
+        RichMultiLineTextField textField = this.getRichTextField();
+
+        if (textField.hasSelection()) {
+            EditCommand command = new EditCommand(this, (box) -> box.applyFormatting(formatting, active));
+            command.executeEdit(textField);
             this.pushHistory(command);
         } else {
             if (formatting.isFormat()) {
@@ -103,7 +108,7 @@ public class RichEditBoxWidget extends MultiLineEditBox {
 
         // Draw the placeholder text if there's no content.
         if (text.isEmpty() && !this.isFocused()) {
-            graphics.drawWordWrap(this.font, this.placeholder, this.getInnerLeft(), this.getInnerTop(), this.width - this.totalInnerPadding(), -857677600);
+            graphics.drawWordWrap(this.font, this.placeholder, this.getInnerLeft(), this.getInnerTop(), this.width - this.totalInnerPadding(), 0xcce0e0e0);
             return;
         }
 
@@ -192,8 +197,8 @@ public class RichEditBoxWidget extends MultiLineEditBox {
     @Override
     public boolean charTyped(CharacterEvent event) {
         if (this.visible && this.isFocused() && event.isAllowedChatCharacter()) {
-            EditCommand command = new EditCommand(this.getRichTextField(),
-                    (editBox) -> editBox.insertText(event.codepointAsString()));
+            EditCommand command = new EditCommand(this,
+                    (textField) -> textField.insertText(event.codepointAsString()));
             command.executeEdit(this.getRichTextField());
             this.pushHistory(command);
             return true;
@@ -216,7 +221,7 @@ public class RichEditBoxWidget extends MultiLineEditBox {
             };
 
             if (modifier != null) {
-                this.applyFormatting(modifier, !this.modifiers.contains(modifier));
+                this.applyFormat(modifier, !this.modifiers.contains(modifier));
                 return true;
             }
         }
@@ -225,8 +230,8 @@ public class RichEditBoxWidget extends MultiLineEditBox {
         if (event.isCut() || event.isPaste() ||
                 List.of(GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER,
                         GLFW.GLFW_KEY_BACKSPACE, GLFW.GLFW_KEY_DELETE).contains(event.key())) {
-            EditCommand command = new EditCommand(this.getRichTextField(),
-                    (editBox) -> editBox.keyPressed(event));
+            EditCommand command = new EditCommand(this,
+                    (textField) -> textField.keyPressed(event));
             command.executeEdit(this.getRichTextField());
             this.pushHistory(command);
             return true;
@@ -244,28 +249,38 @@ public class RichEditBoxWidget extends MultiLineEditBox {
     }
 
     public RichMultiLineTextField getRichTextField() {
-        return (RichMultiLineTextField) textField;
+        return (RichMultiLineTextField) this.textField;
+    }
+
+    @Override
+    public void setText(RichText text) {
+        this.getRichTextField().setValue(text, true);
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+        this.visible = visible;
     }
 
     public static class Builder extends MultiLineEditBox.Builder {
         @Nullable
         private Runnable onInvalidateFormat = null;
         @Nullable
-        private Consumer<EditCommand> onHistoryPush = null;
+        private Consumer<Command> onHistoryPush = null;
 
         public Builder onInvalidateFormat(Runnable onInvalidateFormat) {
             this.onInvalidateFormat = onInvalidateFormat;
             return this;
         }
 
-        public Builder onHistoryPush(Consumer<EditCommand> onHistoryPush) {
+        public Builder onHistoryPush(Consumer<Command> onHistoryPush) {
             this.onHistoryPush = onHistoryPush;
             return this;
         }
 
         @Override
-        public @NotNull MultiLineEditBox build(Font font, int width, int height, Component message) {
-            return new RichEditBoxWidget(font,
+        public MultiLineEditBox build(Font font, int width, int height, Component message) {
+            return new RichEditBox(font,
                     this.x, this.y, width, height,
                     this.placeholder, message, this.textColor,
                     this.textShadow, this.cursorColor, this.showBackground,

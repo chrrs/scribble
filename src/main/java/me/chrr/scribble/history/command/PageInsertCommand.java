@@ -1,7 +1,9 @@
 package me.chrr.scribble.history.command;
 
 import me.chrr.scribble.history.HistoryListener;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public class PageInsertCommand implements Command {
     private final int page;
 
@@ -11,11 +13,11 @@ public class PageInsertCommand implements Command {
 
     @Override
     public void execute(HistoryListener listener) {
-        listener.scribble$history$insertPage(page, null);
+        listener.insertPageAt(page, null);
     }
 
     @Override
     public void rollback(HistoryListener listener) {
-        listener.scribble$history$deletePage(page);
+        listener.deletePage(page);
     }
 }

@@ -3,7 +3,7 @@ package me.chrr.scribble.book;
 import me.chrr.scribble.Scribble;
 import net.minecraft.client.Minecraft;
 import net.minecraft.locale.Language;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NullMarked;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.Platform;
@@ -15,6 +15,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.function.Consumer;
 
+@NullMarked
 public class FileChooser {
     private FileChooser() {
     }
@@ -25,7 +26,7 @@ public class FileChooser {
      * @param save         if the dialog should be a save dialog instead of an open dialog.
      * @param pathConsumer the callback to call when a path is successfully chosen.
      */
-    public static void chooseBook(boolean save, Consumer<Path> pathConsumer) {
+    public static void chooseFile(boolean save, Consumer<Path> pathConsumer) {
         new Thread(() -> {
             try (MemoryStack stack = MemoryStack.stackPush()) {
                 PointerBuffer filter = null;
@@ -80,15 +81,17 @@ public class FileChooser {
      * @return the book directory.
      */
     private static Path createAndGetBookDirectory() {
+        Path bookDir = Scribble.platform().BOOK_DIR;
+
         try {
-            if (!Files.exists(Scribble.BOOK_DIR)) {
-                Files.createDirectory(Scribble.BOOK_DIR);
+            if (!Files.exists(bookDir)) {
+                Files.createDirectory(bookDir);
             }
         } catch (Exception ignored) {
             Scribble.LOGGER.warn("couldn't create the default book directory");
         }
 
-        return Scribble.BOOK_DIR;
+        return bookDir;
     }
 
     /**
@@ -98,7 +101,7 @@ public class FileChooser {
      * @throws IOException when an error happens.
      */
     public static void convertLegacyBooks() throws IOException {
-        Path rootDir = Scribble.BOOK_DIR;
+        Path rootDir = Scribble.platform().BOOK_DIR;
         Path legacyDir = rootDir.resolve("_legacy");
 
         if (!rootDir.toFile().isDirectory()) {
@@ -107,8 +110,7 @@ public class FileChooser {
 
         Files.walkFileTree(rootDir, new SimpleFileVisitor<>() {
             @Override
-            @NotNull
-            public FileVisitResult preVisitDirectory(@NotNull Path dir, @NotNull BasicFileAttributes attrs) {
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
                 if (dir.getFileName().toString().equals("_legacy")) {
                     return FileVisitResult.SKIP_SUBTREE;
                 } else {
@@ -117,8 +119,7 @@ public class FileChooser {
             }
 
             @Override
-            @NotNull
-            public FileVisitResult visitFile(@NotNull Path file, @NotNull BasicFileAttributes attrs) {
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                 if (file.toString().endsWith(".book")) {
                     Scribble.LOGGER.info("converting legacy NBT-based book file at {} to JSON.", file);
 
