@@ -1,0 +1,1 @@
+<!-- Please read CONTRIBUTING.md. AI assisted contributions will _not_ be accepted. -->

@@ -2,7 +2,9 @@ package me.chrr.scribble.history.command;
 
 import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.history.HistoryListener;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public class PageDeleteCommand implements Command {
     private final int page;
     private final RichText content;
@@ -14,11 +16,11 @@ public class PageDeleteCommand implements Command {
 
     @Override
     public void execute(HistoryListener listener) {
-        listener.scribble$history$deletePage(page);
+        listener.deletePage(page);
     }
 
     @Override
     public void rollback(HistoryListener listener) {
-        listener.scribble$history$insertPage(page, content);
+        listener.insertPageAt(page, content);
     }
 }

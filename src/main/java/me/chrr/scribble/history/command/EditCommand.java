@@ -1,65 +1,69 @@
 package me.chrr.scribble.history.command;
 
 import me.chrr.scribble.book.RichText;
+import me.chrr.scribble.gui.edit.RichEditBox;
 import me.chrr.scribble.gui.edit.RichMultiLineTextField;
 import me.chrr.scribble.history.HistoryListener;
 import net.minecraft.ChatFormatting;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Set;
 import java.util.function.Consumer;
 
+@NullMarked
 public class EditCommand implements Command {
     private final RichText text;
     private final Consumer<RichMultiLineTextField> action;
 
     public int page = -1;
 
-    @Nullable
-    public ChatFormatting color = null;
-    public Set<ChatFormatting> modifiers = Set.of();
+    public final @Nullable ChatFormatting color;
+    public final Set<ChatFormatting> modifiers;
 
     private final int cursor;
     private final int selectCursor;
     private final boolean selecting;
 
-    public EditCommand(RichMultiLineTextField editBox, Consumer<RichMultiLineTextField> action) {
-        this.text = editBox.getRichText();
+    public EditCommand(RichEditBox editBox, Consumer<RichMultiLineTextField> action) {
+        RichMultiLineTextField textField = editBox.getRichTextField();
+
+        this.text = textField.getRichText();
         this.action = action;
 
-        this.cursor = editBox.cursor;
-        this.selectCursor = editBox.selectCursor;
-        this.selecting = editBox.selecting;
+        this.color = editBox.color;
+        this.modifiers = editBox.modifiers;
+
+        this.cursor = textField.cursor;
+        this.selectCursor = textField.selectCursor;
+        this.selecting = textField.selecting;
     }
 
-    public void executeEdit(RichMultiLineTextField editBox) {
-        editBox.cursor = cursor;
-        editBox.selectCursor = selectCursor;
-        editBox.selecting = selecting;
-        action.accept(editBox);
+    public void executeEdit(RichMultiLineTextField textField) {
+        textField.cursor = this.cursor;
+        textField.selectCursor = this.selectCursor;
+        textField.selecting = this.selecting;
+        action.accept(textField);
     }
 
     @Override
     public void execute(HistoryListener listener) {
-        listener.scribble$history$switchPage(page);
-        listener.scribble$history$setFormat(this.color, this.modifiers);
-
-        RichMultiLineTextField editBox = listener.scribble$history$getRichEditBox();
-        this.executeEdit(editBox);
+        RichMultiLineTextField textField = listener.switchAndFocusPage(this.page);
+        listener.setFormat(this.color, this.modifiers);
+        this.executeEdit(textField);
     }
 
     @Override
     public void rollback(HistoryListener listener) {
-        listener.scribble$history$switchPage(page);
-        listener.scribble$history$setFormat(this.color, this.modifiers);
+        RichMultiLineTextField textField = listener.switchAndFocusPage(this.page);
+        listener.setFormat(this.color, this.modifiers);
 
-        RichMultiLineTextField editBox = listener.scribble$history$getRichEditBox();
-        editBox.cursor = cursor;
-        editBox.selectCursor = selectCursor;
-        editBox.selecting = selecting;
-        editBox.setRichTextWithoutUpdating(text);
+        textField.cursor = this.cursor;
+        textField.selectCursor = this.selectCursor;
+        textField.selecting = this.selecting;
+        textField.setValueWithoutUpdating(this.text);
 
-        editBox.onValueChange();
-        editBox.sendUpdateFormat();
+        textField.onValueChange();
+        textField.sendUpdateFormat();
     }
 }

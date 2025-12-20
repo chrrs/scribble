@@ -9,7 +9,9 @@ import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public class IconButtonWidget extends AbstractButton {
     private static final Identifier WIDGETS_TEXTURE = Scribble.id("textures/gui/scribble_widgets.png");
 

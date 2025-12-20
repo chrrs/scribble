@@ -1,0 +1,20 @@
+name: Feature Request
+description: Propose a new feature or a change to the mod.
+labels: [ "enhancement" ]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening an issue, please briefly look through the [open issues](https://github.com/chrrs/scribble/issues)
+        to see if a similar request already exists.
+
+  - type: textarea
+    id: description
+    validations:
+      required: true
+    attributes:
+      label: Describe the feature / change
+      description: |
+        Describe what the new feature or change would be. Please be specific, and motivate your answer, it helps make
+        requests more understandable!

@@ -27,9 +27,6 @@
         ],
         "modmenu": [
             "me.chrr.scribble.fabric.ModMenuCompat"
-        ],
-        "debugify": [
-            "me.chrr.scribble.fabric.DebugifyCompat"
         ]
     },
     "depends": {

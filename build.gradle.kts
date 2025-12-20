@@ -22,6 +22,7 @@ architectury.common(stonecutter.tree.branches.mapNotNull {
 
 repositories {
     maven("https://maven.shedaniel.me/")
+    maven("https://maven.isxander.dev/releases")
 }
 
 dependencies {
@@ -30,6 +31,7 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:${prop("fabric", "loaderVersion")}")
 
     modCompileOnly("me.shedaniel.cloth:cloth-config-fabric:${prop("clothconfig", "version")}")
+    modCompileOnly("dev.isxander:yet-another-config-lib:${prop("yacl", "version")}")
 }
 
 loom {

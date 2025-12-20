@@ -9,6 +9,7 @@ import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.function.Consumer;
 
@@ -16,22 +17,22 @@ import java.util.function.Consumer;
  * A toggle-able button that's used in the book edit screen for toggling
  * text modifiers. It always uses `gui/scribble_widgets.png` as texture.
  */
+@NullMarked
 public class ModifierButtonWidget extends AbstractButton {
     private static final Identifier WIDGETS_TEXTURE = Scribble.id("textures/gui/scribble_widgets.png");
 
     private final int u;
     private final int v;
 
-    public boolean toggled;
+    public boolean toggled = false;
     private final Consumer<Boolean> onToggle;
 
-    public ModifierButtonWidget(Component tooltip, Consumer<Boolean> onToggle, int x, int y, int u, int v, int width, int height, boolean toggled) {
+    public ModifierButtonWidget(Component tooltip, Consumer<Boolean> onToggle, int x, int y, int u, int v, int width, int height) {
         super(x, y, width, height, tooltip);
         this.setTooltip(Tooltip.create(tooltip));
 
         this.u = u;
         this.v = v;
-        this.toggled = toggled;
         this.onToggle = onToggle;
     }
 

@@ -47,7 +47,6 @@ dependencies {
     include(fabricApiModule("fabric-resource-loader-v0")!!)
 
     modCompileOnly("com.terraformersmc:modmenu:${common.prop("modmenu", "version")}")
-    modCompileOnly("dev.isxander:debugify:1.21.8+1.0") { isTransitive = false }
 
     commonBundle(project(common.path, "namedElements")) { isTransitive = false }
     shadowBundle(project(common.path, "transformProductionFabric")) { isTransitive = false }

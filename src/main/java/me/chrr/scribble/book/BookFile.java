@@ -6,6 +6,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.Tag;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,6 +24,7 @@ import java.util.Optional;
  * @param author the author of the book file. Usually equal to a username.
  * @param pages  the rich-text pages of the book.
  */
+@NullMarked
 public record BookFile(String author, Collection<String> pages) {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 

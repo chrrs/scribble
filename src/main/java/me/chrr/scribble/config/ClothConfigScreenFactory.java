@@ -6,27 +6,29 @@ import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 
+@NullMarked
 public class ClothConfigScreenFactory {
     private ClothConfigScreenFactory() {
     }
 
-    public static Screen create(Screen parent) {
+    public static Screen create(ConfigManager configManager, Screen parent) {
         ConfigBuilder builder = ConfigBuilder.create()
                 .setParentScreen(parent)
                 .setTitle(Component.translatable("config.scribble.title"));
 
         builder.setSavingRunnable(() -> {
             try {
-                Scribble.CONFIG_MANAGER.save();
+                configManager.save();
             } catch (IOException e) {
                 Scribble.LOGGER.error("could not save config", e);
             }
         });
 
-        Config config = Scribble.CONFIG_MANAGER.getConfig();
+        Config config = configManager.getConfig();
 
         ConfigCategory category = builder.getOrCreateCategory(Component.empty());
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
@@ -64,6 +66,14 @@ public class ClothConfigScreenFactory {
                 )
                 .setDefaultValue(Config.DEFAULT.editHistorySize)
                 .setSaveConsumer((value) -> config.editHistorySize = value)
+                .build());
+
+        category.addEntry(entryBuilder.startIntField(
+                        Component.literal("Pages to show"),
+                        config.pagesToShow
+                )
+                .setDefaultValue(Config.DEFAULT.pagesToShow)
+                .setSaveConsumer((value) -> config.pagesToShow = value)
                 .build());
 
         return builder.build();
