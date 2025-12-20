@@ -2,7 +2,7 @@ package me.chrr.scribble.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import me.chrr.scribble.Scribble;
+import me.chrr.scribble.ScribbleConfig;
 import me.chrr.scribble.screen.ScribbleLecternScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
@@ -21,7 +21,7 @@ public abstract class MenuScreensMixin {
         if (type == MenuType.LECTERN) {
             original.call(type, (MenuScreens.ScreenConstructor<LecternMenu, S>) (menu, inventory, title) -> {
                 Minecraft minecraft = Minecraft.getInstance();
-                if (!minecraft.hasShiftDown() || !Scribble.config().openVanillaBookScreenOnShift) {
+                if (!minecraft.hasShiftDown() || !ScribbleConfig.INSTANCE.openVanillaBookScreenOnShift) {
                     //noinspection unchecked: S is technically not the same here, but it doesn't matter.
                     return (S) new ScribbleLecternScreen(menu);
                 } else {

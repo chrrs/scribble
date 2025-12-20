@@ -4,7 +4,7 @@ import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.BookFile;
 import me.chrr.scribble.book.FileChooser;
 import me.chrr.scribble.book.RichText;
-import me.chrr.scribble.config.Config;
+import me.chrr.scribble.ScribbleConfig;
 import me.chrr.scribble.gui.BookTextWidget;
 import me.chrr.scribble.gui.TextArea;
 import me.chrr.scribble.gui.button.IconButtonWidget;
@@ -30,7 +30,7 @@ public class ScribbleBookViewScreen extends ScribbleBookScreen<Component> {
 
     @Override
     protected boolean shouldShowActionButtons() {
-        return Scribble.config().showActionButtons == Config.ShowActionButtons.ALWAYS;
+        return ScribbleConfig.INSTANCE.showActionButtons == ScribbleConfig.ShowActionButtons.ALWAYS;
     }
 
     @Override
