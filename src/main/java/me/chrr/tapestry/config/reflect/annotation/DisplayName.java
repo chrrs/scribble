@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 
 @NullMarked
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
+@Target({ElementType.TYPE, ElementType.FIELD})
 public @interface DisplayName {
     String value();
 
