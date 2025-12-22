@@ -32,7 +32,7 @@ public class Scribble {
     }
 
     public static Screen buildConfigScreen(Screen parent) {
-        return new TapestryConfigScreen(ScribbleConfig.INSTANCE, parent);
+        return new TapestryConfigScreen(parent, ScribbleConfig.INSTANCE);
     }
 
     public static Platform platform() {

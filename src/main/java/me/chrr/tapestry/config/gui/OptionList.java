@@ -11,16 +11,22 @@ import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 
 @NullMarked
 public class OptionList extends ContainerObjectSelectionList<OptionList.Entry> {
-    public OptionList(Minecraft minecraft, int width, int height, int y) {
+    private final boolean showHeaderSeparator;
+
+    public OptionList(Minecraft minecraft, boolean showHeaderSeparator, int width, int height, int y) {
         super(minecraft, width, height, y, 25);
 
+        this.showHeaderSeparator = showHeaderSeparator;
         this.centerListVertically = false;
     }
 
@@ -39,6 +45,17 @@ public class OptionList extends ContainerObjectSelectionList<OptionList.Entry> {
     @Override
     public int getRowWidth() {
         return 310;
+    }
+
+    @Override
+    protected void renderListSeparators(GuiGraphics guiGraphics) {
+        if (this.showHeaderSeparator) {
+            Identifier headerSeparator = this.minecraft.level == null ? Screen.HEADER_SEPARATOR : Screen.INWORLD_HEADER_SEPARATOR;
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, headerSeparator, this.getX(), this.getY() - 2, 0f, 0f, this.getWidth(), 2, 32, 2);
+        }
+
+        Identifier footerSeparator = this.minecraft.level == null ? Screen.FOOTER_SEPARATOR : Screen.INWORLD_FOOTER_SEPARATOR;
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, footerSeparator, this.getX(), this.getBottom(), 0f, 0f, this.getWidth(), 2, 32, 2);
     }
 
     private static <T> OptionWidget<T> getWidgetForProxy(OptionProxy<T> optionProxy) {

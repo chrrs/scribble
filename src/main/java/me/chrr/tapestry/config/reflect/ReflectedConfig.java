@@ -24,6 +24,7 @@ public abstract class ReflectedConfig implements Config {
     private ConfigIo.@Nullable UpgradeRewriter upgradeRewriter = null;
     private @Nullable Path currentConfigPath = null;
     private @Nullable String translationPrefix = null;
+    private @Nullable Component title = null;
 
     //region Initialization & Reflection
     protected void reflectOptions() {
@@ -44,6 +45,16 @@ public abstract class ReflectedConfig implements Config {
         DisplayName.Strategy displayNameStrategyAnnotation = getClass().getAnnotation(DisplayName.Strategy.class);
         if (displayNameStrategyAnnotation != null)
             displayNaming = displayNameStrategyAnnotation.value();
+
+        // Get the config screen title.
+        DisplayName displayNameAnnotation = getClass().getAnnotation(DisplayName.class);
+        if (displayNameAnnotation != null) {
+            this.title = getText("{}", displayNameAnnotation.value());
+        } else {
+            this.title = this.translationPrefix != null
+                    ? Component.translatable(this.translationPrefix + ".title")
+                    : Component.literal(getClass().getSimpleName());
+        }
 
         // Construct options for all public, non-static, non-transient fields.
         for (Field field : getClass().getFields()) {
@@ -86,25 +97,25 @@ public abstract class ReflectedConfig implements Config {
             serializeName = strategy.transform(field.getName());
         }
 
-        String displayNameStr;
+        String fieldDisplayName;
         DisplayName displayNameAnnotation = field.getAnnotation(DisplayName.class);
         if (displayNameAnnotation != null) {
-            displayNameStr = displayNameAnnotation.value();
+            fieldDisplayName = displayNameAnnotation.value();
         } else {
             NamingStrategy strategy = displayNaming;
             DisplayName.Strategy strategyAnnotation = field.getAnnotation(DisplayName.Strategy.class);
             if (strategyAnnotation != null)
                 strategy = strategyAnnotation.value();
-            displayNameStr = strategy.transform(field.getName());
+            fieldDisplayName = strategy.transform(field.getName());
         }
 
         // Actually construct the option.
-        Component displayName = this.getText("option." + displayNameStr);
+        Component displayName = getText("option.{}", fieldDisplayName);
         Option<?, ?> option = createOptionWithDefaultValue(serializeName, displayName, serializeBinding, displayBinding);
 
         Header headerAnnotation = field.getAnnotation(Header.class);
         if (headerAnnotation != null)
-            option.header = this.getText("header." + headerAnnotation.value());
+            option.header = getText("header.{}", headerAnnotation.value());
 
         // Get the controller.
         Slider.Int intSlider = field.getAnnotation(Slider.Int.class);
@@ -116,7 +127,7 @@ public abstract class ReflectedConfig implements Config {
             option.controller = new Controller.Slider<>(floatSlider.min(), floatSlider.max(), floatSlider.step());
 
         if (field.getType().isEnum())
-            option.controller = createEnumValuesController(field.getType(), displayNaming, displayNameStr);
+            option.controller = createEnumValuesController(field.getType(), displayNaming, fieldDisplayName);
 
         return option;
     }
@@ -129,7 +140,7 @@ public abstract class ReflectedConfig implements Config {
         List<Controller.EnumValues.Value<T>> values = Arrays.stream(valueClass.getEnumConstants())
                 .map((value) -> {
                     String name = namingStrategy.transform(((Enum<?>) value).name().toLowerCase());
-                    Component text = this.getText("option." + fieldName + "." + name);
+                    Component text = this.getText("option." + fieldName + ".{}", name);
                     return new Controller.EnumValues.Value<>(value, text);
                 })
                 .toList();
@@ -185,6 +196,14 @@ public abstract class ReflectedConfig implements Config {
 
         return upgradeRewriter;
     }
+
+    private Component getText(String template, String name) {
+        if (this.translationPrefix != null) {
+            return Component.translatable(this.translationPrefix + "." + template.replace("{}", name));
+        } else {
+            return Component.literal(name);
+        }
+    }
     //endregion
 
     //region Config IO
@@ -204,8 +223,8 @@ public abstract class ReflectedConfig implements Config {
     }
 
     @Override
-    public @Nullable String getTranslationPrefix() {
-        return this.translationPrefix;
+    public @Nullable Component getTitle() {
+        return this.title;
     }
 
     @Override
