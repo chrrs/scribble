@@ -18,6 +18,8 @@ import me.chrr.scribble.history.CommandManager;
 import me.chrr.scribble.history.HistoryListener;
 import me.chrr.scribble.history.command.Command;
 import me.chrr.scribble.history.command.EditCommand;
+import me.chrr.scribble.history.command.PageDeleteCommand;
+import me.chrr.scribble.history.command.PageInsertCommand;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
@@ -68,6 +70,8 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
 
     private @Nullable IconButtonWidget undoButton;
     private @Nullable IconButtonWidget redoButton;
+
+    private final List<IconButtonWidget> insertPageButtons = new ArrayList<>();
 
     private @Nullable ModifierButtonWidget boldButton;
     private @Nullable ModifierButtonWidget italicButton;
@@ -136,6 +140,48 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
             undoButton.active = commandManager.canUndo();
             redoButton.active = commandManager.canRedo();
         }
+    }
+
+    @Override
+    protected void initPageButtons(int y) {
+        this.insertPageButtons.clear();
+
+        for (int i = 0; i < this.pagesToShow; i++) {
+            int xOffset = this.pagesToShow == 1
+                    ? 0 : i == 0
+                    ? 32 : i == this.pagesToShow - 1
+                    ? -32 : 0;
+
+            // When we only show a single page, it's clearer to show something like
+            // 'insert new page _before_ current' instead of just 'here'.
+            Component insertText = this.pagesToShow == 1
+                    ? Component.translatable("text.scribble.action.insert_new_page")
+                    : Component.translatable("text.scribble.action.insert_new_page_here");
+            Component deleteText = Component.translatable("text.scribble.action.delete_page");
+
+            int pageOffset = i;
+            this.insertPageButtons.add(addRenderableWidget(new IconButtonWidget(insertText,
+                    () -> {
+                        PageInsertCommand command = new PageInsertCommand(this.currentPage + pageOffset);
+                        command.execute(this);
+                        commandManager.push(command);
+                    },
+                    getBackgroundX() + 78 + xOffset + i * 126, y + 2, 12, 90, 12, 12)));
+            addRenderableWidget(new IconButtonWidget(deleteText,
+                    () -> {
+                        PageDeleteCommand command = new PageDeleteCommand(this.currentPage + pageOffset,
+                                this.pages.get(this.currentPage + pageOffset));
+                        command.execute(this);
+                        commandManager.push(command);
+                    },
+                    getBackgroundX() + 94 + xOffset + i * 126, y + 2, 0, 90, 12, 12));
+        }
+    }
+
+    @Override
+    public void updateCurrentPages() {
+        super.updateCurrentPages();
+        this.insertPageButtons.forEach((button) -> button.visible = this.getTotalPages() < 100);
     }
 
     @Override
@@ -449,6 +495,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     public void insertPageAt(int page, @Nullable RichText content) {
         this.pages.add(page, Optional.ofNullable(content).orElse(RichText.EMPTY));
         this.dirty = true;
+        this.showPage(page, false);
         this.updateCurrentPages();
     }
 
