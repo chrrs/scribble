@@ -23,11 +23,18 @@ architectury.common(stonecutter.tree.branches.mapNotNull {
 repositories {
     maven("https://maven.shedaniel.me/")
     maven("https://maven.isxander.dev/releases")
+    maven("https://maven.parchmentmc.org")
 }
 
 dependencies {
     minecraft("com.mojang:minecraft:$minecraft")
-    mappings(loom.officialMojangMappings())
+
+    @Suppress("UnstableApiUsage")
+    mappings(loom.layered {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${prop("parchment", "version")}@zip")
+    })
+
     modImplementation("net.fabricmc:fabric-loader:${prop("fabric", "loaderVersion")}")
 
     modCompileOnly("me.shedaniel.cloth:cloth-config-fabric:${prop("clothconfig", "version")}")
