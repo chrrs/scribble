@@ -67,6 +67,7 @@ public abstract class ScribbleBookScreen<T> extends Screen {
 
         this.backButton = addRenderableWidget(new PageButton(x + 43, y + 157, false,
                 (button) -> this.goPageBackward(this.minecraft.hasShiftDown()), true));
+        initPageButtons(y + 157);
         this.forwardButton = addRenderableWidget(new PageButton(x + 126 * this.pagesToShow - 10, y + 157, true,
                 (button) -> this.goPageForward(this.minecraft.hasShiftDown()), true));
 
@@ -221,6 +222,9 @@ public abstract class ScribbleBookScreen<T> extends Screen {
     protected abstract boolean shouldShowActionButtons();
 
     protected abstract void initActionButtons(int x, int y);
+
+    protected void initPageButtons(int y) {
+    }
 
     protected abstract void initMenuControls(int y);
 
