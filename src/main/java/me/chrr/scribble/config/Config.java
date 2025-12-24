@@ -12,6 +12,7 @@ public class Config {
     public ShowActionButtons showActionButtons = ShowActionButtons.WHEN_EDITING;
     public int editHistorySize = 32;
     public int pagesToShow = 1;
+    public boolean openVanillaBookScreenOnShift = false;
 
     @DeprecatedConfigOption
     private boolean showSaveLoadButtons = true;

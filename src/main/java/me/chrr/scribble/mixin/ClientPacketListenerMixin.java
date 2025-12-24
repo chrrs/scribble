@@ -3,6 +3,7 @@ package me.chrr.scribble.mixin;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import me.chrr.scribble.Scribble;
 import me.chrr.scribble.screen.ScribbleBookViewScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -16,9 +17,8 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(ClientPacketListener.class)
 public abstract class ClientPacketListenerMixin {
     @WrapOperation(method = "handleOpenBook", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"))
-    public void overrideBookViewScreen(Minecraft instance, Screen screen, Operation<Void> original, @Local BookViewScreen.BookAccess book) {
-        if (instance.hasShiftDown()) {
-            // FIXME: this is temporary, maybe a config option?
+    public void overrideBookViewScreen(Minecraft instance, Screen screen, Operation<Void> original, @Local(name = "bookAccess") BookViewScreen.BookAccess book) {
+        if (instance.hasShiftDown() && Scribble.config().openVanillaBookScreenOnShift) {
             original.call(instance, screen);
         } else {
             // FIXME: ideally, I'd like to avoid even constructing the original BookViewScreen.
