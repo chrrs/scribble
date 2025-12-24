@@ -188,7 +188,7 @@ public abstract class ScribbleBookScreen<T> extends Screen {
     public int getBackgroundY() {
         if (Scribble.config().centerBookGui) {
             // Perfect centering actually doesn't look great, so we put it on a third.
-            return this.height / 3 - this.getMenuHeight() / 3;
+            return 2 + this.height / 3 - getMenuHeight() / 3;
         } else {
             return 2;
         }
@@ -202,8 +202,8 @@ public abstract class ScribbleBookScreen<T> extends Screen {
         return 182;
     }
 
-    public int getMenuHeight() {
-        return 192 + 2 + 20;
+    public static int getMenuHeight() {
+        return 194 + 20;
     }
 
     public int getMenuControlsY() {
