@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 @NullMarked
-@Mixin(LocalPlayer.class)
+@Mixin(value = LocalPlayer.class, priority = 500)
 public abstract class LocalPlayerMixin {
     @WrapOperation(method = "openItemGui", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"))
     public void overrideBookViewScreen(Minecraft instance, Screen screen, Operation<Void> original, @Local(argsOnly = true) ItemStack itemStack, @Local(argsOnly = true) InteractionHand hand, @Local WritableBookContent book) {
