@@ -21,7 +21,7 @@ import java.util.Objects;
 
 @NullMarked
 public class ScribbleBookViewScreen extends ScribbleBookScreen<Component> {
-    private final BookViewScreen.BookAccess book;
+    protected BookViewScreen.BookAccess book;
 
     public ScribbleBookViewScreen(BookViewScreen.BookAccess book) {
         super(Component.translatable("book.view.title"));
@@ -80,10 +80,11 @@ public class ScribbleBookViewScreen extends ScribbleBookScreen<Component> {
 
     private void handleClickEvent(ClickEvent event) {
         switch (event) {
-            case ClickEvent.ChangePage(int page) -> this.showPage(page - 1, false);
-            // FIXME: closeContainerOnServer for lecterns.
-            case ClickEvent.RunCommand(String command) ->
-                    clickCommandAction(Objects.requireNonNull(this.minecraft.player), command, null);
+            case ClickEvent.ChangePage(int page) -> this.jumpToPage(page - 1);
+            case ClickEvent.RunCommand(String command) -> {
+                this.closeRemoteContainer();
+                clickCommandAction(Objects.requireNonNull(this.minecraft.player), command, null);
+            }
             default -> Screen.defaultHandleGameClickEvent(event, this.minecraft, this);
         }
     }

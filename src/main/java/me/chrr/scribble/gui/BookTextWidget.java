@@ -25,6 +25,7 @@ public class BookTextWidget implements TextArea<Component> {
 
     private boolean visible = true;
     private boolean hovered = false;
+    private boolean dimmed = false;
 
     private final int x;
     private final int y;
@@ -51,7 +52,10 @@ public class BookTextWidget implements TextArea<Component> {
 
         this.hovered = guiGraphics.containsPointInScissor(mouseX, mouseY)
                 && this.areCoordinatesInRectangle(mouseX, mouseY);
-        this.visitText(guiGraphics.textRenderer(GuiGraphics.HoveredTextEffects.TOOLTIP_AND_CURSOR));
+
+        ActiveTextCollector textCollector = guiGraphics.textRenderer(GuiGraphics.HoveredTextEffects.TOOLTIP_AND_CURSOR);
+        textCollector.defaultParameters(textCollector.defaultParameters().withOpacity(this.dimmed ? 0.3f : 1f));
+        this.visitText(textCollector);
     }
 
     private void visitText(ActiveTextCollector activeTextCollector) {
@@ -133,5 +137,9 @@ public class BookTextWidget implements TextArea<Component> {
     @Override
     public boolean isFocused() {
         return false;
+    }
+
+    public void setDimmed(boolean dimmed) {
+        this.dimmed = dimmed;
     }
 }

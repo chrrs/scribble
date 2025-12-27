@@ -16,6 +16,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.Style;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.CommonColors;
 import net.minecraft.util.Util;
 import org.jspecify.annotations.NullMarked;
@@ -28,6 +29,8 @@ public class PageNumberWidget extends AbstractWidget {
     private final Font font;
     private final Consumer<Integer> onPageChange;
     private final int anchorX;
+
+    private boolean dimmed = false;
 
     private Component text;
     private Component hoverText;
@@ -70,9 +73,11 @@ public class PageNumberWidget extends AbstractWidget {
                 graphics.fill(cursorX, this.getY() - 1, cursorX + 1, this.getY() + 1 + font.lineHeight, CommonColors.BLACK);
             }
         } else {
+            int color = ARGB.color(this.dimmed ? 0.3f : 1f, CommonColors.BLACK);
+
             Component text = this.isHovered() ? this.hoverText : this.text;
             int textWidth = font.width(text);
-            graphics.drawString(this.font, text, this.getX() + this.width - textWidth, this.getY(), CommonColors.BLACK, false);
+            graphics.drawString(this.font, text, this.getX() + this.width - textWidth, this.getY(), color, false);
         }
 
         if (this.isHovered()) {
@@ -164,5 +169,9 @@ public class PageNumberWidget extends AbstractWidget {
 
         this.width = this.font.width(this.text);
         this.setX(this.anchorX - this.width);
+    }
+
+    public void setDimmed(boolean dimmed) {
+        this.dimmed = dimmed;
     }
 }
