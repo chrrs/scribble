@@ -59,7 +59,7 @@ public abstract class ScribbleBookScreen<T> extends Screen {
 
         this.pageNumbers.clear();
         for (int i = 0; i < this.pagesToShow; i++) {
-            PageNumberWidget widget = new PageNumberWidget(page -> showPage(page - 1, false), x + 148 + i * 126, y + 16, this.font);
+            PageNumberWidget widget = new PageNumberWidget(page -> jumpToPage(page - 1), x + 148 + i * 126, y + 16, this.font);
             this.pageNumbers.add(addRenderableWidget(widget));
         }
 
@@ -127,9 +127,14 @@ public abstract class ScribbleBookScreen<T> extends Screen {
         }
     }
 
+    public void jumpToPage(int page) {
+        this.showPage(page, false);
+    }
+
     public void showPage(int page, boolean insertIfMissing) {
         // Insert pages so the requested page exists if needed.
-        int newPage = Math.clamp(page, 0, this.getTotalPages() - 1);
+        // (note that min+max instead of clamp here is deliberate)
+        int newPage = Math.max(Math.min(page, this.getTotalPages() - 1), 0);
         if (insertIfMissing) {
             while (newPage < page && this.canInsertPages()) {
                 this.insertEmptyPageAt(this.getTotalPages());
@@ -151,7 +156,7 @@ public abstract class ScribbleBookScreen<T> extends Screen {
 
     public void goPageForward(boolean toEnd) {
         if (toEnd) {
-            showPage(this.getTotalPages(), false);
+            showPage(this.getTotalPages() - 1, false);
         } else {
             showPage(this.currentPage + this.pagesToShow, true);
         }
@@ -179,6 +184,12 @@ public abstract class ScribbleBookScreen<T> extends Screen {
     @Override
     public boolean isInGameUi() {
         return true;
+    }
+
+    @Override
+    public void onClose() {
+        this.closeRemoteContainer();
+        super.onClose();
     }
 
     public int getBackgroundX() {
@@ -212,6 +223,9 @@ public abstract class ScribbleBookScreen<T> extends Screen {
     //endregion
 
     //region Abstract methods
+    protected void closeRemoteContainer() {
+    }
+
     protected boolean canInsertPages() {
         return false;
     }
