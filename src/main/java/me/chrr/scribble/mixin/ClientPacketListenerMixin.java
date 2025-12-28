@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(value = ClientPacketListener.class, priority = 500)
 public abstract class ClientPacketListenerMixin {
     @WrapOperation(method = "handleOpenBook", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"))
-    public void overrideBookViewScreen(Minecraft instance, Screen screen, Operation<Void> original, @Local(name = "bookAccess") BookViewScreen.BookAccess book) {
+    public void overrideBookViewScreen(Minecraft instance, Screen screen, Operation<Void> original, @Local BookViewScreen.BookAccess book) {
         if (instance.hasShiftDown() && Scribble.config().openVanillaBookScreenOnShift) {
             original.call(instance, screen);
         } else {
