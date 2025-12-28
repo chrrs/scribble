@@ -3,7 +3,7 @@ import me.modmuss50.mpp.ReleaseType
 plugins {
     id("dev.architectury.loom")
     id("architectury-plugin")
-    id("com.github.johnrengelman.shadow")
+    id("com.gradleup.shadow")
     id("me.modmuss50.mod-publish-plugin")
 }
 
@@ -56,10 +56,8 @@ loom {
 }
 
 java {
-    val java = if (stonecutter.eval(minecraft, ">=1.20.5"))
-        JavaVersion.VERSION_21 else JavaVersion.VERSION_17
-    targetCompatibility = java
-    sourceCompatibility = java
+    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_21
 }
 
 tasks {
@@ -69,7 +67,7 @@ tasks {
     }
 
     remapJar {
-        atAccessWideners.add("aw/${common.prop("mod", "accesswidener")}.accesswidener")
+        atAccessWideners.add("scribble.accesswidener")
         inputFile.set(shadowJar.get().archiveFile)
         archiveClassifier = null
         dependsOn(shadowJar)
