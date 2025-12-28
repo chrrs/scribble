@@ -9,6 +9,7 @@ public class Config {
     public int version = 3;
     public boolean copyFormattingCodes = true;
     public boolean centerBookGui = true;
+    public boolean showFormattingButtons = true;
     public ShowActionButtons showActionButtons = ShowActionButtons.WHEN_EDITING;
     public int editHistorySize = 32;
     public int pagesToShow = 1;

@@ -38,6 +38,13 @@ public class YACLConfigScreenFactory {
                                                 (value) -> config.centerBookGui = value)
                                         .controller(TickBoxControllerBuilder::create)
                                         .build())
+                                .option(Option.<Boolean>createBuilder()
+                                        .name(Component.literal("Show formatting buttons"))
+                                        .description(OptionDescription.of(Component.literal("Formatting buttons are the color/modifier buttons on the right of the page. With this option, you can hide these buttons.\n\nNote: You'll always be able to access their functionality using their hotkeys.")))
+                                        .binding(Config.DEFAULT.showFormattingButtons, () -> config.showFormattingButtons,
+                                                (value) -> config.showFormattingButtons = value)
+                                        .controller(TickBoxControllerBuilder::create)
+                                        .build())
                                 .option(Option.<Config.ShowActionButtons>createBuilder()
                                         .name(Component.literal("Show action buttons"))
                                         .description(OptionDescription.of(Component.literal("Action buttons are the white buttons on the left of the page. This option determines when these action buttons should be shown or hidden.\n\nThe 'Show when editing' option shows the action buttons when editing a book using a book & quill, but hides them when reading a written book.")))

@@ -309,7 +309,8 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
             // On Ctrl-Z, undo.
             if ((KeyboardUtil.isKey(keyEvent.key(), "Z") && !keyEvent.hasShiftDown()
                     && undoButton != null && undoButton.active)) {
-                undoButton.onPress(keyEvent);
+                this.commandManager.tryUndo();
+                this.invalidateActionButtons();
                 return true;
             }
 
@@ -317,7 +318,8 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
             if (((KeyboardUtil.isKey(keyEvent.key(), "Z") && keyEvent.hasShiftDown())
                     || (KeyboardUtil.isKey(keyEvent.key(), "Y") && !keyEvent.hasShiftDown()))
                     && redoButton != null && redoButton.active) {
-                redoButton.onPress(keyEvent);
+                this.commandManager.tryRedo();
+                this.invalidateActionButtons();
                 return true;
             }
         }
@@ -331,46 +333,48 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     protected void init() {
         super.init();
 
-        int x = this.width / 2 + this.getBackgroundWidth() / 2 - 20;
-        int y = this.getBackgroundY() + 12;
+        if (Scribble.config().showFormattingButtons) {
+            int x = this.width / 2 + this.getBackgroundWidth() / 2 - 20;
+            int y = this.getBackgroundY() + 12;
 
-        // Modifier buttons (but in reverse!)
-        obfuscatedButton = addRenderableWidget(new ModifierButtonWidget(
-                Component.translatable("text.scribble.modifier.obfuscated"),
-                (toggled) -> this.applyFormat(ChatFormatting.OBFUSCATED, toggled),
-                x, y + 70, 0, 70, 22, 18));
-        strikethroughButton = addRenderableWidget(new ModifierButtonWidget(
-                Component.translatable("text.scribble.modifier.strikethrough"),
-                (toggled) -> this.applyFormat(ChatFormatting.STRIKETHROUGH, toggled),
-                x, y + 53, 0, 53, 22, 17));
-        underlineButton = addRenderableWidget(new ModifierButtonWidget(
-                Component.translatable("text.scribble.modifier.underline"),
-                (toggled) -> this.applyFormat(ChatFormatting.UNDERLINE, toggled),
-                x, y + 36, 0, 36, 22, 17));
-        italicButton = addRenderableWidget(new ModifierButtonWidget(
-                Component.translatable("text.scribble.modifier.italic"),
-                (toggled) -> this.applyFormat(ChatFormatting.ITALIC, toggled),
-                x, y + 19, 0, 19, 22, 17));
-        boldButton = addRenderableWidget(new ModifierButtonWidget(
-                Component.translatable("text.scribble.modifier.bold"),
-                (toggled) -> this.applyFormat(ChatFormatting.BOLD, toggled),
-                x, y, 0, 0, 22, 19));
+            // Modifier buttons (but in reverse!)
+            obfuscatedButton = addRenderableWidget(new ModifierButtonWidget(
+                    Component.translatable("text.scribble.modifier.obfuscated"),
+                    (toggled) -> this.applyFormat(ChatFormatting.OBFUSCATED, toggled),
+                    x, y + 70, 0, 70, 22, 18));
+            strikethroughButton = addRenderableWidget(new ModifierButtonWidget(
+                    Component.translatable("text.scribble.modifier.strikethrough"),
+                    (toggled) -> this.applyFormat(ChatFormatting.STRIKETHROUGH, toggled),
+                    x, y + 53, 0, 53, 22, 17));
+            underlineButton = addRenderableWidget(new ModifierButtonWidget(
+                    Component.translatable("text.scribble.modifier.underline"),
+                    (toggled) -> this.applyFormat(ChatFormatting.UNDERLINE, toggled),
+                    x, y + 36, 0, 36, 22, 17));
+            italicButton = addRenderableWidget(new ModifierButtonWidget(
+                    Component.translatable("text.scribble.modifier.italic"),
+                    (toggled) -> this.applyFormat(ChatFormatting.ITALIC, toggled),
+                    x, y + 19, 0, 19, 22, 17));
+            boldButton = addRenderableWidget(new ModifierButtonWidget(
+                    Component.translatable("text.scribble.modifier.bold"),
+                    (toggled) -> this.applyFormat(ChatFormatting.BOLD, toggled),
+                    x, y, 0, 0, 22, 19));
 
-        // Color swatches
-        colorSwatches = new ArrayList<>(COLORS.length);
-        for (int i = 0; i < COLORS.length; i++) {
-            int dx = (i % 2) * 8;
-            int dy = (i / 2) * 8;
+            // Color swatches
+            colorSwatches = new ArrayList<>(COLORS.length);
+            for (int i = 0; i < COLORS.length; i++) {
+                int dx = (i % 2) * 8;
+                int dy = (i / 2) * 8;
 
-            ChatFormatting color = COLORS[i];
-            colorSwatches.add(addRenderableWidget(new ColorSwatchWidget(
-                    Component.translatable("text.scribble.color." + color.getName()), color,
-                    () -> this.applyFormat(color, true),
-                    x + 3 + dx, y + 95 + dy, 8, 8
-            )));
+                ChatFormatting color = COLORS[i];
+                colorSwatches.add(addRenderableWidget(new ColorSwatchWidget(
+                        Component.translatable("text.scribble.color." + color.getName()), color,
+                        () -> this.applyFormat(color, true),
+                        x + 3 + dx, y + 95 + dy, 8, 8
+                )));
+            }
+
+            this.invalidateFormattingButtons();
         }
-
-        this.invalidateFormattingButtons();
     }
 
     private void applyFormat(ChatFormatting formatting, boolean enabled) {
@@ -390,8 +394,6 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
         if (editBox == null)
             return;
 
-        // Sometimes, these buttons get invalidated on screen initialize, when the buttons don't exist yet.
-        // We can just return in that case.
         if (boldButton == null || italicButton == null || underlineButton == null
                 || strikethroughButton == null || obfuscatedButton == null)
             return;
