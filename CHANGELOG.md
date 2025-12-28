@@ -1,3 +1,29 @@
+## 2.0.0-beta1
+
+Instead of mixin in to the vanilla book GUI, Scribble now uses exact recreations of the GUI as a base. You'll probably
+not notice much of a difference as a player, except that a lot more is now possible! In fact, there's so much more
+possible, that this is now Scribble 2.0! A lot of features have been thought through again from scratch, a lot of
+existing features are more polished now, and generally the mod is just better.
+
+- You can now enable double page viewing in the settings menu! This shows two pages at once, like a real book.
+    - When interacting with lecterns, one page will be dimmed to show which page is 'active' (The page that controls
+      comparator output, and the page other players will see).
+- The config/settings menu has been migrated to Yet Another Config Library from Cloth Config. You'll need to install
+  this mod to configure Scribble.
+    - There are plans to move Scribble to an custom config system without dependencies, but no ETA on that yet.
+    - Also, there's an action button to the settings now, so no need for Mod Menu!
+- As the original mixins are now gone, Scribble is a lot more compatible with other mods!
+    - Most importantly, Scribble doesn't conflict with Amendments now. Problems like the incompatibility with Figura
+      also shouldn't happen any more.
+    - Unfortunately, this does lose compat with some other mods such as Symbol Chat (though it's not _incompatible_,
+      it'll just not do anything).
+- The code is generally a lot cleaner, so this should make updates and improvements in the future a lot easier!
+
+Also in this release:
+
+- Fix modifier buttons having their hover outline cut off.
+- Consider the whole GUI when vertically centering, not just the book itself.
+
 ## 1.6.7
 
 - Update to 1.21.11.
