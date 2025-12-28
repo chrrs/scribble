@@ -334,27 +334,27 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
         int x = this.width / 2 + this.getBackgroundWidth() / 2 - 20;
         int y = this.getBackgroundY() + 12;
 
-        // Modifier buttons
-        boldButton = addRenderableWidget(new ModifierButtonWidget(
-                Component.translatable("text.scribble.modifier.bold"),
-                (toggled) -> this.applyFormat(ChatFormatting.BOLD, toggled),
-                x, y, 0, 0, 22, 19));
-        italicButton = addRenderableWidget(new ModifierButtonWidget(
-                Component.translatable("text.scribble.modifier.italic"),
-                (toggled) -> this.applyFormat(ChatFormatting.ITALIC, toggled),
-                x, y + 19, 0, 19, 22, 17));
-        underlineButton = addRenderableWidget(new ModifierButtonWidget(
-                Component.translatable("text.scribble.modifier.underline"),
-                (toggled) -> this.applyFormat(ChatFormatting.UNDERLINE, toggled),
-                x, y + 36, 0, 36, 22, 17));
-        strikethroughButton = addRenderableWidget(new ModifierButtonWidget(
-                Component.translatable("text.scribble.modifier.strikethrough"),
-                (toggled) -> this.applyFormat(ChatFormatting.STRIKETHROUGH, toggled),
-                x, y + 53, 0, 53, 22, 17));
+        // Modifier buttons (but in reverse!)
         obfuscatedButton = addRenderableWidget(new ModifierButtonWidget(
                 Component.translatable("text.scribble.modifier.obfuscated"),
                 (toggled) -> this.applyFormat(ChatFormatting.OBFUSCATED, toggled),
                 x, y + 70, 0, 70, 22, 18));
+        strikethroughButton = addRenderableWidget(new ModifierButtonWidget(
+                Component.translatable("text.scribble.modifier.strikethrough"),
+                (toggled) -> this.applyFormat(ChatFormatting.STRIKETHROUGH, toggled),
+                x, y + 53, 0, 53, 22, 17));
+        underlineButton = addRenderableWidget(new ModifierButtonWidget(
+                Component.translatable("text.scribble.modifier.underline"),
+                (toggled) -> this.applyFormat(ChatFormatting.UNDERLINE, toggled),
+                x, y + 36, 0, 36, 22, 17));
+        italicButton = addRenderableWidget(new ModifierButtonWidget(
+                Component.translatable("text.scribble.modifier.italic"),
+                (toggled) -> this.applyFormat(ChatFormatting.ITALIC, toggled),
+                x, y + 19, 0, 19, 22, 17));
+        boldButton = addRenderableWidget(new ModifierButtonWidget(
+                Component.translatable("text.scribble.modifier.bold"),
+                (toggled) -> this.applyFormat(ChatFormatting.BOLD, toggled),
+                x, y, 0, 0, 22, 19));
 
         // Color swatches
         colorSwatches = new ArrayList<>(COLORS.length);
