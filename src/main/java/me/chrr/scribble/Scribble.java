@@ -60,7 +60,6 @@ public class Scribble {
         public final Path BOOK_DIR = getGameDir().resolve("books");
 
         public final String VERSION = getModVersion();
-        public final boolean HAS_CLOTH_CONFIG = isModLoaded("cloth_config") || isModLoaded("cloth-config");
         public final boolean HAS_YACL = isModLoaded("yet_another_config_lib_v3");
 
         protected abstract boolean isModLoaded(String modId);
