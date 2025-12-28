@@ -73,7 +73,7 @@ public class YACLConfigScreenFactory {
                                 .build())
                         .group(OptionGroup.createBuilder()
                                 .name(Component.literal("Miscellaneous"))
-                                .description(OptionDescription.of(Component.literal("Options that don't fit in the other categories. You will most likely not need to change most of these.")))
+                                .description(OptionDescription.of(Component.literal("Options that don't fit in the other categories. You most likely will not need to change most of these.")))
                                 .option(Option.<Boolean>createBuilder()
                                         .name(Component.literal("Open vanilla GUI's when holding SHIFT"))
                                         .description(OptionDescription.of(Component.literal("Scribble replaces the vanilla GUI with an exact copy, but sometimes (ex. with other mods) you still want to be able to access the original screen. If this option is enabled, you can access the original screen by holding down SHIFT.")))

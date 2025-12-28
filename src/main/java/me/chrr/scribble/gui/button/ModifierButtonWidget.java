@@ -38,13 +38,11 @@ public class ModifierButtonWidget extends AbstractButton {
 
     @Override
     protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-        // If the button is hovered or focused, we want it to be in front, so we shift the Z.
-        if (this.isHoveredOrFocused()) {
-            // FIXME: shift Z +1.
-        }
+        // If the button is hovered or focused, we want it to be in front, so we slightly increase the height.
+        int offset = this.isHoveredOrFocused() ? 1 : 0;
 
         int u = this.u + (this.isHoveredOrFocused() ? 22 : 0) + (this.toggled ? 44 : 0);
-        graphics.blit(RenderPipelines.GUI_TEXTURED, WIDGETS_TEXTURE, getX(), getY(), u, v, width, height + 1, 128, 128);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, WIDGETS_TEXTURE, getX(), getY(), u, v, width, height + offset, 128, 128);
     }
 
     @Override
