@@ -37,7 +37,6 @@ dependencies {
 
     modImplementation("net.fabricmc:fabric-loader:${prop("fabric", "loaderVersion")}")
 
-    modCompileOnly("me.shedaniel.cloth:cloth-config-fabric:${prop("clothconfig", "version")}")
     modCompileOnly("dev.isxander:yet-another-config-lib:${prop("yacl", "version")}")
 }
 
