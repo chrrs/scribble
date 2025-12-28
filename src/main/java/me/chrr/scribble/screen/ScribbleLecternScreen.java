@@ -96,6 +96,11 @@ public class ScribbleLecternScreen extends ScribbleBookViewScreen implements Men
     }
 
     @Override
+    public boolean isPauseScreen() {
+        return false;
+    }
+
+    @Override
     public void updateCurrentPages() {
         super.updateCurrentPages();
         this.updateEffectivePage();
