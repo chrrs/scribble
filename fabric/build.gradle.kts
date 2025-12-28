@@ -44,7 +44,8 @@ dependencies {
 
     fun fabricApiModule(name: String) =
         modImplementation(fabricApi.module(name, common.prop("fabric", "apiVersion")))
-    include(fabricApiModule("fabric-resource-loader-v0")!!)
+    include(fabricApiModule("fabric-api-base")!!)
+    include(fabricApiModule("fabric-resource-loader-v1")!!)
 
     modCompileOnly("com.terraformersmc:modmenu:${common.prop("modmenu", "version")}")
 
