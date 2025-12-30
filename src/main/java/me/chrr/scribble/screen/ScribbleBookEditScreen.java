@@ -505,6 +505,9 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     public void deletePage(int page) {
         this.pages.remove(page);
         this.dirty = true;
+
+        if (page >= this.pages.size() - 1)
+            this.showPage(page - 1, false);
         this.updateCurrentPages();
     }
     //endregion
