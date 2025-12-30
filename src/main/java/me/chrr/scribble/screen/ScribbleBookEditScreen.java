@@ -7,7 +7,7 @@ import me.chrr.scribble.SetReturnScreen;
 import me.chrr.scribble.book.BookFile;
 import me.chrr.scribble.book.FileChooser;
 import me.chrr.scribble.book.RichText;
-import me.chrr.scribble.config.Config;
+import me.chrr.scribble.ScribbleConfig;
 import me.chrr.scribble.gui.TextArea;
 import me.chrr.scribble.gui.button.ColorSwatchWidget;
 import me.chrr.scribble.gui.button.IconButtonWidget;
@@ -102,7 +102,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     //region Widgets (Action, Menu & TextArea)
     @Override
     protected boolean shouldShowActionButtons() {
-        return Scribble.config().showActionButtons != Config.ShowActionButtons.NEVER;
+        return ScribbleConfig.INSTANCE.showActionButtons != ScribbleConfig.ShowActionButtons.NEVER;
     }
 
     @Override
