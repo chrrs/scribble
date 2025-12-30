@@ -59,7 +59,8 @@ public class ScribbleBookViewScreen extends ScribbleBookScreen<Component> {
 
     @Override
     protected int getTotalPages() {
-        return book.getPageCount();
+        // Always return at least 1 page, so we don't show an empty book (see #100).
+        return Math.max(1, book.getPageCount());
     }
 
     private void saveBookToFile() {
