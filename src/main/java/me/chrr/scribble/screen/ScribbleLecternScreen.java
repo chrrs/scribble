@@ -101,6 +101,11 @@ public class ScribbleLecternScreen extends ScribbleBookViewScreen implements Men
     }
 
     @Override
+    protected boolean shouldPlayTurnSound() {
+        return false;
+    }
+
+    @Override
     public void updateCurrentPages() {
         super.updateCurrentPages();
         this.updateEffectivePage();

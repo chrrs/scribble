@@ -66,10 +66,10 @@ public abstract class ScribbleBookScreen<T> extends Screen {
         initMenuControls(getMenuControlsY());
 
         this.backButton = addRenderableWidget(new PageButton(x + 43, y + 157, false,
-                (button) -> this.goPageBackward(this.minecraft.hasShiftDown()), true));
+                (button) -> this.goPageBackward(this.minecraft.hasShiftDown()), this.shouldPlayTurnSound()));
         initPageButtons(y + 157);
         this.forwardButton = addRenderableWidget(new PageButton(x + 126 * this.pagesToShow - 10, y + 157, true,
-                (button) -> this.goPageForward(this.minecraft.hasShiftDown()), true));
+                (button) -> this.goPageForward(this.minecraft.hasShiftDown()), this.shouldPlayTurnSound()));
 
         if (shouldShowActionButtons()) {
             initActionButtons(x, this.getBackgroundY() + 12 + 4);
@@ -228,6 +228,10 @@ public abstract class ScribbleBookScreen<T> extends Screen {
 
     protected boolean canInsertPages() {
         return false;
+    }
+
+    protected boolean shouldPlayTurnSound() {
+        return true;
     }
 
     protected void insertEmptyPageAt(int page) {
