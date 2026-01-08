@@ -2,8 +2,8 @@ package me.chrr.scribble.gui.edit;
 
 import com.mojang.datafixers.util.Pair;
 import me.chrr.scribble.KeyboardUtil;
+import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.RichText;
-import me.chrr.scribble.ScribbleConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -194,7 +194,7 @@ public class RichMultiLineTextField extends MultilineTextField {
     @Override
     public boolean keyPressed(KeyEvent event) {
         // Override copy/cut/paste to remove formatting codes if the config option is set or SHIFT is held down.
-        boolean keepFormatting = ScribbleConfig.INSTANCE.copyFormattingCodes ^ event.hasShiftDown();
+        boolean keepFormatting = Scribble.config().copyFormattingCodes.get() ^ event.hasShiftDown();
         boolean ctrlNoAlt = event.hasControlDown() && !event.hasAltDown();
         if (ctrlNoAlt && (KeyboardUtil.isKey(event.key(), "C") || KeyboardUtil.isKey(event.key(), "X"))) {
             String text = this.getSelectedText();

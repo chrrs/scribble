@@ -5,23 +5,23 @@ import org.jspecify.annotations.NullMarked;
 
 @NullMarked
 public class OptionProxy<T> {
-    public final Option<?, T> option;
+    public final Option<T> option;
     public T value;
 
-    public OptionProxy(Option<?, T> option) {
+    public OptionProxy(Option<T> option) {
         this.option = option;
-        this.value = option.displayBinding.get();
+        this.value = option.value.get();
     }
 
     public void apply() {
-        this.option.displayBinding.set(this.value);
+        this.option.value.set(this.value);
     }
 
     public void reset() {
-        this.value = this.option.defaultDisplayValue;
+        this.value = this.option.value.getDefaultValue();
     }
 
     public boolean isChanged() {
-        return this.value != this.option.defaultDisplayValue;
+        return this.value != this.option.value.getDefaultValue();
     }
 }

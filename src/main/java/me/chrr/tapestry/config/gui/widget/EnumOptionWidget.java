@@ -1,26 +1,26 @@
 package me.chrr.tapestry.config.gui.widget;
 
-import me.chrr.tapestry.config.Controller;
 import me.chrr.tapestry.config.gui.OptionProxy;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.NullMarked;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @NullMarked
 public class EnumOptionWidget<T> extends OptionWidget.Clickable<T> {
-    private final List<T> values = new ArrayList<>();
+    private final List<T> values;
     private final Map<T, Component> nameByValue = new HashMap<>();
 
-    public EnumOptionWidget(OptionProxy<T> optionProxy, Controller.EnumValues<T> enumValues) {
+    public EnumOptionWidget(OptionProxy<T> optionProxy, List<T> values) {
         super(optionProxy);
 
-        for (Controller.EnumValues.Value<T> value : enumValues.options) {
-            this.values.add(value.value());
-            this.nameByValue.put(value.value(), value.name());
-        }
+        this.values = values;
+        for (T value : values)
+            this.nameByValue.put(value, optionProxy.option.value.textProvider.apply(value));
     }
 
     @Override

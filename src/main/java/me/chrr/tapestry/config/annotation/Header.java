@@ -1,4 +1,4 @@
-package me.chrr.tapestry.config.reflect.annotation;
+package me.chrr.tapestry.config.annotation;
 
 import org.jspecify.annotations.NullMarked;
 
@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 
 @NullMarked
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface TranslateDisplayNames {
-    String prefix();
+@Target(ElementType.FIELD)
+public @interface Header {
+    String value();
 }

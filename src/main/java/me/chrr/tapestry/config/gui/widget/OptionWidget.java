@@ -48,7 +48,7 @@ public abstract class OptionWidget<T> extends AbstractWidget {
     }
 
     protected void renderValueLabel(GuiGraphics graphics, int rightOffset, int availableWidth) {
-        this.renderValueLabel(graphics, rightOffset, availableWidth, Component.literal(optionProxy.value.toString()));
+        this.renderValueLabel(graphics, rightOffset, availableWidth, optionProxy.option.value.textProvider.apply(optionProxy.value));
     }
 
     protected void renderValueLabel(GuiGraphics graphics, int rightOffset, int availableWidth, Component value) {

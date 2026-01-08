@@ -30,7 +30,7 @@ public class ScribbleBookViewScreen extends ScribbleBookScreen<Component> {
 
     @Override
     protected boolean shouldShowActionButtons() {
-        return ScribbleConfig.INSTANCE.showActionButtons == ScribbleConfig.ShowActionButtons.ALWAYS;
+        return Scribble.config().showActionButtons.get() == ScribbleConfig.ShowActionButtons.ALWAYS;
     }
 
     @Override

@@ -1,42 +1,33 @@
 package me.chrr.scribble;
 
 import com.google.gson.JsonObject;
-import me.chrr.tapestry.config.Binding;
-import me.chrr.tapestry.config.reflect.NamingStrategy;
-import me.chrr.tapestry.config.reflect.ReflectedConfig;
-import me.chrr.tapestry.config.reflect.annotation.*;
+import me.chrr.tapestry.config.NamingStrategy;
+import me.chrr.tapestry.config.ReflectedConfig;
+import me.chrr.tapestry.config.annotation.*;
+import me.chrr.tapestry.config.value.Value;
 import org.jspecify.annotations.NullMarked;
 
-import java.util.List;
-
 @NullMarked
-@TranslateDisplayNames(prefix = "config.scribble")
+@TranslationPrefix("config.scribble")
 @SerializeName.Strategy(NamingStrategy.SNAKE_CASE)
+@SuppressWarnings("unused")
 public class ScribbleConfig extends ReflectedConfig {
-    public static final ScribbleConfig INSTANCE = load(() -> Scribble.platform().CONFIG_DIR,
-            ScribbleConfig.class, "scribble.client.json", List.of("scribble.json"));
-
+    @Hidden
+    public Value<Integer> pagesToShow = value(1);
 
     @Header("appearance")
-    @Rebind.Display("doublePageViewing")
-    @DisplayName("double_page_viewing")
-    public int pagesToShow = 1;
-    public boolean centerBookGui = true;
-    public boolean showFormattingButtons = true;
-    public ShowActionButtons showActionButtons = ShowActionButtons.WHEN_EDITING;
+    public Value<Boolean> doublePageViewing = map(pagesToShow, (n) -> n > 1, (b) -> b ? 2 : 1);
+    public Value<Boolean> centerBookGui = value(true);
+    public Value<Boolean> showFormattingButtons = value(true);
+    public Value<ShowActionButtons> showActionButtons = value(ShowActionButtons.WHEN_EDITING);
 
     @Header("behaviour")
-    public boolean copyFormattingCodes = true;
-    @Slider.Int(min = 8, max = 128)
-    public int editHistorySize = 32;
+    public Value<Boolean> copyFormattingCodes = value(true);
+    public Value<Integer> editHistorySize = value(32)
+            .range(8, 128, 1);
 
     @Header("miscellaneous")
-    public boolean openVanillaBookScreenOnShift = false;
-
-
-    @SuppressWarnings("unused")
-    private final transient Binding<Boolean> doublePageViewing = Binding.of(Boolean.class,
-            () -> this.pagesToShow > 1, (value) -> this.pagesToShow = value ? 2 : 1);
+    public Value<Boolean> openVanillaBookScreenOnShift = value(false);
 
     @UpgradeRewriter(currentVersion = 3)
     public static void upgrade(int fromVersion, JsonObject config) {
@@ -46,7 +37,6 @@ public class ScribbleConfig extends ReflectedConfig {
                     config.get("show_save_load_buttons").getAsBoolean() ? "WHEN_EDITING" : "NEVER");
         }
     }
-
 
     public enum ShowActionButtons {
         ALWAYS,

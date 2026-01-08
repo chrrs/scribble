@@ -1,6 +1,6 @@
-package me.chrr.tapestry.config.reflect.annotation;
+package me.chrr.tapestry.config.annotation;
 
-import me.chrr.tapestry.config.reflect.NamingStrategy;
+import me.chrr.tapestry.config.NamingStrategy;
 import org.jspecify.annotations.NullMarked;
 
 import java.lang.annotation.ElementType;

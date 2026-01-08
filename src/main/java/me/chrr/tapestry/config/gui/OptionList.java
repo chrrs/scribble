@@ -1,14 +1,12 @@
 package me.chrr.tapestry.config.gui;
 
-import me.chrr.tapestry.config.Controller;
 import me.chrr.tapestry.config.Option;
 import me.chrr.tapestry.config.gui.widget.*;
+import me.chrr.tapestry.config.value.Constraint;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.StringWidget;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
@@ -36,7 +34,7 @@ public class OptionList extends ContainerObjectSelectionList<OptionList.Entry> {
         this.addEntry(new HeaderEntry(text), height);
     }
 
-    public <T> OptionProxy<T> addOption(Option<?, T> option) {
+    public <T> OptionProxy<T> addOption(Option<T> option) {
         OptionProxy<T> proxy = new OptionProxy<>(option);
         this.addEntry(new OptionEntry<>(proxy));
         return proxy;
@@ -59,23 +57,23 @@ public class OptionList extends ContainerObjectSelectionList<OptionList.Entry> {
     }
 
     private static <T> OptionWidget<T> getWidgetForProxy(OptionProxy<T> optionProxy) {
-        Class<T> valueClass = optionProxy.option.displayBinding.getValueClass();
+        Class<T> valueClass = optionProxy.option.value.getValueType();
 
-        // FIXME: very dirty and manual replacement for an interface method, but I don't
-        //        want widgets in server-side code.
         if (valueClass == boolean.class || valueClass == Boolean.class) {
             return unsafeCast(new BooleanOptionWidget(unsafeCast(optionProxy)));
-        } else if ((valueClass == int.class || valueClass == Integer.class) &&
-                optionProxy.option.controller instanceof Controller.Slider<?> slider) {
-            return unsafeCast(new SliderOptionWidget.Int(unsafeCast(optionProxy), unsafeCast(slider)));
-        } else if ((valueClass == float.class || valueClass == Float.class) &&
-                optionProxy.option.controller instanceof Controller.Slider<?> slider) {
-            return unsafeCast(new SliderOptionWidget.Float(unsafeCast(optionProxy), unsafeCast(slider)));
-        } else if (optionProxy.option.controller instanceof Controller.EnumValues<?> enumValues) {
-            return new EnumOptionWidget<>(optionProxy, unsafeCast(enumValues));
+        } else if (optionProxy.option.value.constraint instanceof Constraint.Range<T> range && range.step() != null) {
+            if ((valueClass == int.class || valueClass == Integer.class)) {
+                return unsafeCast(new SliderOptionWidget.Int(unsafeCast(optionProxy), unsafeCast(range)));
+            } else if ((valueClass == float.class || valueClass == Float.class)) {
+                return unsafeCast(new SliderOptionWidget.Float(unsafeCast(optionProxy), unsafeCast(range)));
+            } else {
+                throw new IllegalArgumentException("Range constraint can't be applied to a value of type " + valueClass);
+            }
+        } else if (optionProxy.option.value.constraint instanceof Constraint.Values<T>(List<T> values)) {
+            return new EnumOptionWidget<>(optionProxy, values);
+        } else {
+            return new ReadOnlyOptionWidget<>(optionProxy);
         }
-
-        return new ReadOnlyOptionWidget<>(optionProxy);
     }
 
     @SuppressWarnings("unchecked")
@@ -110,14 +108,16 @@ public class OptionList extends ContainerObjectSelectionList<OptionList.Entry> {
     protected static class OptionEntry<T> extends Entry {
         private final OptionWidget<T> widget;
         private final OptionProxy<T> optionProxy;
-        private final Button reset;
+        private final IconButton reset;
 
         public OptionEntry(OptionProxy<T> optionProxy) {
             this.widget = getWidgetForProxy(optionProxy);
             this.optionProxy = optionProxy;
 
-            this.reset = Button.builder(Component.literal("✘"), (button) -> optionProxy.reset())
-                    .tooltip(Tooltip.create(Component.literal("Reset to default value"))).build();
+            this.reset = new IconButton(0, 0, 0, 0,
+                    Component.translatable("text.tapestry.config.reset"),
+                    Identifier.fromNamespaceAndPath("tapestry-config", "textures/gui/reset.png"),
+                    (button) -> optionProxy.reset());
         }
 
         public List<? extends NarratableEntry> narratables() {

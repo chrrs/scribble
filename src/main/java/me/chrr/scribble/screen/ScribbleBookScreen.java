@@ -1,7 +1,6 @@
 package me.chrr.scribble.screen;
 
 import me.chrr.scribble.Scribble;
-import me.chrr.scribble.ScribbleConfig;
 import me.chrr.scribble.gui.PageNumberWidget;
 import me.chrr.scribble.gui.TextArea;
 import me.chrr.scribble.gui.button.IconButtonWidget;
@@ -44,7 +43,7 @@ public abstract class ScribbleBookScreen<T> extends Screen {
     //region Widgets
     @Override
     protected void init() {
-        this.pagesToShow = ScribbleConfig.INSTANCE.pagesToShow;
+        this.pagesToShow = Scribble.config().pagesToShow.get();
         if (this.pagesToShow == 1) {
             this.backgroundTexture = BookViewScreen.BOOK_LOCATION;
         } else {
@@ -204,7 +203,7 @@ public abstract class ScribbleBookScreen<T> extends Screen {
     }
 
     public int getBackgroundY() {
-        if (ScribbleConfig.INSTANCE.centerBookGui) {
+        if (Scribble.config().centerBookGui.get()) {
             // Perfect centering actually doesn't look great, so we put it on a third.
             return 2 + this.height / 3 - getMenuHeight() / 3;
         } else {

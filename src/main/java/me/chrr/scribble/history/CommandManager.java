@@ -1,6 +1,6 @@
 package me.chrr.scribble.history;
 
-import me.chrr.scribble.ScribbleConfig;
+import me.chrr.scribble.Scribble;
 import me.chrr.scribble.history.command.Command;
 import org.jspecify.annotations.NullMarked;
 
@@ -26,7 +26,7 @@ public class CommandManager {
         this.commands.add(command);
         this.index += 1;
 
-        if (this.commands.size() > ScribbleConfig.INSTANCE.editHistorySize) {
+        if (this.commands.size() > Scribble.config().editHistorySize.get()) {
             this.commands.removeFirst();
             this.index -= 1;
         }

@@ -121,13 +121,11 @@ publishMods {
         projectId.set(prop("modrinth", "id"))
         accessToken.set(providers.environmentVariable("MODRINTH_TOKEN"))
         minecraftVersions.addAll(versions)
-        optional("yacl")
     }
 
     curseforge {
         projectId.set(prop("curseforge", "id"))
         accessToken.set(providers.environmentVariable("CURSEFORGE_TOKEN"))
         minecraftVersions.addAll(versions)
-        optional("yacl")
     }
 }

@@ -43,7 +43,7 @@ public class TapestryConfigScreen extends Screen {
 
     @Override
     protected void init() {
-        // Initialize the actual option lists.
+        // Initialise the actual option lists.
         ConfigTab[] tabs = new ConfigTab[this.configs.length];
         for (int i = 0; i < this.configs.length; i++) {
             OptionList list = createOptionList(this.configs[i], this.width,
@@ -92,10 +92,12 @@ public class TapestryConfigScreen extends Screen {
 
     private OptionList createOptionList(Config config, int width, int height, int y) {
         OptionList list = new OptionList(this.minecraft, this.configs.length <= 1, width, height, y);
-        for (Option<?, ?> option : config.getOptions()) {
+        for (Option<?> option : config.getOptions()) {
             if (option.header != null)
                 list.addHeader(option.header);
-            this.proxies.add(list.addOption(option));
+
+            if (!option.hidden)
+                this.proxies.add(list.addOption(option));
         }
 
         return list;

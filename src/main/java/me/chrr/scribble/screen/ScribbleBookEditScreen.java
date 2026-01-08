@@ -102,7 +102,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     //region Widgets (Action, Menu & TextArea)
     @Override
     protected boolean shouldShowActionButtons() {
-        return ScribbleConfig.INSTANCE.showActionButtons != ScribbleConfig.ShowActionButtons.NEVER;
+        return Scribble.config().showActionButtons.get() != ScribbleConfig.ShowActionButtons.NEVER;
     }
 
     @Override
@@ -333,7 +333,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     protected void init() {
         super.init();
 
-        if (ScribbleConfig.INSTANCE.showFormattingButtons) {
+        if (Scribble.config().showFormattingButtons.get()) {
             int x = this.width / 2 + this.getBackgroundWidth() / 2 - 20;
             int y = this.getBackgroundY() + 12;
 

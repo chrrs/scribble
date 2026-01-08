@@ -36,3 +36,6 @@ accessible field net/minecraft/client/gui/components/MultiLineEditBox$Builder te
 accessible field net/minecraft/client/gui/components/MultiLineEditBox$Builder cursorColor I
 accessible field net/minecraft/client/gui/components/MultiLineEditBox$Builder showBackground Z
 accessible field net/minecraft/client/gui/components/MultiLineEditBox$Builder showDecorations Z
+
+# FIXME: For some reason, this is not accessible but only sometimes??
+accessible class net/minecraft/client/gui/screens/MenuScreens$ScreenConstructor

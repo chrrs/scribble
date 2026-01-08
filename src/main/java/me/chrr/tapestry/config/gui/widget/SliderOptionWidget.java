@@ -2,14 +2,16 @@ package me.chrr.tapestry.config.gui.widget;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
-import me.chrr.tapestry.config.Controller;
 import me.chrr.tapestry.config.gui.OptionProxy;
+import me.chrr.tapestry.config.value.Constraint;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.CommonColors;
 import org.jspecify.annotations.NullMarked;
+
+import java.util.Objects;
 
 @NullMarked
 public abstract class SliderOptionWidget<N extends Number> extends OptionWidget<N> {
@@ -23,12 +25,12 @@ public abstract class SliderOptionWidget<N extends Number> extends OptionWidget<
     public final N max;
     public final N step;
 
-    public SliderOptionWidget(OptionProxy<N> optionProxy, Controller.Slider<N> controller) {
+    public SliderOptionWidget(OptionProxy<N> optionProxy, Constraint.Range<N> range) {
         super(optionProxy);
 
-        this.min = controller.min;
-        this.max = controller.max;
-        this.step = controller.step;
+        this.min = range.min();
+        this.max = range.max();
+        this.step = Objects.requireNonNull(range.step());
     }
 
     @Override
@@ -100,8 +102,10 @@ public abstract class SliderOptionWidget<N extends Number> extends OptionWidget<
         graphics.fill(thumbX + 1, thumbY + 1, thumbX + thumbWidth + 1, thumbY + thumbHeight + 1, shadow);
         graphics.fill(thumbX, thumbY, thumbX + thumbWidth, thumbY + thumbHeight, color);
 
-        if (isSliding || (this.isHovered() && mouseX >= sliderMinX && mouseX <= sliderMaxX)) {
-            graphics.requestCursor(this.isActive() ? CursorTypes.RESIZE_EW : CursorTypes.NOT_ALLOWED);
+        if (this.isSliding) {
+            graphics.requestCursor(CursorTypes.RESIZE_EW);
+        } else if (this.isHovered() && mouseX >= sliderMinX && mouseX <= sliderMaxX) {
+            graphics.requestCursor(this.isActive() ? CursorTypes.POINTING_HAND : CursorTypes.NOT_ALLOWED);
         }
     }
 
@@ -113,8 +117,8 @@ public abstract class SliderOptionWidget<N extends Number> extends OptionWidget<
 
 
     public static class Int extends SliderOptionWidget<Integer> {
-        public Int(OptionProxy<Integer> optionProxy, Controller.Slider<Integer> controller) {
-            super(optionProxy, controller);
+        public Int(OptionProxy<Integer> optionProxy, Constraint.Range<Integer> range) {
+            super(optionProxy, range);
         }
 
         @Override
@@ -124,7 +128,7 @@ public abstract class SliderOptionWidget<N extends Number> extends OptionWidget<
 
         @Override
         protected Integer getValueFromProgress(float progress) {
-            return this.min + (int) (progress * (this.max - this.min)) / step * step;
+            return (int) (this.min + progress * (this.max - this.min)) / step * step;
         }
 
         @Override
@@ -134,8 +138,8 @@ public abstract class SliderOptionWidget<N extends Number> extends OptionWidget<
     }
 
     public static class Float extends SliderOptionWidget<java.lang.Float> {
-        public Float(OptionProxy<java.lang.Float> optionProxy, Controller.Slider<java.lang.Float> controller) {
-            super(optionProxy, controller);
+        public Float(OptionProxy<java.lang.Float> optionProxy, Constraint.Range<java.lang.Float> range) {
+            super(optionProxy, range);
         }
 
         @Override
@@ -145,7 +149,7 @@ public abstract class SliderOptionWidget<N extends Number> extends OptionWidget<
 
         @Override
         protected java.lang.Float getValueFromProgress(float progress) {
-            return this.min + Math.round(progress * (this.max - this.min) / step) * step;
+            return Math.round((this.min + progress * (this.max - this.min)) / step) * step;
         }
 
         @Override

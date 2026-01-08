@@ -1,6 +1,7 @@
 package me.chrr.scribble;
 
 import me.chrr.scribble.book.FileChooser;
+import me.chrr.tapestry.config.ReflectedConfig;
 import me.chrr.tapestry.config.gui.TapestryConfigScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.Identifier;
@@ -9,8 +10,8 @@ import org.apache.logging.log4j.Logger;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 
 @NullMarked
@@ -19,20 +20,23 @@ public class Scribble {
     public static final Logger LOGGER = LogManager.getLogger();
 
     private static @Nullable Platform PLATFORM;
+    private static @Nullable ScribbleConfig CONFIG;
 
     public static void init(Platform platform) {
         PLATFORM = platform;
-        ScribbleConfig.INSTANCE.ensureLoaded();
 
-        try {
-            FileChooser.convertLegacyBooks();
-        } catch (IOException e) {
-            LOGGER.error("failed to convert legacy NBT-based book files to JSON", e);
-        }
+        CONFIG = ReflectedConfig.load(() -> platform.CONFIG_DIR, ScribbleConfig.class,
+                "scribble.client.json", List.of("scribble.json"));
+
+        FileChooser.convertLegacyBooks();
     }
 
     public static Screen buildConfigScreen(Screen parent) {
-        return new TapestryConfigScreen(parent, ScribbleConfig.INSTANCE);
+        return new TapestryConfigScreen(parent, config());
+    }
+
+    public static ScribbleConfig config() {
+        return Objects.requireNonNull(CONFIG);
     }
 
     public static Platform platform() {
