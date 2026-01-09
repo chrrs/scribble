@@ -169,8 +169,20 @@ public class RichMultiLineTextField extends MultilineTextField {
         int line = Mth.floor(y / (double) font.lineHeight);
 
         StringView substring = this.displayLines.get(Mth.clamp(line, 0, this.displayLines.size() - 1));
-        int col = this.font.substrByWidth(this.richText.subText(substring.beginIndex(), substring.endIndex()), cursorX).getString().length();
-        this.seekCursor(Whence.ABSOLUTE, substring.beginIndex() + col);
+        RichText lineText = this.richText.subText(substring.beginIndex(), substring.endIndex());
+        int col = this.font.substrByWidth(lineText, cursorX).getString().length();
+
+        if (col >= substring.endIndex() - 1) {
+            this.seekCursor(Whence.ABSOLUTE, substring.beginIndex() + col);
+        } else {
+            int width = this.font.width(lineText.subText(0, col));
+            int overshot = cursorX - width;
+
+            RichText nextChar = lineText.subText(col, col + 1);
+            int charWidth = this.font.width(nextChar);
+            int offset = (overshot * 2 >= charWidth) ? 1 : 0;
+            this.seekCursor(Whence.ABSOLUTE, substring.beginIndex() + col + offset);
+        }
     }
 
     @Override
