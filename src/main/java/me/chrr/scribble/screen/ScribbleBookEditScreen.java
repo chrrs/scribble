@@ -128,7 +128,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
                 x, y + 12 * 2 + 4, 48, 90, 12, 12));
         addRenderableWidget(new IconButtonWidget(
                 Component.translatable("text.scribble.action.load_book_from_file"),
-                () -> this.confirmIf(true, "overwrite_warning",
+                () -> this.confirmIf(this.dirty || !this.isEmpty(), "overwrite_warning",
                         () -> FileChooser.chooseFile(false, this::loadFromFile)),
                 x, y + 12 * 3 + 4, 60, 90, 12, 12));
 
@@ -457,6 +457,10 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     @Override
     protected void insertEmptyPageAt(int page) {
         this.pages.add(page, RichText.EMPTY);
+    }
+
+    private boolean isEmpty() {
+        return this.pages.stream().allMatch(RichText::isEmpty);
     }
     //endregion
 
