@@ -10,6 +10,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.BookViewScreen;
 import net.minecraft.client.gui.screens.inventory.PageButton;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -17,9 +18,11 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @NullMarked
 public abstract class ScribbleBookScreen<T> extends Screen {
@@ -168,6 +171,19 @@ public abstract class ScribbleBookScreen<T> extends Screen {
         } else {
             showPage(this.currentPage - 1, false);
         }
+    }
+
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        if (event.key() == GLFW.GLFW_KEY_PAGE_UP) {
+            Objects.requireNonNull(this.backButton).onPress(event);
+            return true;
+        } else if (event.key() == GLFW.GLFW_KEY_PAGE_DOWN) {
+            Objects.requireNonNull(this.forwardButton).onPress(event);
+            return true;
+        }
+
+        return super.keyPressed(event);
     }
     //endregion
 
