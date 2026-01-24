@@ -97,10 +97,8 @@ public class FileChooser {
     /**
      * Walk the default book directory, and convert all 'legacy style' book files to the
      * new JSON format. All old files are copied to the '_legacy' directory.
-     *
-     * @throws IOException when an error happens.
      */
-    public static void convertLegacyBooks() throws IOException {
+    public static void convertLegacyBooks() {
         Path rootDir = Scribble.platform().BOOK_DIR;
         Path legacyDir = rootDir.resolve("_legacy");
 
@@ -108,43 +106,47 @@ public class FileChooser {
             return;
         }
 
-        Files.walkFileTree(rootDir, new SimpleFileVisitor<>() {
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                if (dir.getFileName().toString().equals("_legacy")) {
-                    return FileVisitResult.SKIP_SUBTREE;
-                } else {
-                    return FileVisitResult.CONTINUE;
+        try {
+            Files.walkFileTree(rootDir, new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+                    if (dir.getFileName().toString().equals("_legacy")) {
+                        return FileVisitResult.SKIP_SUBTREE;
+                    } else {
+                        return FileVisitResult.CONTINUE;
+                    }
                 }
-            }
 
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                if (file.toString().endsWith(".book")) {
-                    Scribble.LOGGER.info("converting legacy NBT-based book file at {} to JSON.", file);
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                    if (file.toString().endsWith(".book")) {
+                        Scribble.LOGGER.info("converting legacy NBT-based book file at {} to JSON.", file);
 
-                    Path relativePath = rootDir.relativize(file);
-                    Path legacyPath = legacyDir.resolve(relativePath);
+                        Path relativePath = rootDir.relativize(file);
+                        Path legacyPath = legacyDir.resolve(relativePath);
 
-                    String fileName = file.getFileName().toString();
-                    fileName = fileName.substring(0, fileName.length() - 5);
+                        String fileName = file.getFileName().toString();
+                        fileName = fileName.substring(0, fileName.length() - 5);
 
-                    Path jsonPath = file.resolveSibling(fileName + ".json");
+                        Path jsonPath = file.resolveSibling(fileName + ".json");
 
-                    try {
-                        BookFile book = BookFile.readFile(file);
-                        book.writeJson(jsonPath);
+                        try {
+                            BookFile book = BookFile.readFile(file);
+                            book.writeJson(jsonPath);
 
-                        Files.createDirectories(legacyPath.getParent());
-                        Files.move(file, legacyPath);
-                    } catch (Exception e) {
-                        Scribble.LOGGER.error("failed to convert legacy NBT-based book file at {} to JSON.", file, e);
+                            Files.createDirectories(legacyPath.getParent());
+                            Files.move(file, legacyPath);
+                        } catch (Exception e) {
+                            Scribble.LOGGER.error("failed to convert legacy NBT-based book file at {} to JSON.", file, e);
+                        }
+
                     }
 
+                    return FileVisitResult.CONTINUE;
                 }
-
-                return FileVisitResult.CONTINUE;
-            }
-        });
+            });
+        } catch (IOException e) {
+            Scribble.LOGGER.error("failed to convert legacy NBT-based book files to JSON", e);
+        }
     }
 }

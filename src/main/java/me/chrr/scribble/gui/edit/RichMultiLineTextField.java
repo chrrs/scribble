@@ -194,7 +194,7 @@ public class RichMultiLineTextField extends MultilineTextField {
     @Override
     public boolean keyPressed(KeyEvent event) {
         // Override copy/cut/paste to remove formatting codes if the config option is set or SHIFT is held down.
-        boolean keepFormatting = Scribble.config().copyFormattingCodes ^ event.hasShiftDown();
+        boolean keepFormatting = Scribble.config().copyFormattingCodes.get() ^ event.hasShiftDown();
         boolean ctrlNoAlt = event.hasControlDown() && !event.hasAltDown();
         if (ctrlNoAlt && (KeyboardUtil.isKey(event.key(), "C") || KeyboardUtil.isKey(event.key(), "X"))) {
             String text = this.getSelectedText();

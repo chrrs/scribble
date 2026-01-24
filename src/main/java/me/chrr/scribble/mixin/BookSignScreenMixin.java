@@ -78,7 +78,7 @@ public abstract class BookSignScreenMixin extends Screen implements SetReturnScr
 
     @Unique
     private int scribble$getYOffset() {
-        if (Scribble.config().centerBookGui) {
+        if (Scribble.config().centerBookGui.get()) {
             // See ScribbleBookScreen#getBackgroundY().
             return this.height / 3 - ScribbleBookScreen.getMenuHeight() / 3;
         } else {

@@ -16,13 +16,13 @@ import org.spongepowered.asm.mixin.Mixin;
 @NullMarked
 @Mixin(MenuScreens.class)
 public abstract class MenuScreensMixin {
+    @SuppressWarnings("unchecked")
     @WrapMethod(method = "register")
     private static <S extends Screen & MenuAccess<LecternMenu>> void overrideLecternScreen(MenuType<LecternMenu> type, MenuScreens.ScreenConstructor<LecternMenu, S> factory, Operation<Void> original) {
         if (type == MenuType.LECTERN) {
             original.call(type, (MenuScreens.ScreenConstructor<LecternMenu, S>) (menu, inventory, title) -> {
                 Minecraft minecraft = Minecraft.getInstance();
-                if (!minecraft.hasShiftDown() || !Scribble.config().openVanillaBookScreenOnShift) {
-                    //noinspection unchecked: S is technically not the same here, but it doesn't matter.
+                if (!minecraft.hasShiftDown() || !Scribble.config().openVanillaBookScreenOnShift.get()) {
                     return (S) new ScribbleLecternScreen(menu);
                 } else {
                     return factory.create(menu, inventory, title);

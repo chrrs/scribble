@@ -35,6 +35,7 @@
         "fabric-resource-loader-v1": "*"
     },
     "breaks": {
-        "fixbookgui": "*"
+        "fixbookgui": "*",
+        "tapestry_config": "*"
     }
 }

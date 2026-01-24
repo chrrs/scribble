@@ -4,7 +4,6 @@ import me.chrr.scribble.Scribble;
 import me.chrr.scribble.gui.PageNumberWidget;
 import me.chrr.scribble.gui.TextArea;
 import me.chrr.scribble.gui.button.IconButtonWidget;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -44,7 +43,7 @@ public abstract class ScribbleBookScreen<T> extends Screen {
     //region Widgets
     @Override
     protected void init() {
-        this.pagesToShow = Scribble.config().pagesToShow;
+        this.pagesToShow = Scribble.config().pagesToShow.get();
         if (this.pagesToShow == 1) {
             this.backgroundTexture = BookViewScreen.BOOK_LOCATION;
         } else {
@@ -84,23 +83,14 @@ public abstract class ScribbleBookScreen<T> extends Screen {
 
     private void initSettingsButton(int x, int y) {
         MutableComponent settingsText = Component.literal("Scribble " + Scribble.platform().VERSION + "\n")
-                .setStyle(Style.EMPTY.withBold(true));
+                .setStyle(Style.EMPTY.withBold(true))
+                .append(Component.translatable("text.scribble.action.settings")
+                        .setStyle(Style.EMPTY.withBold(false)));
 
-        boolean canOpenConfigScreen = Scribble.platform().HAS_YACL;
-        if (canOpenConfigScreen) {
-            settingsText.append(Component.translatable("text.scribble.action.settings")
-                    .setStyle(Style.EMPTY.withBold(false)));
-        } else {
-            // FIXME: make this a translatable string
-            settingsText.append(Component.literal("YACL needs to be installed to access the settings menu.")
-                    .setStyle(Style.EMPTY.withBold(false).withColor(ChatFormatting.RED)));
-        }
-
-        IconButtonWidget widget = addRenderableWidget(new IconButtonWidget(
+        addRenderableWidget(new IconButtonWidget(
                 settingsText,
                 () -> minecraft.setScreen(Scribble.buildConfigScreen(this)),
                 x, y, 96, 90, 12, 12));
-        widget.active = canOpenConfigScreen;
     }
 
     public void updateCurrentPages() {
@@ -213,7 +203,7 @@ public abstract class ScribbleBookScreen<T> extends Screen {
     }
 
     public int getBackgroundY() {
-        if (Scribble.config().centerBookGui) {
+        if (Scribble.config().centerBookGui.get()) {
             // Perfect centering actually doesn't look great, so we put it on a third.
             return 2 + this.height / 3 - getMenuHeight() / 3;
         } else {

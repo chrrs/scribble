@@ -1,11 +1,15 @@
-package me.chrr.scribble.config;
+package me.chrr.tapestry.config.annotation;
+
+import org.jspecify.annotations.NullMarked;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.FIELD)
+@NullMarked
 @Retention(RetentionPolicy.RUNTIME)
-public @interface DeprecatedConfigOption {
+@Target(ElementType.FIELD)
+public @interface Header {
+    String value();
 }
