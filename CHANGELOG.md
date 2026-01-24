@@ -1,3 +1,14 @@
+## 2.0.0-beta2
+
+- Move from YACL to a custom config system.
+- Don't show an overwrite warning when importing into an empty, unchanged book.
+- Add back page-up/down hotkeys for navigating books.
+- Update Chinese translations (Thanks to @Andypsl8!).
+- Improve text cursor placement when clicking somewhere with your mouse.
+- Fix zero-page books not showing anything.
+- Allow deleting the last page of a book again.
+- Don't play the turn page sound twice for lecterns.
+
 ## 2.0.0-beta1
 
 Instead of mixin in to the vanilla book GUI, Scribble now uses exact recreations of the GUI as a base. You'll probably
