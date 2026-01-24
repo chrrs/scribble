@@ -59,6 +59,9 @@ public enum ConfigIo {
                 upgradeRewriter.upgrade(version, object);
                 object.addProperty("version", upgradeRewriter.getLatestVersion());
                 LOGGER.info("Upgraded config at '{}' to version {}", path, upgradeRewriter.getLatestVersion());
+
+                String json = GSON.toJson(object);
+                Files.write(path, json.getBytes());
             }
 
             for (Option<?> option : config.getOptions()) {
