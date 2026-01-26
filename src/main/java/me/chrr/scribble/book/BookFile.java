@@ -40,7 +40,7 @@ public record BookFile(String author, Collection<String> pages) {
 
     public void writeJson(Path path) throws IOException {
         String json = GSON.toJson(this);
-        Files.write(path, json.getBytes());
+        Files.writeString(path, json);
     }
 
     private static BookFile readJson(Path path) throws IOException {

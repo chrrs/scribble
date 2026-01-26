@@ -61,7 +61,7 @@ public enum ConfigIo {
                 LOGGER.info("Upgraded config at '{}' to version {}", path, upgradeRewriter.getLatestVersion());
 
                 String json = GSON.toJson(object);
-                Files.write(path, json.getBytes());
+                Files.writeString(path, json);
             }
 
             for (Option<?> option : config.getOptions()) {
@@ -94,7 +94,7 @@ public enum ConfigIo {
 
         try {
             String json = GSON.toJson(object);
-            Files.write(path, json.getBytes());
+            Files.writeString(path, json);
         } catch (IOException e) {
             LOGGER.error("Failed to save config to '{}'", path, e);
         }
