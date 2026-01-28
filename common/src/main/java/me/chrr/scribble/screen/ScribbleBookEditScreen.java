@@ -3,11 +3,11 @@ package me.chrr.scribble.screen;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import me.chrr.scribble.KeyboardUtil;
 import me.chrr.scribble.Scribble;
+import me.chrr.scribble.ScribbleConfig;
 import me.chrr.scribble.SetReturnScreen;
 import me.chrr.scribble.book.BookFile;
 import me.chrr.scribble.book.FileChooser;
 import me.chrr.scribble.book.RichText;
-import me.chrr.scribble.ScribbleConfig;
 import me.chrr.scribble.gui.TextArea;
 import me.chrr.scribble.gui.button.ColorSwatchWidget;
 import me.chrr.scribble.gui.button.IconButtonWidget;
@@ -102,7 +102,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     //region Widgets (Action, Menu & TextArea)
     @Override
     protected boolean shouldShowActionButtons() {
-        return Scribble.config().showActionButtons.get() != ScribbleConfig.ShowActionButtons.NEVER;
+        return Scribble.CONFIG.showActionButtons.get() != ScribbleConfig.ShowActionButtons.NEVER;
     }
 
     @Override
@@ -333,7 +333,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     protected void init() {
         super.init();
 
-        if (Scribble.config().showFormattingButtons.get()) {
+        if (Scribble.CONFIG.showFormattingButtons.get()) {
             int x = this.width / 2 + this.getBackgroundWidth() / 2 - 20;
             int y = this.getBackgroundY() + 12;
 

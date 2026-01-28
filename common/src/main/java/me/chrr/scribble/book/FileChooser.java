@@ -81,7 +81,7 @@ public class FileChooser {
      * @return the book directory.
      */
     private static Path createAndGetBookDirectory() {
-        Path bookDir = Scribble.platform().BOOK_DIR;
+        Path bookDir = Scribble.BOOK_DIR;
 
         try {
             if (!Files.exists(bookDir)) {
@@ -99,7 +99,7 @@ public class FileChooser {
      * new JSON format. All old files are copied to the '_legacy' directory.
      */
     public static void convertLegacyBooks() {
-        Path rootDir = Scribble.platform().BOOK_DIR;
+        Path rootDir = Scribble.BOOK_DIR;
         Path legacyDir = rootDir.resolve("_legacy");
 
         if (!rootDir.toFile().isDirectory()) {

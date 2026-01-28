@@ -13,7 +13,6 @@
     "config.scribble.option.edit_history_size": "Edit history limit",
     "config.scribble.category.miscellaneous": "Miscellaneous",
     "config.scribble.option.open_vanilla_book_screen_on_shift": "Open vanilla GUIs when holding SHIFT",
-    "text.tapestry.config.reset": "Reset to default value",
     "text.scribble.action.delete_page": "Delete this page",
     "text.scribble.action.insert_new_page": "Insert new page\nbefore this one",
     "text.scribble.action.insert_new_page_here": "Insert new page here",
