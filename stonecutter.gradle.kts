@@ -1,12 +1,9 @@
 plugins {
     id("dev.kikugie.stonecutter")
-    id("dev.architectury.loom") version "1.13-SNAPSHOT" apply false
-    id("architectury-plugin") version "3.4-SNAPSHOT" apply false
-    id("com.gradleup.shadow") version "9.3.0" apply false
-    id("me.modmuss50.mod-publish-plugin") version "1.1.0" apply false
+    id("me.chrr.tapestry.gradle") version "0.0.0" apply false
 }
 
-stonecutter active "1.21.11" /* [SC] DO NOT EDIT */
+stonecutter active "26.1" /* [SC] DO NOT EDIT */
 
 for (node in stonecutter.tree.nodes) {
     if (node.metadata != stonecutter.current || node.branch.id.isEmpty()) continue

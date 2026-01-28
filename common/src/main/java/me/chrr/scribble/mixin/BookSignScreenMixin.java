@@ -39,7 +39,7 @@ public abstract class BookSignScreenMixin extends Screen implements SetReturnScr
         this.scribble$returnScreen = screen;
     }
 
-    @WrapOperation(method = "method_71541", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"))
+    @WrapOperation(method = "lambda$init$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"))
     public void redirectReturnScreen(Minecraft instance, Screen screen, Operation<Void> original) {
         original.call(instance, this.scribble$returnScreen != null ? this.scribble$returnScreen : screen);
     }
