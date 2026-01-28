@@ -26,7 +26,7 @@ public class CommandManager {
         this.commands.add(command);
         this.index += 1;
 
-        if (this.commands.size() > Scribble.config().editHistorySize.get()) {
+        if (this.commands.size() > Scribble.CONFIG.editHistorySize.get()) {
             this.commands.removeFirst();
             this.index -= 1;
         }

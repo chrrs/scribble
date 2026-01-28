@@ -43,7 +43,7 @@ public abstract class ScribbleBookScreen<T> extends Screen {
     //region Widgets
     @Override
     protected void init() {
-        this.pagesToShow = Scribble.config().pagesToShow.get();
+        this.pagesToShow = Scribble.CONFIG.pagesToShow.get();
         if (this.pagesToShow == 1) {
             this.backgroundTexture = BookViewScreen.BOOK_LOCATION;
         } else {
@@ -82,7 +82,7 @@ public abstract class ScribbleBookScreen<T> extends Screen {
     }
 
     private void initSettingsButton(int x, int y) {
-        MutableComponent settingsText = Component.literal("Scribble " + Scribble.platform().VERSION + "\n")
+        MutableComponent settingsText = Component.literal("Scribble " + Scribble.VERSION + "\n")
                 .setStyle(Style.EMPTY.withBold(true))
                 .append(Component.translatable("text.scribble.action.settings")
                         .setStyle(Style.EMPTY.withBold(false)));
@@ -203,7 +203,7 @@ public abstract class ScribbleBookScreen<T> extends Screen {
     }
 
     public int getBackgroundY() {
-        if (Scribble.config().centerBookGui.get()) {
+        if (Scribble.CONFIG.centerBookGui.get()) {
             // Perfect centering actually doesn't look great, so we put it on a third.
             return 2 + this.height / 3 - getMenuHeight() / 3;
         } else {

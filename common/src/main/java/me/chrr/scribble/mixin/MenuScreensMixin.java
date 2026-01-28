@@ -22,7 +22,7 @@ public abstract class MenuScreensMixin {
         if (type == MenuType.LECTERN) {
             original.call(type, (MenuScreens.ScreenConstructor<LecternMenu, S>) (menu, inventory, title) -> {
                 Minecraft minecraft = Minecraft.getInstance();
-                if (!minecraft.hasShiftDown() || !Scribble.config().openVanillaBookScreenOnShift.get()) {
+                if (!minecraft.hasShiftDown() || !Scribble.CONFIG.openVanillaBookScreenOnShift.get()) {
                     return (S) new ScribbleLecternScreen(menu);
                 } else {
                     return factory.create(menu, inventory, title);

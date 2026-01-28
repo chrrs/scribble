@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.At;
 public abstract class LocalPlayerMixin {
     @WrapOperation(method = "openItemGui", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"))
     public void overrideBookViewScreen(Minecraft instance, Screen screen, Operation<Void> original, @Local(argsOnly = true) ItemStack itemStack, @Local(argsOnly = true) InteractionHand hand, @Local WritableBookContent book) {
-        if (instance.hasShiftDown() && Scribble.config().openVanillaBookScreenOnShift.get()) {
+        if (instance.hasShiftDown() && Scribble.CONFIG.openVanillaBookScreenOnShift.get()) {
             original.call(instance, screen);
         } else {
             // FIXME: ideally, I'd like to avoid even constructing the original BookEditScreen.

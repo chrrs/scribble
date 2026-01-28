@@ -3,7 +3,7 @@ repositories {
 }
 
 dependencies {
-    val root = requireNotNull(stonecutter.node.sibling("")).project
+    val root = stonecutter.node.sibling("")!!.project
     fun fabricApiModule(name: String) =
         implementation(fabricApi.module(name, root.property("fabric.api.version") as String))
 
