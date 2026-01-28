@@ -78,7 +78,7 @@ public class TapestryConfigScreen extends Screen {
             this.layout.arrangeElements();
             this.optionList.updateSize(this.width, this.layout);
         } else if (this.tabNavigationBar != null) {
-            this.tabNavigationBar.setWidth(this.width);
+            this.tabNavigationBar.updateWidth(this.width);
             this.tabNavigationBar.arrangeElements();
 
             int headerHeight = this.tabNavigationBar.getRectangle().bottom();

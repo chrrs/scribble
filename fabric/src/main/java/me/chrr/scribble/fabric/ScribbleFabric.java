@@ -1,6 +1,7 @@
 package me.chrr.scribble.fabric;
 
 import me.chrr.scribble.Scribble;
+import me.chrr.tapestry.gradle.annotation.FabricEntrypoint;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import org.jspecify.annotations.NullMarked;
@@ -8,6 +9,7 @@ import org.jspecify.annotations.NullMarked;
 import java.nio.file.Path;
 
 @NullMarked
+@FabricEntrypoint("client")
 public class ScribbleFabric extends Scribble.Platform implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
