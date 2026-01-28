@@ -23,7 +23,7 @@ tapestry {
 
     info {
         id = "scribble"
-        version = "2.0.0-beta2"
+        version = prop("mod.version")
 
         name = "Scribble"
         description = "Expertly edit your books with rich formatting options, page utilities and more!"
