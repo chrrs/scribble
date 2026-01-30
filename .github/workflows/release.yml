@@ -15,9 +15,6 @@ jobs:
     permissions:
       contents: write
 
-    env:
-      RELEASE: 'true'
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,28 +33,20 @@ jobs:
         run: |
           sed -i "s/^mod\.version=.*/mod\.version=${{ github.event.inputs.version }}/" gradle.properties
 
-      - name: Build JARs
-        run: ./gradlew build
-
-      - name: Publish
+      - name: Publish to Modrinth and CurseForge
         run: ./gradlew publishMods
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          RELEASE: 'true'
 
-      - name: Commit version change
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add gradle.properties
-          git commit -m "chore: release plugin ${{ github.event.inputs.version }}" || echo "no changes to commit"
-
-      - name: Push changes
-        uses: ad-m/github-push-action@v1
+      - name: Commit and push version change
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          commit_message: 'chore: release ${{ github.event.inputs.version }}'
+          tag_name: v${{ github.event.inputs.version }}
 
-      - name: Create release
+      - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.event.inputs.version }}
