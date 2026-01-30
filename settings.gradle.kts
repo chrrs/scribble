@@ -2,7 +2,7 @@ pluginManagement {
     repositories {
         maven("https://maven.fabricmc.net/")
         maven("https://maven.kikugie.dev/snapshots")
-        mavenLocal()
+        maven("https://maven.chrr.me/releases")
         gradlePluginPortal()
     }
 }

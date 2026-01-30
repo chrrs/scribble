@@ -1,5 +1,5 @@
 repositories {
-    mavenLocal()
+    maven("https://maven.chrr.me/releases")
 }
 
 dependencies {
