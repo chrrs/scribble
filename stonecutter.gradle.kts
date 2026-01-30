@@ -1,6 +1,6 @@
 plugins {
     id("dev.kikugie.stonecutter")
-    id("me.chrr.tapestry.gradle") version "0.0.0" apply false
+    id("me.chrr.tapestry.gradle") version "1.0.0-beta1" apply false
 }
 
 stonecutter active "26.1" /* [SC] DO NOT EDIT */
