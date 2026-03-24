@@ -4,7 +4,7 @@ import me.chrr.scribble.Scribble;
 import me.chrr.scribble.gui.PageNumberWidget;
 import me.chrr.scribble.gui.TextArea;
 import me.chrr.scribble.gui.button.IconButtonWidget;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.BookViewScreen;
@@ -68,10 +68,10 @@ public abstract class ScribbleBookScreen<T> extends Screen {
         initMenuControls(getMenuControlsY());
 
         this.backButton = addRenderableWidget(new PageButton(x + 43, y + 157, false,
-                (button) -> this.goPageBackward(this.minecraft.hasShiftDown()), this.shouldPlayTurnSound()));
+                (_) -> this.goPageBackward(this.minecraft.hasShiftDown()), this.shouldPlayTurnSound()));
         initPageButtons(y + 157);
         this.forwardButton = addRenderableWidget(new PageButton(x + 126 * this.pagesToShow - 10, y + 157, true,
-                (button) -> this.goPageForward(this.minecraft.hasShiftDown()), this.shouldPlayTurnSound()));
+                (_) -> this.goPageForward(this.minecraft.hasShiftDown()), this.shouldPlayTurnSound()));
 
         if (shouldShowActionButtons()) {
             initActionButtons(x, this.getBackgroundY() + 12 + 4);
@@ -179,11 +179,11 @@ public abstract class ScribbleBookScreen<T> extends Screen {
 
     //region Rendering and dimensions
     @Override
-    public void renderBackground(GuiGraphics guiGraphics, int i, int j, float f) {
-        super.renderBackground(guiGraphics, i, j, f);
+    public void extractBackground(GuiGraphicsExtractor GuiGraphicsExtractor, int mouseX, int mouseY, float a) {
+        super.extractBackground(GuiGraphicsExtractor, mouseX, mouseY, a);
 
         int textureSize = this.pagesToShow == 1 ? 256 : 512;
-        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, backgroundTexture, this.getBackgroundX(), this.getBackgroundY(),
+        GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, backgroundTexture, this.getBackgroundX(), this.getBackgroundY(),
                 0.0F, 0.0F, 122 * this.pagesToShow + 70, 192, textureSize, textureSize);
     }
 

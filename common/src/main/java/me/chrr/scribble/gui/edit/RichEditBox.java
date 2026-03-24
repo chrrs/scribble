@@ -8,7 +8,7 @@ import me.chrr.scribble.history.command.Command;
 import me.chrr.scribble.history.command.EditCommand;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.MultilineTextField;
 import net.minecraft.client.gui.narration.NarratedElementType;
@@ -103,12 +103,12 @@ public class RichEditBox extends MultiLineEditBox implements TextArea<RichText> 
     }
 
     @Override
-    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
+    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float deltaTicks) {
         RichText text = getRichTextField().getRichText();
 
         // Draw the placeholder text if there's no content.
         if (text.isEmpty() && !this.isFocused()) {
-            graphics.drawWordWrap(this.font, this.placeholder, this.getInnerLeft(), this.getInnerTop(), this.width - this.totalInnerPadding(), 0xcce0e0e0);
+            graphics.textWithWordWrap(this.font, this.placeholder, this.getInnerLeft(), this.getInnerTop(), this.width - this.totalInnerPadding(), 0xcce0e0e0);
             return;
         }
 
@@ -129,7 +129,7 @@ public class RichEditBox extends MultiLineEditBox implements TextArea<RichText> 
                 if (visible) {
                     // AD-HOC: Draw the entire line in one call. Vanilla does this differently, I don't know why
                     RichText lineText = text.subText(line.beginIndex(), line.endIndex());
-                    graphics.drawString(this.font, lineText.getAsMutableComponent(), x, y, this.textColor, this.textShadow);
+                    graphics.text(this.font, lineText.getAsMutableComponent(), x, y, this.textColor, this.textShadow);
 
                     RichText beforeCursor = text.subText(line.beginIndex(), cursor);
                     lastX = x + this.font.width(beforeCursor);
@@ -143,7 +143,7 @@ public class RichEditBox extends MultiLineEditBox implements TextArea<RichText> 
                 // Otherwise, just draw the line normally.
                 if (visible) {
                     RichText lineText = text.subText(line.beginIndex(), line.endIndex());
-                    graphics.drawString(this.font, lineText.getAsMutableComponent(), x, y, this.textColor, this.textShadow);
+                    graphics.text(this.font, lineText.getAsMutableComponent(), x, y, this.textColor, this.textShadow);
                     lastX = x + this.font.width(lineText) - 1;
                 }
 
@@ -156,7 +156,7 @@ public class RichEditBox extends MultiLineEditBox implements TextArea<RichText> 
         // If we haven't drawn the cursor yet, it should be a '_' at the last draw position.
         if (blink && !cursorInText) {
             if (this.withinContentAreaTopBottom(lastY, lastY + this.font.lineHeight)) {
-                graphics.drawString(this.font, "_", lastX + 1, lastY, this.getCursorColor(), this.textShadow);
+                graphics.text(this.font, "_", lastX + 1, lastY, this.getCursorColor(), this.textShadow);
             }
         }
 

@@ -6,7 +6,7 @@ import me.chrr.scribble.Scribble;
 import me.chrr.scribble.SetReturnScreen;
 import me.chrr.scribble.screen.ScribbleBookScreen;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -39,7 +39,7 @@ public abstract class BookSignScreenMixin extends Screen implements SetReturnScr
         this.scribble$returnScreen = screen;
     }
 
-    @WrapOperation(method = "lambda$init$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"))
+    @WrapOperation(method = "lambda$init$2", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"))
     public void redirectReturnScreen(Minecraft instance, Screen screen, Operation<Void> original) {
         original.call(instance, this.scribble$returnScreen != null ? this.scribble$returnScreen : screen);
     }
@@ -47,7 +47,7 @@ public abstract class BookSignScreenMixin extends Screen implements SetReturnScr
 
     //region Centering
     // If we need to center the GUI, we shift the Y of the texture draw call down.
-    @ModifyArg(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"), index = 3)
+    @ModifyArg(method = "extractBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"), index = 3)
     public int shiftBackgroundY(int y) {
         return scribble$getYOffset() + y;
     }
@@ -64,15 +64,15 @@ public abstract class BookSignScreenMixin extends Screen implements SetReturnScr
 
     // When rendering, we translate the matrices of the draw context to draw the text further down if needed.
     // Note that this happens after the parent screen render, so only the text in the book is shifted.
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", shift = At.Shift.AFTER))
-    public void translateRender(GuiGraphics graphics, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    @Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V", shift = At.Shift.AFTER))
+    public void translateRender(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         graphics.pose().pushMatrix();
         graphics.pose().translate(0f, scribble$getYOffset());
     }
 
     // At the end of rendering, we need to pop those matrices we pushed.
-    @Inject(method = "render", at = @At(value = "RETURN"))
-    public void popRender(GuiGraphics graphics, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    @Inject(method = "extractRenderState", at = @At(value = "RETURN"))
+    public void popRender(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         graphics.pose().popMatrix();
     }
 

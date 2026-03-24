@@ -1,7 +1,7 @@
 package me.chrr.scribble.gui.button;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -24,7 +24,7 @@ public class ColorSwatchWidget extends AbstractButton {
     }
 
     @Override
-    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         if (isHoveredOrFocused() || toggled) {
             graphics.fill(getX(), getY(), getX() + width, getY() + height, isHoveredOrFocused() ? 0xffffffff : 0xffa0a0a0);
         }
