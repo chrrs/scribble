@@ -1,7 +1,7 @@
 package me.chrr.scribble.gui.button;
 
 import me.chrr.scribble.Scribble;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -37,7 +37,7 @@ public class ModifierButtonWidget extends AbstractButton {
     }
 
     @Override
-    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         // If the button is hovered or focused, we want it to be in front, so we slightly increase the height.
         int offset = this.isHoveredOrFocused() ? 1 : 0;
 

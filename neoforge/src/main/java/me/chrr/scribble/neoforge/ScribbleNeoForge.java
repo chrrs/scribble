@@ -14,6 +14,6 @@ public class ScribbleNeoForge {
         Scribble.init();
 
         mod.registerExtensionPoint(IConfigScreenFactory.class,
-                (container, parent) -> Scribble.buildConfigScreen(parent));
+                (_, parent) -> Scribble.buildConfigScreen(parent));
     }
 }

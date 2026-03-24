@@ -1,7 +1,7 @@
 package me.chrr.scribble.gui.button;
 
 import me.chrr.scribble.Scribble;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -30,7 +30,7 @@ public class IconButtonWidget extends AbstractButton {
     }
 
     @Override
-    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         int v = this.v + (!this.active ? 2 : (this.isHoveredOrFocused() ? 1 : 0)) * this.height;
         graphics.blit(RenderPipelines.GUI_TEXTURED, WIDGETS_TEXTURE, getX(), getY(), this.u, v, this.width, this.height, 128, 128);
     }

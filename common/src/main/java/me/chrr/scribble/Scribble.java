@@ -18,11 +18,11 @@ import java.util.Objects;
 public class Scribble {
     public static final String MOD_ID = "scribble";
     public static final String VERSION = Objects.requireNonNull(Tapestry.PLATFORM_METHODS.getModVersion(MOD_ID));
-    
+
     public static final Logger LOGGER = LogManager.getLogger();
 
     public static final Path BOOK_DIR = Tapestry.PLATFORM_METHODS.getGameDirectory().resolve("books");
-    public static ScribbleConfig CONFIG = ReflectedConfig.load(ScribbleConfig.class, "scribble.client.json", List.of("scribble.json"));
+    public static final ScribbleConfig CONFIG = ReflectedConfig.load(ScribbleConfig.class, "scribble.client.json", List.of("scribble.json"));
 
     public static void init() {
         FileChooser.convertLegacyBooks();

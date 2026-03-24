@@ -1,3 +1,5 @@
+import me.chrr.tapestry.gradle.Environment
+
 plugins {
     id("me.chrr.tapestry.gradle")
 }
@@ -29,6 +31,7 @@ tapestry {
         description = "Expertly edit your books with rich formatting options, page utilities and more!"
         authors = listOf("chrrrs")
         license = "MIT"
+        environment = Environment.Client
 
         url = "https://github.com/chrrs/scribble"
         sources = "https://github.com/chrrs/scribble"

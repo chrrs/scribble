@@ -2,7 +2,7 @@ package me.chrr.scribble.gui;
 
 import net.minecraft.client.gui.ActiveTextCollector;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -46,14 +46,14 @@ public class BookTextWidget implements TextArea<Component> {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         if (!visible)
             return;
 
-        this.hovered = guiGraphics.containsPointInScissor(mouseX, mouseY)
+        this.hovered = graphics.containsPointInScissor(mouseX, mouseY)
                 && this.areCoordinatesInRectangle(mouseX, mouseY);
 
-        ActiveTextCollector textCollector = guiGraphics.textRenderer(GuiGraphics.HoveredTextEffects.TOOLTIP_AND_CURSOR);
+        ActiveTextCollector textCollector = graphics.textRenderer(GuiGraphicsExtractor.HoveredTextEffects.TOOLTIP_AND_CURSOR);
         textCollector.defaultParameters(textCollector.defaultParameters().withOpacity(this.dimmed ? 0.3f : 1f));
         this.visitText(textCollector);
     }

@@ -5,7 +5,7 @@ repositories {
 dependencies {
     val root = stonecutter.node.sibling("")!!.project
     fun tapestryModule(name: String) =
-        implementation("me.chrr.tapestry:$name:${root.property("tapestry.version")}+mc${root.property("minecraft.version")}")
+        implementation("me.chrr.tapestry:$name:${root.property("tapestry.version")}")
 
     jij(tapestryModule("tapestry-base")!!)
     jij(tapestryModule("tapestry-config")!!)
