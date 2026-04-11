@@ -1,3 +1,7 @@
+## 2.0.1
+
+- Update Tapestry, which fixes some config things.
+
 ## 2.0.0
 
 Scribble's been upgraded and is out of beta! Thanks to Mojang deobfuscating the game, you can now use the same JAR file

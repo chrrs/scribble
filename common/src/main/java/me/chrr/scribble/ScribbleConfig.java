@@ -15,18 +15,18 @@ public class ScribbleConfig extends ReflectedConfig {
     @Hidden
     public Value<Integer> pagesToShow = value(1);
 
-    @Header("appearance")
+    @Category("appearance")
     public Value<Boolean> doublePageViewing = map(pagesToShow, (n) -> n > 1, (b) -> b ? 2 : 1);
     public Value<Boolean> centerBookGui = value(true);
     public Value<Boolean> showFormattingButtons = value(true);
     public Value<ShowActionButtons> showActionButtons = value(ShowActionButtons.WHEN_EDITING);
 
-    @Header("behaviour")
+    @Category("behaviour")
     public Value<Boolean> copyFormattingCodes = value(true);
     public Value<Integer> editHistorySize = value(32)
             .range(8, 128, 1);
 
-    @Header("miscellaneous")
+    @Category("miscellaneous")
     public Value<Boolean> openVanillaBookScreenOnShift = value(false);
 
     @UpgradeRewriter(currentVersion = 3)
