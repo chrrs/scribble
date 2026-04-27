@@ -108,6 +108,9 @@ public class RichMultiLineTextField extends MultilineTextField {
     }
 
     public void resetCursor(boolean update) {
+        if (this.cursor == this.value.length() && this.selectCursor == this.cursor)
+            return;
+
         this.cursor = this.value.length();
         this.selectCursor = this.cursor;
 
@@ -187,8 +190,13 @@ public class RichMultiLineTextField extends MultilineTextField {
 
     @Override
     public void seekCursor(Whence whence, int amount) {
+        int cursorBefore = this.cursor;
+        int selectBefore = this.selectCursor;
+
         super.seekCursor(whence, amount);
-        this.sendUpdateFormat();
+
+        if (cursorBefore != this.cursor || selectBefore != this.selectCursor)
+            this.sendUpdateFormat();
     }
 
     @Override
