@@ -47,7 +47,10 @@ tapestry {
     }
 
     depends {
-        minecraft = prop("minecraft.compatible").map { it.split(",") }
+        minecraft.version(prop("minecraft.dependency").get())
+        mod(fabric = "fabric-resource-loader-v1")
+        mod("tapestry_config")
+        mod("tapestry")
     }
 
     game {
