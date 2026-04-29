@@ -34,7 +34,7 @@ public record BookFile(String author, Collection<String> pages) {
         } else if (path.toString().endsWith(".json")) {
             return readJson(path);
         } else {
-            throw new IOException("unrecognized file format");
+            throw new IOException("Unrecognized file format.");
         }
     }
 
@@ -51,7 +51,7 @@ public record BookFile(String author, Collection<String> pages) {
         CompoundTag root = NbtIo.read(path);
 
         if (root == null) {
-            throw new IOException("could not read book nbt file");
+            throw new IOException("Could not read book NBT file.");
         }
 
         String author = root.getString("author").orElse("<unknown>");

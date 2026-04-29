@@ -126,7 +126,7 @@ public abstract class ScribbleBookScreen<T> extends Screen {
 
     public void showPage(int page, boolean insertIfMissing) {
         // Insert pages so the requested page exists if needed.
-        // (note that min+max instead of clamp here is deliberate)
+        // noinspection MathClampMigration: Math.clamp checks for min>max, which isn't necessarily true here.
         int newPage = Math.max(Math.min(page, this.getTotalPages() - 1), 0);
         if (insertIfMissing) {
             while (newPage < page && this.canInsertPages()) {

@@ -1,10 +1,7 @@
 package me.chrr.scribble.screen;
 
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
-import me.chrr.scribble.KeyboardUtil;
-import me.chrr.scribble.Scribble;
-import me.chrr.scribble.ScribbleConfig;
-import me.chrr.scribble.SetReturnScreen;
+import me.chrr.scribble.*;
 import me.chrr.scribble.book.BookFile;
 import me.chrr.scribble.book.FileChooser;
 import me.chrr.scribble.book.RichText;
@@ -25,6 +22,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.AlertScreen;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.inventory.BookSignScreen;
 import net.minecraft.client.input.KeyEvent;
@@ -149,8 +147,8 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
         for (int i = 0; i < this.pagesToShow; i++) {
             int xOffset = this.pagesToShow == 1
                     ? 0 : i == 0
-                    ? 32 : i == this.pagesToShow - 1
-                    ? -32 : 0;
+                          ? 32 : i == this.pagesToShow - 1
+                                 ? -32 : 0;
 
             // When we only show a single page, it's clearer to show something like
             // 'insert new page _before_ current' instead of just 'here'.
@@ -277,6 +275,12 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
             bookFile.writeJson(path);
         } catch (Exception e) {
             Scribble.LOGGER.error("could not save book to file", e);
+            this.minecraft.setScreen(new AlertScreen(
+                    () -> this.minecraft.setScreen(this),
+                    Component.translatable("text.scribble.error.save_book.title"),
+                    Component.translatable("text.scribble.error.summary_below")
+                            .append("\n\n\n").append(ExceptionUtil.getExceptionSummary(e))
+            ));
         }
     }
 
@@ -285,7 +289,11 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
             BookFile bookFile = BookFile.readFile(path);
 
             this.pages.clear();
-            this.pages.addAll(bookFile.pages().stream().map(RichText::fromFormattedString).toList());
+
+            //noinspection ConstantValue: this isn
+            if (bookFile.pages() != null)
+                this.pages.addAll(bookFile.pages().stream().map(RichText::fromFormattedString).toList());
+
             this.commandManager.clear();
             this.dirty = true;
 
@@ -293,6 +301,13 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
             this.updateCurrentPages();
         } catch (Exception e) {
             Scribble.LOGGER.error("could not load book from file", e);
+            this.minecraft.setScreen(new AlertScreen(
+                    () -> this.minecraft.setScreen(this),
+                    Component.translatable("text.scribble.error.load_book.title"),
+                    Component.translatable("text.scribble.error.load_book.subtitle")
+                            .append("\n").append(Component.translatable("text.scribble.error.summary_below"))
+                            .append("\n\n\n").append(ExceptionUtil.getExceptionSummary(e))
+            ));
         }
     }
 

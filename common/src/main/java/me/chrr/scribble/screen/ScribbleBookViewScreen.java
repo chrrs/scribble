@@ -1,5 +1,6 @@
 package me.chrr.scribble.screen;
 
+import me.chrr.scribble.ExceptionUtil;
 import me.chrr.scribble.Scribble;
 import me.chrr.scribble.ScribbleConfig;
 import me.chrr.scribble.book.BookFile;
@@ -9,6 +10,7 @@ import me.chrr.scribble.gui.BookTextWidget;
 import me.chrr.scribble.gui.TextArea;
 import me.chrr.scribble.gui.button.IconButtonWidget;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.AlertScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.BookViewScreen;
 import net.minecraft.network.chat.ClickEvent;
@@ -75,6 +77,12 @@ public class ScribbleBookViewScreen extends ScribbleBookScreen<Component> {
                 bookFile.writeJson(path);
             } catch (Exception e) {
                 Scribble.LOGGER.error("could not save book to file", e);
+                this.minecraft.setScreen(new AlertScreen(
+                        () -> this.minecraft.setScreen(this),
+                        Component.translatable("text.scribble.error.save_book.title"),
+                        Component.translatable("text.scribble.error.summary_below")
+                                .append("\n\n\n").append(ExceptionUtil.getExceptionSummary(e))
+                ));
             }
         });
     }
