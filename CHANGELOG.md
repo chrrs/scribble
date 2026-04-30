@@ -1,3 +1,9 @@
+## 2.0.2
+
+- Show error dialogs when saving and loading books fails.
+- Don't reset current formatting when cursor updates, but doesn't move.
+- Mark versions compatible with all past and future drop versions (e.g. `~26.1` becomes `>=26.1 <26.2`).
+
 ## 2.0.1
 
 - Update Tapestry, which fixes some config things.
