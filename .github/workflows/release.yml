@@ -7,6 +7,10 @@ on:
         description: 'Version number'
         required: true
         type: string
+      minecraftVersions:
+        description: 'Minecraft versions (optional, comma-separated)'
+        required: false
+        type: string
 
 jobs:
   release:
@@ -34,8 +38,18 @@ jobs:
           sed -i "s/^mod\.version=.*/mod\.version=${{ github.event.inputs.version }}/" gradle.properties
 
       - name: Publish to Modrinth and CurseForge
+        if: ${{ !github.event.inputs.versions }}
         run: ./gradlew publishMods
         env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          RELEASE: 'true'
+
+      - name: Publish specified versions to Modrinth and CurseForge
+        if: ${{ github.event.inputs.versions }}
+        run: ./gradlew publishModsSpecificVersions
+        env:
+          PUBLISH_VERSIONS: ${{ github.event.inputs.versions }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
           RELEASE: 'true'

@@ -10,7 +10,17 @@ for (node in stonecutter.tree.nodes) {
 
     val loader = node.branch.id.replaceFirstChar { it.uppercase() }
     node.project.tasks.register("runActive$loader") {
-        dependsOn("runClient")
+        description = "Run the client for the active version using $loader."
         group = "project"
+
+        dependsOn("runClient")
     }
+}
+
+tasks.register("publishModsSpecificVersions") {
+    description = "Publish specific versions only, as specified by the PUBLISH_VERSIONS environment variable."
+    group = "project"
+
+    var versions = providers.environmentVariable("PUBLISH_VERSIONS").map { it.split(",") }
+    dependsOn(stonecutter.tasks.named("publishMods") { versions.get().contains(metadata.project) })
 }
