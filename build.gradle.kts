@@ -1,66 +1,52 @@
-import me.chrr.tapestry.gradle.Environment
-
 plugins {
-    id("me.chrr.tapestry.gradle")
+    id("dev.architectury.loom")
+    id("architectury-plugin")
 }
 
-val root = stonecutter.current.project
+fun Project.hasProp(namespace: String, key: String) = hasProperty("$namespace.$key")
+fun Project.prop(namespace: String, key: String) = property("$namespace.$key") as String
+
 val current = stonecutter.current.version
+val minecraft = prop("minecraft", "version")
 
-fun sibling(name: String) =
-    stonecutter.node.sibling(name)!!.project
+group = prop("mod", "group")
+version = "${prop("mod", "version")}+mc$current-common"
+base.archivesName.set(prop("mod", "name"))
 
-tapestry {
-    projects {
-        common = listOf(sibling("common"))
-        fabric = listOf(sibling("fabric"))
-        neoforge = listOf(sibling("neoforge"))
-    }
+architectury.injectInjectables = false
+architectury.common(stonecutter.tree.branches.mapNotNull {
+    if (stonecutter.current.project !in it) null
+    else if (!it.project.hasProp("loom", "platform")) null
+    else it.project.prop("loom", "platform")
+})
 
-    versions {
-        minecraft = prop("minecraft.version")
-        fabricLoader = prop("fabric.loader.version")
-        neoforge = prop("neoforge.version")
-    }
+repositories {
+    maven("https://maven.parchmentmc.org")
+}
 
-    info {
-        id = "scribble"
-        version = prop("mod.version")
+dependencies {
+    minecraft("com.mojang:minecraft:$minecraft")
 
-        name = "Scribble"
-        description = "Expertly edit your books with rich formatting options, page utilities and more!"
-        authors = listOf("chrrrs")
-        license = "MIT"
-        environment = Environment.Client
+    @Suppress("UnstableApiUsage")
+    mappings(loom.layered {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${prop("parchment", "version")}@zip")
+    })
 
-        url = "https://github.com/chrrs/scribble"
-        sources = "https://github.com/chrrs/scribble"
-        issues = "https://github.com/chrrs/scribble/issues"
+    modImplementation("net.fabricmc:fabric-loader:${prop("fabric", "loaderVersion")}")
+}
 
-        icon = "assets/scribble/icon.png"
-        banner = "assets/scribble/banner.png"
-    }
+loom {
+    accessWidenerPath = rootProject.file("src/main/resources/scribble.accesswidener")
+}
 
-    transform {
-        classTweaker = "scribble.accesswidener"
-        mixinConfigs.add("scribble.mixins.json")
-    }
+java {
+    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_21
+}
 
-    depends {
-        minecraft.version(prop("minecraft.dependency").get())
-        mod(fabric = "fabric-resource-loader-v1")
-        mod("tapestry_config")
-        mod("tapestry")
-    }
-
-    game {
-        runDir = rootProject.file("run")
-        username = "chrrz"
-    }
-
-    publish {
-        readChangelogFrom(rootProject.file("CHANGELOG.md"))
-        modrinth = "yXAvIk0x"
-        curseforge = "1051344"
+tasks {
+    jar {
+        from("LICENSE")
     }
 }

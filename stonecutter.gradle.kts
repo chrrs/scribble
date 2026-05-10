@@ -1,26 +1,19 @@
 plugins {
     id("dev.kikugie.stonecutter")
-    id("me.chrr.tapestry.gradle") version "1.1.0" apply false
+    id("dev.architectury.loom") version "1.13-SNAPSHOT" apply false
+    id("architectury-plugin") version "3.4-SNAPSHOT" apply false
+    id("com.gradleup.shadow") version "9.3.0" apply false
+    id("me.modmuss50.mod-publish-plugin") version "1.1.0" apply false
 }
 
-stonecutter active "26.1" /* [SC] DO NOT EDIT */
+stonecutter active "1.21.11" /* [SC] DO NOT EDIT */
 
 for (node in stonecutter.tree.nodes) {
     if (node.metadata != stonecutter.current || node.branch.id.isEmpty()) continue
 
     val loader = node.branch.id.replaceFirstChar { it.uppercase() }
     node.project.tasks.register("runActive$loader") {
-        description = "Run the client for the active version using $loader."
-        group = "project"
-
         dependsOn("runClient")
+        group = "project"
     }
-}
-
-tasks.register("publishModsSpecificVersions") {
-    description = "Publish specific versions only, as specified by the PUBLISH_VERSIONS environment variable."
-    group = "project"
-
-    var versions = providers.environmentVariable("PUBLISH_VERSIONS").map { it.split(",") }
-    dependsOn(stonecutter.tasks.named("publishMods") { versions.get().contains(metadata.project) })
 }

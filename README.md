@@ -14,12 +14,16 @@ or [CurseForge](https://curseforge.com/minecraft/mc-mods/scribble).
 
 Scribble supports multiple Minecraft versions using [Stonecutter](https://stonecutter.kikugie.dev/).
 The easiest way to interact with this is by using an IDE such as IntelliJ. To switch between versions,
-use the Gradle tasks under the `stonecutter` category. To run the game, use the `runActive{Fabric,Neoforge}`
+use the Gradle tasks under the `stonecutter` category. To run the game, use the `runActive{Fabric,Forge,Neoforge}`
 tasks.
 
-Make sure to switch back to the latest version to commit changes.
+Make sure to switch back to `1.21.4` to commit changes.
 
 ### Release checklist
 
-- Add a changelog entry to `CHANGELOG.md`.
+- Update the version number.
+    - Change in `gradle.properties`.
+    - Add an entry in `CHANGELOG.md`.
+- Commit and push a new tag. (example: `v1.2.3`)
+    - Tag name is the version number prefixed by `v`.
 - Manually trigger the Publish workflow on GitHub.

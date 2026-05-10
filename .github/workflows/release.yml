@@ -1,16 +1,7 @@
-name: Release
+name: Publish
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version number'
-        required: true
-        type: string
-      minecraftVersions:
-        description: 'Minecraft versions (optional, comma-separated)'
-        required: false
-        type: string
 
 jobs:
   release:
@@ -20,49 +11,33 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup JDK 25
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '25'
+          java-version: '21'
           distribution: 'temurin'
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - name: Run Build
+        run: ./gradlew buildAndCollect
 
-      - name: Update version in gradle.properties
-        id: set-version
+      - name: Fetch changelog
         run: |
-          sed -i "s/^mod\.version=.*/mod\.version=${{ github.event.inputs.version }}/" gradle.properties
+          {
+            echo "CHANGELOG<<EOF"
+            tr -d '\r' < CHANGELOG.md | awk -vver="${GITHUB_REF_NAME#v}" '/^## / { if (p) { exit }; if ($2 == ver) { p=1; next } } p'
+            echo "EOF"
+          } >> $GITHUB_ENV
 
-      - name: Publish to Modrinth and CurseForge
-        if: ${{ !github.event.inputs.versions }}
-        run: ./gradlew publishMods
+      - run: ./gradlew publishMods
         env:
+          CHANGELOG: ${{ env.CHANGELOG }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
-          RELEASE: 'true'
 
-      - name: Publish specified versions to Modrinth and CurseForge
-        if: ${{ github.event.inputs.versions }}
-        run: ./gradlew publishModsSpecificVersions
-        env:
-          PUBLISH_VERSIONS: ${{ github.event.inputs.versions }}
-          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
-          RELEASE: 'true'
-
-      - name: Commit and push version change
-        uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          commit_message: 'chore: release ${{ github.event.inputs.version }}'
-          tag_name: v${{ github.event.inputs.version }}
-
-      - name: Create GitHub release
+      - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ github.event.inputs.version }}
-          body: 'Read more on [Modrinth](https://modrinth.com/mod/scribble).'
-          files: versions/*/build/libs/scribble-*.jar
+          body: ${{ env.CHANGELOG }}
+          files: build/libs/*.jar

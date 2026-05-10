@@ -3,8 +3,5 @@ build/
 run/
 logs/
 
-versions/
-!/versions
-
 .idea/
 .vscode/
