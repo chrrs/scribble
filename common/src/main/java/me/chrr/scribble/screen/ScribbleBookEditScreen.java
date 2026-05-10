@@ -250,14 +250,16 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
             @Override
             public boolean handleOverflow(RichText currentText, int cursor, RichText insert,
                                           @Nullable ChatFormatting color, Set<ChatFormatting> modifiers) {
-                if (overflowHandler == null || getTotalPages() >= 100) return false;
+                if (overflowHandler == null || getTotalPages() >= 100)
+                    return false;
                 int page = currentPage + pageOffset;
                 return overflowHandler.insertWithOverflow(page, currentText, cursor, insert, color, modifiers);
             }
 
             @Override
             public boolean handleEnterAtEnd() {
-                if (getTotalPages() >= 100) return false;
+                if (getTotalPages() >= 100)
+                    return false;
                 int page = currentPage + pageOffset;
                 PageInsertCommand command = new PageInsertCommand(page + 1);
                 command.execute(ScribbleBookEditScreen.this);
@@ -267,9 +269,11 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
 
             @Override
             public boolean handleBackspaceOnEmpty() {
-                if (getTotalPages() <= 1) return false;
+                if (getTotalPages() <= 1)
+                    return false;
                 int page = currentPage + pageOffset;
-                if (page <= 0) return false;
+                if (page <= 0)
+                    return false;
                 PageDeleteCommand command = new PageDeleteCommand(page, pages.get(page), -1); // Navigate left
                 command.execute(ScribbleBookEditScreen.this);
                 pushCommand(command);
