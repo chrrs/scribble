@@ -1,3 +1,23 @@
+## 2.0.2
+
+- Show error dialogs when saving and loading books fails.
+- Don't reset current formatting when cursor updates, but doesn't move.
+- Mark versions compatible with all past and future drop versions (e.g. `~26.1` becomes `>=26.1 <26.2`).
+
+## 2.0.1
+
+- Update Tapestry, which fixes some config things.
+
+## 2.0.0
+
+Scribble's been upgraded and is out of beta! Thanks to Mojang deobfuscating the game, you can now use the same JAR file
+for both Fabric and NeoForge! There's lots of other changes too if you're upgrading from a 1.x version, so see the
+previous changelog entries.
+
+- Update to 26.1, drop support for older versions.
+- Use Tapestry Gradle to build the mod (and a merged JAR!) instead of Architectury.
+- Always encode exported book files using UTF-8.
+
 ## 2.0.0-beta2
 
 - Move from YACL to a custom config system.
