@@ -170,7 +170,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
                     () -> {
                         PageInsertCommand command = new PageInsertCommand(this.currentPage + pageOffset);
                         command.execute(this);
-                        this.pushCommand(command);
+                        commandManager.push(command);
                     },
                     getBackgroundX() + 78 + xOffset + i * 126, y + 2, 12, 90, 12, 12)));
             this.deletePageButtons.add(addRenderableWidget(new IconButtonWidget(deleteText,
@@ -178,7 +178,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
                         PageDeleteCommand command = new PageDeleteCommand(this.currentPage + pageOffset,
                                 this.pages.get(this.currentPage + pageOffset), 1); // Navigate right
                         command.execute(this);
-                        this.pushCommand(command);
+                        commandManager.push(command);
                     },
                     getBackgroundX() + 94 + xOffset + i * 126, y + 2, 0, 90, 12, 12)));
         }
@@ -215,7 +215,11 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     protected TextArea<RichText> createTextArea(int x, int y, int width, int height, int pageOffset) {
         // Create the overflow handler lazily (needs font)
         if (this.overflowHandler == null) {
-            this.overflowHandler = new TextOverflowHandler(this, this.font, this::pushCommand);
+            this.overflowHandler = new TextOverflowHandler(this, this.font, (cmd) -> {
+                this.commandManager.push(cmd);
+                this.dirty = true;
+                this.invalidateActionButtons();
+            });
         }
 
         // Create an overflow handler for this specific edit box
@@ -263,7 +267,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
                 int page = currentPage + pageOffset;
                 PageInsertCommand command = new PageInsertCommand(page + 1);
                 command.execute(ScribbleBookEditScreen.this);
-                pushCommand(command);
+                commandManager.push(command);
                 return true;
             }
 
@@ -274,7 +278,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
                 if (page <= 0) return false;
                 PageDeleteCommand command = new PageDeleteCommand(page, pages.get(page), -1); // Navigate left
                 command.execute(ScribbleBookEditScreen.this);
-                pushCommand(command);
+                commandManager.push(command);
                 return true;
             }
         };
@@ -516,15 +520,10 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     //endregion
 
     //region History
-    public void pushCommand(Command command) {
-        this.pushCommand(0, command);
-    }
-
     public void pushCommand(int pageOffset, Command command) {
         if (command instanceof EditCommand editCommand) {
             editCommand.page = this.currentPage + pageOffset;
         }
-        // OverflowCommand, PageInsertCommand, PageDeleteCommand have their state set at construction time
 
         this.commandManager.push(command);
         this.dirty = true;
