@@ -175,8 +175,9 @@ public class RichMultiLineTextField extends MultilineTextField {
         RichText lineText = this.richText.subText(substring.beginIndex(), substring.endIndex());
         int col = this.font.substrByWidth(lineText, cursorX).getString().length();
 
-        if (col >= substring.endIndex() - 1) {
-            this.seekCursor(Whence.ABSOLUTE, substring.beginIndex() + col);
+        int lineLength = substring.endIndex() - substring.beginIndex();
+        if (col >= lineLength) {
+            this.seekCursor(Whence.ABSOLUTE, substring.endIndex());
         } else {
             int width = this.font.width(lineText.subText(0, col));
             int overshot = cursorX - width;
