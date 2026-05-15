@@ -5,10 +5,12 @@ import me.chrr.scribble.*;
 import me.chrr.scribble.book.BookFile;
 import me.chrr.scribble.book.FileChooser;
 import me.chrr.scribble.book.RichText;
+import me.chrr.scribble.book.TextOverflowHandler;
 import me.chrr.scribble.gui.TextArea;
 import me.chrr.scribble.gui.button.ColorSwatchWidget;
 import me.chrr.scribble.gui.button.IconButtonWidget;
 import me.chrr.scribble.gui.button.ModifierButtonWidget;
+import me.chrr.scribble.gui.edit.OverflowHandler;
 import me.chrr.scribble.gui.edit.RichEditBox;
 import me.chrr.scribble.gui.edit.RichMultiLineTextField;
 import me.chrr.scribble.history.CommandManager;
@@ -70,6 +72,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     private @Nullable IconButtonWidget redoButton;
 
     private final List<IconButtonWidget> insertPageButtons = new ArrayList<>();
+    private final List<IconButtonWidget> deletePageButtons = new ArrayList<>();
 
     private @Nullable ModifierButtonWidget boldButton;
     private @Nullable ModifierButtonWidget italicButton;
@@ -78,6 +81,8 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     private @Nullable ModifierButtonWidget obfuscatedButton;
 
     private List<ColorSwatchWidget> colorSwatches = List.of();
+
+    private @Nullable TextOverflowHandler overflowHandler;
 
     public ScribbleBookEditScreen(Player player, ItemStack itemStack, InteractionHand hand, WritableBookContent book) {
         super(Component.translatable("book.edit.title"));
@@ -143,6 +148,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     @Override
     protected void initPageButtons(int y) {
         this.insertPageButtons.clear();
+        this.deletePageButtons.clear();
 
         for (int i = 0; i < this.pagesToShow; i++) {
             int xOffset = this.pagesToShow == 1
@@ -162,17 +168,17 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
                     () -> {
                         PageInsertCommand command = new PageInsertCommand(this.currentPage + pageOffset);
                         command.execute(this);
-                        commandManager.push(command);
+                        this.pushCommand(command);
                     },
                     getBackgroundX() + 78 + xOffset + i * 126, y + 2, 12, 90, 12, 12)));
-            addRenderableWidget(new IconButtonWidget(deleteText,
+            this.deletePageButtons.add(addRenderableWidget(new IconButtonWidget(deleteText,
                     () -> {
                         PageDeleteCommand command = new PageDeleteCommand(this.currentPage + pageOffset,
-                                this.pages.get(this.currentPage + pageOffset));
+                                this.pages.get(this.currentPage + pageOffset), 1); // Navigate right
                         command.execute(this);
-                        commandManager.push(command);
+                        this.pushCommand(command);
                     },
-                    getBackgroundX() + 94 + xOffset + i * 126, y + 2, 0, 90, 12, 12));
+                    getBackgroundX() + 94 + xOffset + i * 126, y + 2, 0, 90, 12, 12)));
         }
     }
 
@@ -180,6 +186,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     public void updateCurrentPages() {
         super.updateCurrentPages();
         this.insertPageButtons.forEach((button) -> button.visible = this.getTotalPages() < 100);
+        this.deletePageButtons.forEach((button) -> button.visible = this.getTotalPages() > 1);
     }
 
     @Override
@@ -204,9 +211,20 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
 
     @Override
     protected TextArea<RichText> createTextArea(int x, int y, int width, int height, int pageOffset) {
+        // Create the overflow handler lazily (needs font)
+        if (this.overflowHandler == null) {
+            this.overflowHandler = new TextOverflowHandler(this, this.font, this::pushCommand);
+        }
+
+        // Create an overflow handler for this specific edit box
+        OverflowHandler editBoxOverflowHandler = Scribble.CONFIG.overflowWhenTyping.get()
+                ? createOverflowHandlerForPage(pageOffset)
+                : null;
+
         RichEditBox editBox = (RichEditBox) new RichEditBox.Builder()
                 .onHistoryPush((command) -> this.pushCommand(pageOffset, command))
                 .onInvalidateFormat(this::invalidateFormattingButtons)
+                .onOverflow(editBoxOverflowHandler)
                 .setShowDecorations(false)
                 .setTextColor(0xff000000).setCursorColor(0xff000000)
                 .setShowBackground(false).setTextShadow(false)
@@ -225,6 +243,43 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
         });
 
         return editBox;
+    }
+
+    private OverflowHandler createOverflowHandlerForPage(int pageOffset) {
+        return new OverflowHandler() {
+            @Override
+            public boolean handleOverflow(RichText currentText, int cursor, RichText insert,
+                                          @Nullable ChatFormatting color, Set<ChatFormatting> modifiers) {
+                if (overflowHandler == null || getTotalPages() >= 100)
+                    return false;
+                int page = currentPage + pageOffset;
+                return overflowHandler.insertWithOverflow(page, currentText, cursor, insert, color, modifiers);
+            }
+
+            @Override
+            public boolean handleEnterAtEnd() {
+                if (getTotalPages() >= 100)
+                    return false;
+                int page = currentPage + pageOffset;
+                PageInsertCommand command = new PageInsertCommand(page + 1);
+                command.execute(ScribbleBookEditScreen.this);
+                pushCommand(command);
+                return true;
+            }
+
+            @Override
+            public boolean handleBackspaceOnEmpty() {
+                if (getTotalPages() <= 1)
+                    return false;
+                int page = currentPage + pageOffset;
+                if (page <= 0)
+                    return false;
+                PageDeleteCommand command = new PageDeleteCommand(page, pages.get(page), -1); // Navigate left
+                command.execute(ScribbleBookEditScreen.this);
+                pushCommand(command);
+                return true;
+            }
+        };
     }
 
     private void updateFocusedEditBox() {
@@ -430,7 +485,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     }
 
     @Override
-    protected int getTotalPages() {
+    public int getTotalPages() {
         return this.pages.size();
     }
 
@@ -480,10 +535,15 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     //endregion
 
     //region History
+    public void pushCommand(Command command) {
+        this.pushCommand(0, command);
+    }
+
     public void pushCommand(int pageOffset, Command command) {
         if (command instanceof EditCommand editCommand) {
             editCommand.page = this.currentPage + pageOffset;
         }
+        // OverflowCommand, PageInsertCommand, PageDeleteCommand have their state set at construction time
 
         this.commandManager.push(command);
         this.dirty = true;
@@ -521,12 +581,27 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     }
 
     @Override
-    public void deletePage(int page) {
+    public void deletePage(int page, int navigateDirection) {
         this.pages.remove(page);
         this.dirty = true;
+        int target = navigateDirection < 0 ? page - 1 : Math.min(page, this.pages.size() - 1);
+        this.showPage(Math.max(0, target), false);
+        this.updateCurrentPages();
+    }
 
-        if (page >= this.pages.size() - 1)
-            this.showPage(page - 1, false);
+    @Override
+    public RichText getPageContent(int page) {
+        return this.pages.get(page);
+    }
+
+    @Override
+    public void setPageContent(int page, RichText content) {
+        this.pages.set(page, content);
+        this.dirty = true;
+    }
+
+    @Override
+    public void refreshPages() {
         this.updateCurrentPages();
     }
     //endregion

@@ -16,5 +16,14 @@ public interface HistoryListener {
 
     void insertPageAt(int page, @Nullable RichText content);
 
-    void deletePage(int page);
+    /** @param navigateDirection negative = go left, 0 or positive = stay/go right */
+    void deletePage(int page, int navigateDirection);
+
+    int getTotalPages();
+
+    RichText getPageContent(int page);
+
+    void setPageContent(int page, RichText content);
+
+    void refreshPages();
 }

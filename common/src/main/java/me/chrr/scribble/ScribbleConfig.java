@@ -25,6 +25,8 @@ public class ScribbleConfig extends ReflectedConfig {
     public Value<Boolean> copyFormattingCodes = value(true);
     public Value<Integer> editHistorySize = value(32)
             .range(8, 128, 1);
+    public Value<Boolean> overflowWhenTyping = value(false);
+    public Value<PasteBehavior> pasteBehavior = value(PasteBehavior.DENY);
 
     @Category("miscellaneous")
     public Value<Boolean> openVanillaBookScreenOnShift = value(false);
@@ -42,5 +44,11 @@ public class ScribbleConfig extends ReflectedConfig {
         ALWAYS,
         WHEN_EDITING,
         NEVER,
+    }
+
+    public enum PasteBehavior {
+        DENY,
+        FIT_PAGE,
+        OVERFLOW,
     }
 }

@@ -18,6 +18,6 @@ public class PageInsertCommand implements Command {
 
     @Override
     public void rollback(HistoryListener listener) {
-        listener.deletePage(page);
+        listener.deletePage(page, -1);
     }
 }

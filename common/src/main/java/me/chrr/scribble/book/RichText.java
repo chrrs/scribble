@@ -509,6 +509,19 @@ public class RichText implements FormattedText {
     }
 
     /**
+     * Remove carriage return characters (\r) from the text. This is needed because
+     * Windows line endings (CRLF) contain \r characters that Minecraft books display
+     * as visible symbols instead of treating them as whitespace.
+     *
+     * @return a new RichText with all carriage returns removed.
+     */
+    public RichText filterCarriageReturns() {
+        String plain = this.getPlainText();
+        if (!plain.contains("\r")) return this;
+        return RichText.fromFormattedString(this.getAsFormattedString().replace("\r", ""));
+    }
+
+    /**
      * Get the rich text as a vanilla {@link MutableComponent}. Note that this text content is valid for
      * this client only!
      *

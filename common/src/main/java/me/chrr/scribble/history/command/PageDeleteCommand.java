@@ -8,15 +8,17 @@ import org.jspecify.annotations.NullMarked;
 public class PageDeleteCommand implements Command {
     private final int page;
     private final RichText content;
+    private final int navigateDirection;
 
-    public PageDeleteCommand(int page, RichText content) {
+    public PageDeleteCommand(int page, RichText content, int navigateDirection) {
         this.page = page;
         this.content = content;
+        this.navigateDirection = navigateDirection;
     }
 
     @Override
     public void execute(HistoryListener listener) {
-        listener.deletePage(page);
+        listener.deletePage(page, navigateDirection);
     }
 
     @Override

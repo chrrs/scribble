@@ -2,11 +2,14 @@ package me.chrr.scribble.gui.edit;
 
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import com.mojang.datafixers.util.Pair;
+import me.chrr.scribble.Scribble;
+import me.chrr.scribble.ScribbleConfig;
 import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.gui.TextArea;
 import me.chrr.scribble.history.command.Command;
 import me.chrr.scribble.history.command.EditCommand;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.MultiLineEditBox;
@@ -32,6 +35,7 @@ import java.util.function.Consumer;
 public class RichEditBox extends MultiLineEditBox implements TextArea<RichText> {
     private final @Nullable Runnable onInvalidateFormat;
     private final @Nullable Consumer<Command> onHistoryPush;
+    private final @Nullable OverflowHandler overflowHandler;
 
     public @Nullable ChatFormatting color = ChatFormatting.BLACK;
     public Set<ChatFormatting> modifiers = new HashSet<>();
@@ -39,11 +43,13 @@ public class RichEditBox extends MultiLineEditBox implements TextArea<RichText> 
     private RichEditBox(Font font, int x, int y, int width, int height,
                         Component placeholder, Component message, int textColor, boolean textShadow, int cursorColor,
                         boolean hasBackground, boolean hasOverlay,
-                        @Nullable Runnable onInvalidateFormat, @Nullable Consumer<Command> onHistoryPush) {
+                        @Nullable Runnable onInvalidateFormat, @Nullable Consumer<Command> onHistoryPush,
+                        @Nullable OverflowHandler overflowHandler) {
         super(font, x, y, width, height, placeholder, message, textColor, textShadow, cursorColor, hasBackground, hasOverlay);
 
         this.onInvalidateFormat = onInvalidateFormat;
         this.onHistoryPush = onHistoryPush;
+        this.overflowHandler = overflowHandler;
 
         this.textField = new RichMultiLineTextField(
                 font, width - this.totalInnerPadding(),
@@ -197,6 +203,30 @@ public class RichEditBox extends MultiLineEditBox implements TextArea<RichText> 
     @Override
     public boolean charTyped(CharacterEvent event) {
         if (this.visible && this.isFocused() && event.isAllowedChatCharacter()) {
+            RichMultiLineTextField tf = this.getRichTextField();
+            RichText currentText = tf.getRichText();
+            int cursor = tf.cursor;
+            
+            // Create the text to insert
+            RichText insert = new RichText(event.codepointAsString(),
+                    Optional.ofNullable(color).orElse(ChatFormatting.BLACK), modifiers);
+            
+            // Check if this would overflow
+            RichText result = tf.hasSelection()
+                    ? currentText.replace(tf.getSelected().beginIndex(), tf.getSelected().endIndex(), insert)
+                    : currentText.insert(cursor, insert);
+            
+            boolean wouldOverflow = tf.hasLineLimit() && tf.font.getSplitter()
+                    .splitLines(result, tf.width, net.minecraft.network.chat.Style.EMPTY).size() > tf.lineLimit;
+            
+            // If would overflow and we have an overflow handler, try to handle it
+            if (wouldOverflow && this.overflowHandler != null && cursor == currentText.getLength() && !tf.hasSelection()) {
+                if (this.overflowHandler.handleOverflow(currentText, cursor, insert, color, modifiers)) {
+                    return true;
+                }
+            }
+            
+            // Normal behavior
             EditCommand command = new EditCommand(this,
                     (textField) -> textField.insertText(event.codepointAsString()));
             command.executeEdit(this.getRichTextField());
@@ -226,17 +256,84 @@ public class RichEditBox extends MultiLineEditBox implements TextArea<RichText> 
             }
         }
 
-        // Wrap the operation with an edit command if it edits the text.
-        if (event.isCut() || event.isPaste() ||
-                List.of(GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER,
-                        GLFW.GLFW_KEY_BACKSPACE, GLFW.GLFW_KEY_DELETE).contains(event.key())) {
-            EditCommand command = new EditCommand(this,
-                    (textField) -> textField.keyPressed(event));
-            command.executeEdit(this.getRichTextField());
+        RichMultiLineTextField tf = this.getRichTextField();
+        RichText currentText = tf.getRichText();
+        int cursor = tf.cursor;
+        boolean isAtEndOfText = cursor == currentText.getLength() && !tf.hasSelection();
+
+        // Handle Enter at end of full page - create new page if overflow handler exists
+        if ((event.key() == GLFW.GLFW_KEY_ENTER || event.key() == GLFW.GLFW_KEY_KP_ENTER) && isAtEndOfText) {
+            boolean pageFull = tf.hasLineLimit() && tf.font.getSplitter()
+                    .splitLines(currentText, tf.width, net.minecraft.network.chat.Style.EMPTY).size() >= tf.lineLimit;
+            if (pageFull) {
+                if (this.overflowHandler != null && this.overflowHandler.handleEnterAtEnd()) {
+                    return true;
+                }
+                return true; // Block enter on full page if overflow disabled
+            }
+        }
+
+        // Handle Backspace on empty page - delete page if overflow handler exists
+        if (event.key() == GLFW.GLFW_KEY_BACKSPACE && currentText.isEmpty() && !tf.hasSelection()) {
+            if (this.overflowHandler != null && this.overflowHandler.handleBackspaceOnEmpty()) {
+                return true;
+            }
+        }
+
+        // Handle Paste with different behaviors based on config
+        if (event.isPaste()) {
+            String clipboardText = Minecraft.getInstance().keyboardHandler.getClipboard().replace("\r", "");
+            boolean keepFormatting = Scribble.CONFIG.copyFormattingCodes.get() ^ event.hasShiftDown();
+            if (!keepFormatting) clipboardText = ChatFormatting.stripFormatting(clipboardText);
+            
+            RichText insert = ChatFormatting.stripFormatting(clipboardText).equals(clipboardText)
+                    ? new RichText(clipboardText, Optional.ofNullable(color).orElse(ChatFormatting.BLACK), modifiers)
+                    : RichText.fromFormattedString(clipboardText);
+
+            int start = tf.hasSelection() ? tf.getSelected().beginIndex() : cursor;
+            int end = tf.hasSelection() ? tf.getSelected().endIndex() : cursor;
+            RichText result = tf.hasSelection() ? currentText.replace(start, end, insert) : currentText.insert(cursor, insert);
+            boolean wouldOverflow = tf.hasLineLimit() && tf.font.getSplitter()
+                    .splitLines(result, tf.width, net.minecraft.network.chat.Style.EMPTY).size() > tf.lineLimit;
+
+            if (wouldOverflow) {
+                ScribbleConfig.PasteBehavior behavior = Scribble.CONFIG.pasteBehavior.get();
+                if (behavior == ScribbleConfig.PasteBehavior.FIT_PAGE) {
+                    int lo = 0, hi = insert.getLength(), best = 0;
+                    while (lo <= hi) {
+                        int mid = (lo + hi) / 2;
+                        RichText partial = insert.subText(0, mid);
+                        RichText partialResult = tf.hasSelection() ? currentText.replace(start, end, partial) : currentText.insert(cursor, partial);
+                        if (tf.font.getSplitter().splitLines(partialResult, tf.width, net.minecraft.network.chat.Style.EMPTY).size() <= tf.lineLimit) {
+                            best = mid; lo = mid + 1;
+                        } else hi = mid - 1;
+                    }
+                    if (best > 0) {
+                        String truncated = insert.subText(0, best).getAsFormattedString();
+                        EditCommand cmd = new EditCommand(this, t -> t.insertText(truncated));
+                        cmd.executeEdit(tf);
+                        this.pushHistory(cmd);
+                    }
+                    return true;
+                } else if (behavior == ScribbleConfig.PasteBehavior.OVERFLOW && this.overflowHandler != null && isAtEndOfText) {
+                    if (this.overflowHandler.handleOverflow(currentText, cursor, insert, color, modifiers)) return true;
+                }
+            }
+            
+            EditCommand command = new EditCommand(this, t -> t.keyPressed(event));
+            command.executeEdit(tf);
             this.pushHistory(command);
             return true;
         }
 
+        // Wrap the operation with an edit command if it edits the text.
+        if (event.isCut() || List.of(GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER,
+                GLFW.GLFW_KEY_BACKSPACE, GLFW.GLFW_KEY_DELETE).contains(event.key())) {
+            EditCommand command = new EditCommand(this, t -> t.keyPressed(event));
+            command.executeEdit(tf);
+            this.pushHistory(command);
+            return true;
+        }
 
         return super.keyPressed(event);
     }
@@ -267,6 +364,8 @@ public class RichEditBox extends MultiLineEditBox implements TextArea<RichText> 
         private Runnable onInvalidateFormat = null;
         @Nullable
         private Consumer<Command> onHistoryPush = null;
+        @Nullable
+        private OverflowHandler overflowHandler = null;
 
         public Builder onInvalidateFormat(Runnable onInvalidateFormat) {
             this.onInvalidateFormat = onInvalidateFormat;
@@ -278,13 +377,19 @@ public class RichEditBox extends MultiLineEditBox implements TextArea<RichText> 
             return this;
         }
 
+        public Builder onOverflow(OverflowHandler overflowHandler) {
+            this.overflowHandler = overflowHandler;
+            return this;
+        }
+
         @Override
         public MultiLineEditBox build(Font font, int width, int height, Component message) {
             return new RichEditBox(font,
                     this.x, this.y, width, height,
                     this.placeholder, message, this.textColor,
                     this.textShadow, this.cursorColor, this.showBackground,
-                    this.showDecorations, this.onInvalidateFormat, this.onHistoryPush);
+                    this.showDecorations, this.onInvalidateFormat, this.onHistoryPush,
+                    this.overflowHandler);
         }
     }
 }
