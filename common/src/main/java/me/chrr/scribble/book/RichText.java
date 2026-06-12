@@ -2,6 +2,7 @@ package me.chrr.scribble.book;
 
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.MapCodec;
+import me.chrr.scribble.util.ChatFormattingUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.*;
 import net.minecraft.network.chat.contents.PlainTextContents;
@@ -88,7 +89,7 @@ public class RichText implements FormattedText {
                         text = new StringBuilder();
                     }
 
-                    if (formatting.isFormat()) {
+                    if (ChatFormattingUtil.isFormat(formatting)) {
                         modifiers.add(formatting);
                     } else if (formatting == ChatFormatting.RESET) {
                         // We get rid of any RESET color codes, as they act weirdly in books.
@@ -151,7 +152,7 @@ public class RichText implements FormattedText {
      */
     private static ChatFormatting formattingFromTextColor(TextColor color) {
         // If the color has a name, we can look it up directly.
-        ChatFormatting byName = ChatFormatting.getByName(color.serialize());
+        ChatFormatting byName = ChatFormattingUtil.getByName(color.serialize());
         if (byName != null) {
             return byName;
         }
@@ -160,12 +161,13 @@ public class RichText implements FormattedText {
         ChatFormatting closest = ChatFormatting.BLACK;
         int distance = Integer.MAX_VALUE;
         for (ChatFormatting formatting : ChatFormatting.values()) {
-            Integer colorValue = formatting.getColor();
-            if (colorValue == null) {
+            TextColor textColor = TextColor.fromLegacyFormat(formatting);
+            if (textColor == null) {
                 continue;
             }
 
             // Find the Euclidean distance between the two colors (without taking the square root).
+            int colorValue = color.getValue();
             int dr = Math.abs((colorValue >> 16 & 0xff) - (color.getValue() >> 16 & 0xff));
             int dg = Math.abs((colorValue >> 8 & 0xff) - (color.getValue() >> 8 & 0xff));
             int db = Math.abs((colorValue & 0xff) - (color.getValue() & 0xff));
@@ -494,7 +496,7 @@ public class RichText implements FormattedText {
             }
 
             // Sort the modifiers so they're always in the same order, so the output is predictable.
-            modifiersToAdd.sort(Comparator.comparingInt(ChatFormatting::getChar));
+            modifiersToAdd.sort(Comparator.comparingInt((f) -> f.code));
             for (ChatFormatting format : modifiersToAdd) {
                 out.append(format);
             }
@@ -631,7 +633,7 @@ public class RichText implements FormattedText {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         RichText richText = (RichText) o;

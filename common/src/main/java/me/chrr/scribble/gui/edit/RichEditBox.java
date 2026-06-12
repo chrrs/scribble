@@ -6,6 +6,7 @@ import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.gui.TextArea;
 import me.chrr.scribble.history.command.Command;
 import me.chrr.scribble.history.command.EditCommand;
+import me.chrr.scribble.util.ChatFormattingUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -16,6 +17,7 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.util.CommonColors;
 import net.minecraft.util.Util;
 import org.jspecify.annotations.NullMarked;
@@ -79,7 +81,7 @@ public class RichEditBox extends MultiLineEditBox implements TextArea<RichText> 
             command.executeEdit(textField);
             this.pushHistory(command);
         } else {
-            if (formatting.isFormat()) {
+            if (ChatFormattingUtil.isFormat(formatting)) {
                 if (active) {
                     this.modifiers.add(formatting);
                 } else {
@@ -98,7 +100,7 @@ public class RichEditBox extends MultiLineEditBox implements TextArea<RichText> 
             return CommonColors.BLACK;
         } else {
             //noinspection DataFlowIssue: the color variable is never a modifier.
-            return 0xff000000 | this.color.getColor();
+            return 0xff000000 | TextColor.fromLegacyFormat(this.color).getValue();
         }
     }
 

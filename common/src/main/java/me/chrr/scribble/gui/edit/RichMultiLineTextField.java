@@ -1,7 +1,8 @@
 package me.chrr.scribble.gui.edit;
 
 import com.mojang.datafixers.util.Pair;
-import me.chrr.scribble.KeyboardUtil;
+import me.chrr.scribble.util.ChatFormattingUtil;
+import me.chrr.scribble.util.KeyboardUtil;
 import me.chrr.scribble.Scribble;
 import me.chrr.scribble.book.RichText;
 import net.minecraft.ChatFormatting;
@@ -44,11 +45,11 @@ public class RichMultiLineTextField extends MultilineTextField {
 
     @Override
     public void setValueListener(Consumer<String> valueListener) {
-        super.setValueListener((text) -> valueListener.accept(value()));
+        super.setValueListener((_) -> valueListener.accept(value()));
     }
 
     public void setRichValueListener(Consumer<RichText> valueListener) {
-        super.setValueListener((text) -> valueListener.accept(getRichText()));
+        super.setValueListener((_) -> valueListener.accept(getRichText()));
     }
 
     public void sendUpdateFormat() {
@@ -65,7 +66,7 @@ public class RichMultiLineTextField extends MultilineTextField {
         int end = selection.endIndex();
 
         RichText result;
-        if (formatting.isFormat()) {
+        if (ChatFormattingUtil.isFormat(formatting)) {
             if (active) {
                 result = this.richText.applyFormatting(start, end, null, Set.of(formatting), Set.of());
             } else {
@@ -238,7 +239,7 @@ public class RichMultiLineTextField extends MultilineTextField {
         }
 
         MutableInt current = new MutableInt();
-        this.font.getSplitter().splitLines(this.richText, this.width, Style.EMPTY, (line, continued) -> {
+        this.font.getSplitter().splitLines(this.richText, this.width, Style.EMPTY, (line, _) -> {
             String content = line.getString();
 
             int start = current.get().intValue();

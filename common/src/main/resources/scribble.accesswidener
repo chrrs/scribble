@@ -37,5 +37,8 @@ accessible field net/minecraft/client/gui/components/MultiLineEditBox$Builder cu
 accessible field net/minecraft/client/gui/components/MultiLineEditBox$Builder showBackground Z
 accessible field net/minecraft/client/gui/components/MultiLineEditBox$Builder showDecorations Z
 
+# We need access to the chat formatting characters to properly encode them.
+accessible field net/minecraft/ChatFormatting code C
+
 # FIXME: For some reason, this is not accessible but only sometimes??
 accessible class net/minecraft/client/gui/screens/MenuScreens$ScreenConstructor

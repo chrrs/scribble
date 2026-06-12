@@ -1,4 +1,4 @@
-package me.chrr.scribble;
+package me.chrr.scribble.util;
 
 import org.jspecify.annotations.NullMarked;
 import org.lwjgl.glfw.GLFW;

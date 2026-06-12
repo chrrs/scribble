@@ -89,7 +89,7 @@ public abstract class ScribbleBookScreen<T> extends Screen {
 
         addRenderableWidget(new IconButtonWidget(
                 settingsText,
-                () -> minecraft.setScreen(Scribble.buildConfigScreen(this)),
+                () -> minecraft.gui.setScreen(Scribble.buildConfigScreen(this)),
                 x, y, 96, 90, 12, 12));
     }
 

@@ -6,6 +6,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import me.chrr.scribble.Scribble;
 import me.chrr.scribble.screen.ScribbleBookViewScreen;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.BookViewScreen;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -16,13 +17,13 @@ import org.spongepowered.asm.mixin.injection.At;
 @NullMarked
 @Mixin(value = ClientPacketListener.class, priority = 500)
 public abstract class ClientPacketListenerMixin {
-    @WrapOperation(method = "handleOpenBook", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"))
-    public void overrideBookViewScreen(Minecraft instance, Screen screen, Operation<Void> original, @Local BookViewScreen.BookAccess book) {
-        if (instance.hasShiftDown() && Scribble.CONFIG.openVanillaBookScreenOnShift.get()) {
+    @WrapOperation(method = "handleOpenBook", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"))
+    public void overrideBookViewScreen(Gui instance, Screen screen, Operation<Void> original, @Local(name = "bookAccess") BookViewScreen.BookAccess bookAccess) {
+        if (Minecraft.getInstance().hasShiftDown() && Scribble.CONFIG.openVanillaBookScreenOnShift.get()) {
             original.call(instance, screen);
         } else {
             // FIXME: ideally, I'd like to avoid even constructing the original BookViewScreen.
-            original.call(instance, new ScribbleBookViewScreen(book));
+            original.call(instance, new ScribbleBookViewScreen(bookAccess));
         }
     }
 }

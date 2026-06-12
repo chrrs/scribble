@@ -5,7 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import me.chrr.scribble.Scribble;
 import me.chrr.scribble.SetReturnScreen;
 import me.chrr.scribble.screen.ScribbleBookScreen;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
@@ -39,8 +39,8 @@ public abstract class BookSignScreenMixin extends Screen implements SetReturnScr
         this.scribble$returnScreen = screen;
     }
 
-    @WrapOperation(method = "lambda$init$2", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"))
-    public void redirectReturnScreen(Minecraft instance, Screen screen, Operation<Void> original) {
+    @WrapOperation(method = "lambda$init$2", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"))
+    public void redirectReturnScreen(Gui instance, Screen screen, Operation<Void> original) {
         original.call(instance, this.scribble$returnScreen != null ? this.scribble$returnScreen : screen);
     }
     //endregion
@@ -65,14 +65,14 @@ public abstract class BookSignScreenMixin extends Screen implements SetReturnScr
     // When rendering, we translate the matrices of the draw context to draw the text further down if needed.
     // Note that this happens after the parent screen render, so only the text in the book is shifted.
     @Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V", shift = At.Shift.AFTER))
-    public void translateRender(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    public void translateRender(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a, CallbackInfo ci) {
         graphics.pose().pushMatrix();
         graphics.pose().translate(0f, scribble$getYOffset());
     }
 
     // At the end of rendering, we need to pop those matrices we pushed.
     @Inject(method = "extractRenderState", at = @At(value = "RETURN"))
-    public void popRender(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    public void popRender(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a, CallbackInfo ci) {
         graphics.pose().popMatrix();
     }
 

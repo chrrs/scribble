@@ -32,10 +32,10 @@ public class ScribbleLecternScreen extends ScribbleBookViewScreen implements Men
     protected void initMenuControls(int y) {
         if (this.minecraft.player != null && this.minecraft.player.mayBuild()) {
             this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE,
-                            button -> this.onClose())
+                            _ -> this.onClose())
                     .pos(this.width / 2 - 98 - 2, y).width(98).build());
             this.addRenderableWidget(Button.builder(Component.translatable("lectern.take_book"),
-                            button -> this.sendButtonClick(LecternMenu.BUTTON_TAKE_BOOK))
+                            _ -> this.sendButtonClick(LecternMenu.BUTTON_TAKE_BOOK))
                     .pos(this.width / 2 + 2, y).width(98).build());
         } else {
             super.initMenuControls(y);

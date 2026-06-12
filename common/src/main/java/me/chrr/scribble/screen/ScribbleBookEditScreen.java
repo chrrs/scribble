@@ -17,6 +17,8 @@ import me.chrr.scribble.history.command.Command;
 import me.chrr.scribble.history.command.EditCommand;
 import me.chrr.scribble.history.command.PageDeleteCommand;
 import me.chrr.scribble.history.command.PageInsertCommand;
+import me.chrr.scribble.util.ExceptionUtil;
+import me.chrr.scribble.util.KeyboardUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
@@ -184,16 +186,16 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
 
     @Override
     protected void initMenuControls(int y) {
-        this.addRenderableWidget(Button.builder(Component.translatable("book.signButton"), (button) -> {
+        this.addRenderableWidget(Button.builder(Component.translatable("book.signButton"), (_) -> {
             @SuppressWarnings("DataFlowIssue")
             BookSignScreen screen = new BookSignScreen(null, this.player, this.hand, getPagesAsStrings(true));
             ((SetReturnScreen) screen).scribble$setReturnScreen(this);
-            this.minecraft.setScreen(screen);
+            this.minecraft.gui.setScreen(screen);
         }).pos(this.width / 2 - 98 - 2, y).width(98).build());
 
-        this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, (button) -> {
-            this.minecraft.setScreen(null);
+        this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, (_) -> {
             this.saveChanges();
+            super.onClose();
         }).pos(this.width / 2 + 2, y).width(98).build());
     }
 
@@ -258,11 +260,11 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
         }
 
         BooleanConsumer onConfirmed = (confirmed) -> {
-            this.minecraft.setScreen(this);
+            this.minecraft.gui.setScreen(this);
             if (confirmed) runnable.run();
         };
 
-        this.minecraft.setScreen(new ConfirmScreen(
+        this.minecraft.gui.setScreen(new ConfirmScreen(
                 onConfirmed,
                 Component.translatable("text.scribble." + name + ".title"),
                 Component.translatable("text.scribble." + name + ".description")
@@ -275,8 +277,8 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
             bookFile.writeJson(path);
         } catch (Exception e) {
             Scribble.LOGGER.error("could not save book to file", e);
-            this.minecraft.setScreen(new AlertScreen(
-                    () -> this.minecraft.setScreen(this),
+            this.minecraft.gui.setScreen(new AlertScreen(
+                    () -> this.minecraft.gui.setScreen(this),
                     Component.translatable("text.scribble.error.save_book.title"),
                     Component.translatable("text.scribble.error.summary_below")
                             .append("\n\n\n").append(ExceptionUtil.getExceptionSummary(e))
@@ -301,8 +303,8 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
             this.updateCurrentPages();
         } catch (Exception e) {
             Scribble.LOGGER.error("could not load book from file", e);
-            this.minecraft.setScreen(new AlertScreen(
-                    () -> this.minecraft.setScreen(this),
+            this.minecraft.gui.setScreen(new AlertScreen(
+                    () -> this.minecraft.gui.setScreen(this),
                     Component.translatable("text.scribble.error.load_book.title"),
                     Component.translatable("text.scribble.error.load_book.subtitle")
                             .append("\n").append(Component.translatable("text.scribble.error.summary_below"))
@@ -382,7 +384,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
 
                 ChatFormatting color = COLORS[i];
                 colorSwatches.add(addRenderableWidget(new ColorSwatchWidget(
-                        Component.translatable("text.scribble.color." + color.getName()), color,
+                        Component.translatable("text.scribble.color." + color.name().toLowerCase()), color,
                         () -> this.applyFormat(color, true),
                         x + 3 + dx, y + 95 + dy, 8, 8
                 )));
@@ -462,6 +464,8 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
         int slot = this.hand == InteractionHand.MAIN_HAND ? this.player.getInventory().getSelectedSlot() : Inventory.SLOT_OFFHAND;
         ClientPacketListener connection = this.minecraft.getConnection();
         Objects.requireNonNull(connection).send(new ServerboundEditBookPacket(slot, pages, Optional.empty()));
+
+        this.dirty = false;
     }
 
     @Override

@@ -25,7 +25,7 @@ public class KeyboardHandlerMixin {
     // as it conflicts with the bold hotkey.
     @WrapOperation(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/GameNarrator;isActive()Z"))
     public boolean isNarratorActive(GameNarrator instance, Operation<Boolean> original, @Local(argsOnly = true) KeyEvent event) {
-        if (minecraft.screen instanceof ScribbleBookEditScreen && !event.hasShiftDown()) {
+        if (minecraft.gui.screen() instanceof ScribbleBookEditScreen && !event.hasShiftDown()) {
             return false;
         } else {
             return original.call(instance);

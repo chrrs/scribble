@@ -7,6 +7,7 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
@@ -29,13 +30,12 @@ public class ColorSwatchWidget extends AbstractButton {
             graphics.fill(getX(), getY(), getX() + width, getY() + height, isHoveredOrFocused() ? 0xffffffff : 0xffa0a0a0);
         }
 
-        Integer color = this.color.getColor();
+        TextColor color = TextColor.fromLegacyFormat(this.color);
         if (color == null) {
             return;
         }
 
-        color = color | 0xff000000;
-        graphics.fill(getX() + 1, getY() + 1, getX() + width - 1, getY() + height - 1, color);
+        graphics.fill(getX() + 1, getY() + 1, getX() + width - 1, getY() + height - 1, color.getValue() | 0xff000000);
     }
 
     @Override
