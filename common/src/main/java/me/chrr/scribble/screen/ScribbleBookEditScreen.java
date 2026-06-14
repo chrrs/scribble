@@ -1,10 +1,11 @@
 package me.chrr.scribble.screen;
 
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
-import me.chrr.scribble.*;
+import me.chrr.scribble.Scribble;
+import me.chrr.scribble.ScribbleConfig;
+import me.chrr.scribble.SetReturnScreen;
 import me.chrr.scribble.book.BookFile;
 import me.chrr.scribble.book.FileChooser;
-import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.gui.TextArea;
 import me.chrr.scribble.gui.button.ColorSwatchWidget;
 import me.chrr.scribble.gui.button.IconButtonWidget;
@@ -17,9 +18,10 @@ import me.chrr.scribble.history.command.Command;
 import me.chrr.scribble.history.command.EditCommand;
 import me.chrr.scribble.history.command.PageDeleteCommand;
 import me.chrr.scribble.history.command.PageInsertCommand;
+import me.chrr.scribble.text.StyleFlag;
+import me.chrr.scribble.text.StyledText;
 import me.chrr.scribble.util.ExceptionUtil;
 import me.chrr.scribble.util.KeyboardUtil;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.components.Button;
@@ -32,6 +34,8 @@ import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.protocol.game.ServerboundEditBookPacket;
 import net.minecraft.server.network.Filterable;
 import net.minecraft.world.InteractionHand;
@@ -46,23 +50,23 @@ import java.nio.file.Path;
 import java.util.*;
 
 @NullMarked
-public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> implements HistoryListener {
-    private static final ChatFormatting[] COLORS = new ChatFormatting[]{
-            ChatFormatting.BLACK, ChatFormatting.DARK_GRAY,
-            ChatFormatting.GRAY, ChatFormatting.WHITE,
-            ChatFormatting.DARK_RED, ChatFormatting.RED,
-            ChatFormatting.GOLD, ChatFormatting.YELLOW,
-            ChatFormatting.DARK_GREEN, ChatFormatting.GREEN,
-            ChatFormatting.DARK_AQUA, ChatFormatting.AQUA,
-            ChatFormatting.DARK_BLUE, ChatFormatting.BLUE,
-            ChatFormatting.DARK_PURPLE, ChatFormatting.LIGHT_PURPLE,
+public class ScribbleBookEditScreen extends ScribbleBookScreen<StyledText> implements HistoryListener {
+    private static final TextColor[] COLORS = new TextColor[]{
+            TextColor.BLACK, TextColor.DARK_GRAY,
+            TextColor.GRAY, TextColor.WHITE,
+            TextColor.DARK_RED, TextColor.RED,
+            TextColor.GOLD, TextColor.YELLOW,
+            TextColor.DARK_GREEN, TextColor.GREEN,
+            TextColor.DARK_AQUA, TextColor.AQUA,
+            TextColor.DARK_BLUE, TextColor.BLUE,
+            TextColor.DARK_PURPLE, TextColor.LIGHT_PURPLE,
     };
 
     private final Player player;
     private final ItemStack itemStack;
     private final InteractionHand hand;
 
-    private final List<RichText> pages;
+    private final List<StyledText> pages;
     private final CommandManager commandManager = new CommandManager(this);
 
     private @Nullable RichEditBox lastFocusedEditBox = null;
@@ -90,11 +94,11 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
 
         this.pages = new ArrayList<>();
         book.getPages(Minecraft.getInstance().isTextFilteringEnabled())
-                .forEach((page) -> this.pages.add(RichText.fromFormattedString(page)));
+                .forEach((page) -> this.pages.add(StyledText.fromFormattedString(page)));
 
         if (this.pages.isEmpty()) {
             for (int i = 0; i < this.pagesToShow; i++) {
-                this.pages.add(RichText.EMPTY);
+                this.pages.add(StyledText.EMPTY);
             }
         }
     }
@@ -205,7 +209,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     }
 
     @Override
-    protected TextArea<RichText> createTextArea(int x, int y, int width, int height, int pageOffset) {
+    protected TextArea<StyledText> createTextArea(int x, int y, int width, int height, int pageOffset) {
         RichEditBox editBox = (RichEditBox) new RichEditBox.Builder()
                 .onHistoryPush((command) -> this.pushCommand(pageOffset, command))
                 .onInvalidateFormat(this::invalidateFormattingButtons)
@@ -219,7 +223,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
         editBox.setLineLimit(height / this.font.lineHeight);
 
         editBox.setRichValueListener((text) -> {
-            RichText existing = this.pages.get(this.currentPage + pageOffset);
+            StyledText existing = this.pages.get(this.currentPage + pageOffset);
             if (existing != text) {
                 this.pages.set(this.currentPage + pageOffset, text);
                 this.dirty = true;
@@ -294,7 +298,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
 
             //noinspection ConstantValue: this isn
             if (bookFile.pages() != null)
-                this.pages.addAll(bookFile.pages().stream().map(RichText::fromFormattedString).toList());
+                this.pages.addAll(bookFile.pages().stream().map(StyledText::fromFormattedString).toList());
 
             this.commandManager.clear();
             this.dirty = true;
@@ -357,23 +361,23 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
             // Modifier buttons (but in reverse!)
             obfuscatedButton = addRenderableWidget(new ModifierButtonWidget(
                     Component.translatable("text.scribble.modifier.obfuscated"),
-                    (toggled) -> this.applyFormat(ChatFormatting.OBFUSCATED, toggled),
+                    (toggled) -> this.setFlag(StyleFlag.Obfuscated, toggled),
                     x, y + 70, 0, 70, 22, 18));
             strikethroughButton = addRenderableWidget(new ModifierButtonWidget(
                     Component.translatable("text.scribble.modifier.strikethrough"),
-                    (toggled) -> this.applyFormat(ChatFormatting.STRIKETHROUGH, toggled),
+                    (toggled) -> this.setFlag(StyleFlag.Strikethrough, toggled),
                     x, y + 53, 0, 53, 22, 17));
             underlineButton = addRenderableWidget(new ModifierButtonWidget(
                     Component.translatable("text.scribble.modifier.underline"),
-                    (toggled) -> this.applyFormat(ChatFormatting.UNDERLINE, toggled),
+                    (toggled) -> this.setFlag(StyleFlag.Underline, toggled),
                     x, y + 36, 0, 36, 22, 17));
             italicButton = addRenderableWidget(new ModifierButtonWidget(
                     Component.translatable("text.scribble.modifier.italic"),
-                    (toggled) -> this.applyFormat(ChatFormatting.ITALIC, toggled),
+                    (toggled) -> this.setFlag(StyleFlag.Italic, toggled),
                     x, y + 19, 0, 19, 22, 17));
             boldButton = addRenderableWidget(new ModifierButtonWidget(
                     Component.translatable("text.scribble.modifier.bold"),
-                    (toggled) -> this.applyFormat(ChatFormatting.BOLD, toggled),
+                    (toggled) -> this.setFlag(StyleFlag.Bold, toggled),
                     x, y, 0, 0, 22, 19));
 
             // Color swatches
@@ -382,10 +386,10 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
                 int dx = (i % 2) * 8;
                 int dy = (i / 2) * 8;
 
-                ChatFormatting color = COLORS[i];
+                TextColor color = COLORS[i];
                 colorSwatches.add(addRenderableWidget(new ColorSwatchWidget(
-                        Component.translatable("text.scribble.color." + color.name().toLowerCase()), color,
-                        () -> this.applyFormat(color, true),
+                        Component.translatable("text.scribble.color." + color.toString()), color,
+                        () -> this.setColor(color),
                         x + 3 + dx, y + 95 + dy, 8, 8
                 )));
             }
@@ -394,13 +398,19 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
         }
     }
 
-    private void applyFormat(ChatFormatting formatting, boolean enabled) {
+    private void setColor(TextColor color) {
         if (this.lastFocusedEditBox == null)
             return;
-        this.lastFocusedEditBox.applyFormat(formatting, enabled);
+        this.lastFocusedEditBox.applyStyle((style) -> style.withColor(color));
     }
 
-    private void setSwatchColor(@Nullable ChatFormatting color) {
+    private void setFlag(StyleFlag flag, boolean enabled) {
+        if (this.lastFocusedEditBox == null)
+            return;
+        this.lastFocusedEditBox.applyStyle((style) -> flag.apply(style, enabled));
+    }
+
+    private void setSwatchColor(@Nullable TextColor color) {
         for (ColorSwatchWidget swatch : colorSwatches) {
             swatch.setToggled(swatch.getColor() == color);
         }
@@ -415,19 +425,19 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
                 || strikethroughButton == null || obfuscatedButton == null)
             return;
 
-        boldButton.toggled = editBox.modifiers.contains(ChatFormatting.BOLD);
-        italicButton.toggled = editBox.modifiers.contains(ChatFormatting.ITALIC);
-        underlineButton.toggled = editBox.modifiers.contains(ChatFormatting.UNDERLINE);
-        strikethroughButton.toggled = editBox.modifiers.contains(ChatFormatting.STRIKETHROUGH);
-        obfuscatedButton.toggled = editBox.modifiers.contains(ChatFormatting.OBFUSCATED);
+        boldButton.toggled = editBox.style.isBold();
+        italicButton.toggled = editBox.style.isItalic();
+        underlineButton.toggled = editBox.style.isUnderlined();
+        strikethroughButton.toggled = editBox.style.isStrikethrough();
+        obfuscatedButton.toggled = editBox.style.isObfuscated();
 
-        setSwatchColor(editBox.color);
+        setSwatchColor(editBox.style.getColor());
     }
     //endregion
 
     //region Page Management
     @Override
-    protected RichText getPage(int page) {
+    protected StyledText getPage(int page) {
         return this.pages.get(page);
     }
 
@@ -443,16 +453,16 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     }
 
     private List<String> getPagesAsStrings(boolean removeTrailingPages) {
-        List<RichText> pages = new ArrayList<>(this.pages);
+        List<StyledText> pages = new ArrayList<>(this.pages);
 
         if (removeTrailingPages) {
-            ListIterator<RichText> listIterator = pages.listIterator(pages.size());
+            ListIterator<StyledText> listIterator = pages.listIterator(pages.size());
             while (listIterator.hasPrevious() && listIterator.previous().isEmpty()) {
                 listIterator.remove();
             }
         }
 
-        return pages.stream().map(RichText::getAsFormattedString).toList();
+        return pages.stream().map(StyledText::getAsFormattedStringLossy).toList();
     }
 
     private void saveChanges() {
@@ -475,11 +485,11 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
 
     @Override
     protected void insertEmptyPageAt(int page) {
-        this.pages.add(page, RichText.EMPTY);
+        this.pages.add(page, StyledText.EMPTY);
     }
 
     private boolean isEmpty() {
-        return this.pages.stream().allMatch(RichText::isEmpty);
+        return this.pages.stream().allMatch(StyledText::isEmpty);
     }
     //endregion
 
@@ -506,19 +516,18 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<RichText> impleme
     }
 
     @Override
-    public void setFormat(@Nullable ChatFormatting color, Set<ChatFormatting> modifiers) {
+    public void setStyle(Style style) {
         RichEditBox editBox = this.lastFocusedEditBox;
         if (editBox == null)
             return;
 
-        editBox.color = color;
-        editBox.modifiers = modifiers;
+        editBox.style = style;
         this.invalidateFormattingButtons();
     }
 
     @Override
-    public void insertPageAt(int page, @Nullable RichText content) {
-        this.pages.add(page, Optional.ofNullable(content).orElse(RichText.EMPTY));
+    public void insertPageAt(int page, @Nullable StyledText content) {
+        this.pages.add(page, Optional.ofNullable(content).orElse(StyledText.EMPTY));
         this.dirty = true;
         this.showPage(page, false);
         this.updateCurrentPages();

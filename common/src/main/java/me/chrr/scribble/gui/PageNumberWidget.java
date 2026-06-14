@@ -1,7 +1,6 @@
 package me.chrr.scribble.gui;
 
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -15,6 +14,7 @@ import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.CommonColors;
@@ -162,7 +162,7 @@ public class PageNumberWidget extends AbstractWidget {
         Component indicator = Component.translatable("book.pageIndicator", "--INDICATOR--", total);
         String[] parts = indicator.getString().split("--INDICATOR--", 2);
 
-        Style gray = Style.EMPTY.withColor(ChatFormatting.DARK_GRAY);
+        Style gray = Style.EMPTY.withColor(TextColor.DARK_GRAY);
         this.beforeCursor = Component.literal(parts[0]).setStyle(gray);
         this.afterCursor = parts.length > 1 ? Component.literal(parts[1]).setStyle(gray) : Component.empty();
 

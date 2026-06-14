@@ -1,13 +1,11 @@
 package me.chrr.scribble.gui.edit;
 
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
-import com.mojang.datafixers.util.Pair;
-import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.gui.TextArea;
 import me.chrr.scribble.history.command.Command;
 import me.chrr.scribble.history.command.EditCommand;
-import me.chrr.scribble.util.ChatFormattingUtil;
-import net.minecraft.ChatFormatting;
+import me.chrr.scribble.text.StyleFlag;
+import me.chrr.scribble.text.StyledText;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.MultiLineEditBox;
@@ -17,6 +15,7 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.util.CommonColors;
 import net.minecraft.util.Util;
@@ -24,42 +23,38 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 @NullMarked
-public class RichEditBox extends MultiLineEditBox implements TextArea<RichText> {
-    private final @Nullable Runnable onInvalidateFormat;
+public class RichEditBox extends MultiLineEditBox implements TextArea<StyledText> {
+    private final @Nullable Runnable onInvalidateStyle;
     private final @Nullable Consumer<Command> onHistoryPush;
 
-    public @Nullable ChatFormatting color = ChatFormatting.BLACK;
-    public Set<ChatFormatting> modifiers = new HashSet<>();
+    public Style style = Style.EMPTY;
 
     private RichEditBox(Font font, int x, int y, int width, int height,
                         Component placeholder, Component message, int textColor, boolean textShadow, int cursorColor,
                         boolean hasBackground, boolean hasOverlay,
-                        @Nullable Runnable onInvalidateFormat, @Nullable Consumer<Command> onHistoryPush) {
+                        @Nullable Runnable onInvalidateStyle, @Nullable Consumer<Command> onHistoryPush) {
         super(font, x, y, width, height, placeholder, message, textColor, textShadow, cursorColor, hasBackground, hasOverlay);
 
-        this.onInvalidateFormat = onInvalidateFormat;
+        this.onInvalidateStyle = onInvalidateStyle;
         this.onHistoryPush = onHistoryPush;
 
         this.textField = new RichMultiLineTextField(
                 font, width - this.totalInnerPadding(),
-                () -> new Pair<>(Optional.ofNullable(color).orElse(ChatFormatting.BLACK), modifiers),
-                (color, modifiers) -> {
-                    this.color = color;
-                    this.modifiers = new HashSet<>(modifiers);
-                    this.notifyInvalidateFormat();
+                () -> style,
+                (style) -> {
+                    this.style = style;
+                    this.notifyInvalidateStyle();
                 });
     }
 
-    private void notifyInvalidateFormat() {
-        if (this.onInvalidateFormat != null) {
-            this.onInvalidateFormat.run();
+    private void notifyInvalidateStyle() {
+        if (this.onInvalidateStyle != null) {
+            this.onInvalidateStyle.run();
         }
     }
 
@@ -69,44 +64,35 @@ public class RichEditBox extends MultiLineEditBox implements TextArea<RichText> 
         }
     }
 
-    public void setRichValueListener(Consumer<RichText> valueListener) {
+    public void setRichValueListener(Consumer<StyledText> valueListener) {
         this.getRichTextField().setRichValueListener(valueListener);
     }
 
-    public void applyFormat(ChatFormatting formatting, boolean active) {
+    public void applyStyle(Function<Style, Style> modifier) {
         RichMultiLineTextField textField = this.getRichTextField();
 
         if (textField.hasSelection()) {
-            EditCommand command = new EditCommand(this, (box) -> box.applyFormatting(formatting, active));
+            EditCommand command = new EditCommand(this, (box) -> box.applySelection(modifier));
             command.executeEdit(textField);
             this.pushHistory(command);
         } else {
-            if (ChatFormattingUtil.isFormat(formatting)) {
-                if (active) {
-                    this.modifiers.add(formatting);
-                } else {
-                    this.modifiers.remove(formatting);
-                }
-            } else {
-                this.color = formatting;
-            }
-
-            this.notifyInvalidateFormat();
+            modifier.apply(this.style);
         }
     }
 
-    private int getCursorColor() {
-        if (this.color == null) {
+    private int getCursorIndicatorColor() {
+        TextColor color = this.style.getColor();
+
+        if (color == null) {
             return CommonColors.BLACK;
         } else {
-            //noinspection DataFlowIssue: the color variable is never a modifier.
-            return 0xff000000 | TextColor.fromLegacyFormat(this.color).getValue();
+            return 0xff000000 | color.getValue();
         }
     }
 
     @Override
     protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float deltaTicks) {
-        RichText text = getRichTextField().getRichText();
+        StyledText text = getRichTextField().getRichText();
 
         // Draw the placeholder text if there's no content.
         if (text.isEmpty() && !this.isFocused()) {
@@ -130,21 +116,21 @@ public class RichEditBox extends MultiLineEditBox implements TextArea<RichText> 
             if (blink && cursorInText && cursor >= line.beginIndex() && cursor <= line.endIndex()) {
                 if (visible) {
                     // AD-HOC: Draw the entire line in one call. Vanilla does this differently, I don't know why
-                    RichText lineText = text.subText(line.beginIndex(), line.endIndex());
+                    StyledText lineText = text.subText(line.beginIndex(), line.endIndex());
                     graphics.text(this.font, lineText.getAsMutableComponent(), x, y, this.textColor, this.textShadow);
 
-                    RichText beforeCursor = text.subText(line.beginIndex(), cursor);
+                    StyledText beforeCursor = text.subText(line.beginIndex(), cursor);
                     lastX = x + this.font.width(beforeCursor);
 
                     if (!hasDrawnCursor) {
-                        graphics.fill(lastX, y - 1, lastX + 1, y + 1 + this.font.lineHeight, this.getCursorColor());
+                        graphics.fill(lastX, y - 1, lastX + 1, y + 1 + this.font.lineHeight, this.getCursorIndicatorColor());
                         hasDrawnCursor = true;
                     }
                 }
             } else {
                 // Otherwise, just draw the line normally.
                 if (visible) {
-                    RichText lineText = text.subText(line.beginIndex(), line.endIndex());
+                    StyledText lineText = text.subText(line.beginIndex(), line.endIndex());
                     graphics.text(this.font, lineText.getAsMutableComponent(), x, y, this.textColor, this.textShadow);
                     lastX = x + this.font.width(lineText) - 1;
                 }
@@ -158,7 +144,7 @@ public class RichEditBox extends MultiLineEditBox implements TextArea<RichText> 
         // If we haven't drawn the cursor yet, it should be a '_' at the last draw position.
         if (blink && !cursorInText) {
             if (this.withinContentAreaTopBottom(lastY, lastY + this.font.lineHeight)) {
-                graphics.text(this.font, "_", lastX + 1, lastY, this.getCursorColor(), this.textShadow);
+                graphics.text(this.font, "_", lastX + 1, lastY, this.getCursorIndicatorColor(), this.textShadow);
             }
         }
 
@@ -213,17 +199,17 @@ public class RichEditBox extends MultiLineEditBox implements TextArea<RichText> 
     public boolean keyPressed(KeyEvent event) {
         // Respond to common hotkeys for toggling modifiers, such as Ctrl-B for bold.
         if (event.hasControlDown() && !event.hasShiftDown() && !event.hasAltDown()) {
-            ChatFormatting modifier = switch (event.key()) {
-                case GLFW.GLFW_KEY_B -> ChatFormatting.BOLD;
-                case GLFW.GLFW_KEY_I -> ChatFormatting.ITALIC;
-                case GLFW.GLFW_KEY_U -> ChatFormatting.UNDERLINE;
-                case GLFW.GLFW_KEY_MINUS -> ChatFormatting.STRIKETHROUGH;
-                case GLFW.GLFW_KEY_K -> ChatFormatting.OBFUSCATED;
+            StyleFlag flag = switch (event.key()) {
+                case GLFW.GLFW_KEY_B -> StyleFlag.Bold;
+                case GLFW.GLFW_KEY_I -> StyleFlag.Italic;
+                case GLFW.GLFW_KEY_U -> StyleFlag.Underline;
+                case GLFW.GLFW_KEY_MINUS -> StyleFlag.Strikethrough;
+                case GLFW.GLFW_KEY_K -> StyleFlag.Obfuscated;
                 default -> null;
             };
 
-            if (modifier != null) {
-                this.applyFormat(modifier, !this.modifiers.contains(modifier));
+            if (flag != null) {
+                this.applyStyle((style) -> flag.apply(style, !flag.isPresent(this.style)));
                 return true;
             }
         }
@@ -255,7 +241,7 @@ public class RichEditBox extends MultiLineEditBox implements TextArea<RichText> 
     }
 
     @Override
-    public void setText(RichText text) {
+    public void setText(StyledText text) {
         this.getRichTextField().setValue(text, true);
     }
 

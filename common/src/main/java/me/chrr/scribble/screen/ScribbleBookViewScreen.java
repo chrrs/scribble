@@ -5,7 +5,7 @@ import me.chrr.scribble.Scribble;
 import me.chrr.scribble.ScribbleConfig;
 import me.chrr.scribble.book.BookFile;
 import me.chrr.scribble.book.FileChooser;
-import me.chrr.scribble.book.RichText;
+import me.chrr.scribble.text.StyledText;
 import me.chrr.scribble.gui.BookTextWidget;
 import me.chrr.scribble.gui.TextArea;
 import me.chrr.scribble.gui.button.IconButtonWidget;
@@ -69,8 +69,8 @@ public class ScribbleBookViewScreen extends ScribbleBookScreen<Component> {
         FileChooser.chooseFile(true, (path) -> {
             try {
                 List<String> pages = this.book.pages().stream()
-                        .map(RichText::fromFormattedTextLossy)
-                        .map(RichText::getAsFormattedString)
+                        .map(StyledText::fromComponent)
+                        .map(StyledText::getAsFormattedStringLossy)
                         .toList();
 
                 BookFile bookFile = new BookFile("<written book>", pages);

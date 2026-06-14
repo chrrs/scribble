@@ -1,25 +1,22 @@
 package me.chrr.scribble.history.command;
 
-import me.chrr.scribble.book.RichText;
 import me.chrr.scribble.gui.edit.RichEditBox;
 import me.chrr.scribble.gui.edit.RichMultiLineTextField;
 import me.chrr.scribble.history.HistoryListener;
-import net.minecraft.ChatFormatting;
+import me.chrr.scribble.text.StyledText;
+import net.minecraft.network.chat.Style;
 import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
 
-import java.util.Set;
 import java.util.function.Consumer;
 
 @NullMarked
 public class EditCommand implements Command {
-    private final RichText text;
+    private final StyledText text;
     private final Consumer<RichMultiLineTextField> action;
 
     public int page = -1;
 
-    public final @Nullable ChatFormatting color;
-    public final Set<ChatFormatting> modifiers;
+    public final Style style;
 
     private final int cursor;
     private final int selectCursor;
@@ -31,8 +28,7 @@ public class EditCommand implements Command {
         this.text = textField.getRichText();
         this.action = action;
 
-        this.color = editBox.color;
-        this.modifiers = editBox.modifiers;
+        this.style = editBox.style;
 
         this.cursor = textField.cursor;
         this.selectCursor = textField.selectCursor;
@@ -49,14 +45,14 @@ public class EditCommand implements Command {
     @Override
     public void execute(HistoryListener listener) {
         RichMultiLineTextField textField = listener.switchAndFocusPage(this.page);
-        listener.setFormat(this.color, this.modifiers);
+        listener.setStyle(this.style);
         this.executeEdit(textField);
     }
 
     @Override
     public void rollback(HistoryListener listener) {
         RichMultiLineTextField textField = listener.switchAndFocusPage(this.page);
-        listener.setFormat(this.color, this.modifiers);
+        listener.setStyle(this.style);
 
         textField.cursor = this.cursor;
         textField.selectCursor = this.selectCursor;
