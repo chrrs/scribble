@@ -21,6 +21,11 @@ tasks.register("publishModsSpecificVersions") {
     description = "Publish specific versions only, as specified by the PUBLISH_VERSIONS environment variable."
     group = "project"
 
-    var versions = providers.environmentVariable("PUBLISH_VERSIONS").map { it.split(",") }
-    dependsOn(stonecutter.tasks.named("publishMods") { versions.get().contains(metadata.project) })
+    var versions = providers.environmentVariable("PUBLISH_VERSIONS")
+        .map { it.split(",").filter(String::isNotEmpty) }
+
+    dependsOn(stonecutter.tasks.named("publishMods") {
+        val versions = versions.get()
+        versions.isEmpty() || versions.contains(metadata.project)
+    })
 }
