@@ -64,3 +64,11 @@ tapestry {
         curseforge = "1051344"
     }
 }
+
+stonecutter.tree.branches
+    .map { stonecutter.node.sibling(it.id)!! }
+    .forEach {
+        // FIXME: Hacky workaround, stops Gradle from complaining.
+        it.project.tasks.named { name -> name in listOf("validateAccessWidener", "convertClassTweaker") }
+            .configureEach { dependsOn("${sibling("common").path}:stonecutterGenerate") }
+    }

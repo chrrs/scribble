@@ -2,6 +2,7 @@ package me.chrr.scribble.util;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import org.jspecify.annotations.NullMarked;
 
@@ -23,17 +24,20 @@ public class ExceptionUtil {
                 first = false;
             } else {
                 out.append("\n\n");
-                out.append(Component.literal("caused by: ").withColor(TextColor.GRAY));
+                out.append(Component.literal("caused by: ")
+                        .withStyle(Style.EMPTY.withColor(TextColor.GRAY)));
             }
 
             String header = cause.getClass().getName() + ": " + cause.getMessage();
-            out.append(Component.literal(header).withColor(TextColor.GRAY));
+            out.append(Component.literal(header)
+                    .withStyle(Style.EMPTY.withColor(TextColor.GRAY)));
 
             Optional<String> source = Arrays.stream(cause.getStackTrace())
                     .map(StackTraceElement::toString)
                     .filter(s -> s.contains("me.chrr."))
                     .findFirst();
-            source.ifPresent(it -> out.append(Component.literal("\nat " + it).withColor(TextColor.DARK_GRAY)));
+            source.ifPresent(it -> out.append(Component.literal("\nat " + it)
+                    .withStyle(Style.EMPTY.withColor(TextColor.DARK_GRAY))));
 
             cause = cause.getCause();
         }
