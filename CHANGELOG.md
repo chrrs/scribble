@@ -1,3 +1,11 @@
+## 2.1.0-beta1
+
+- Switch away from formatting codes internally. Scribble still uses formatting codes to write the books, however Mojang
+  has made it very clear that they're deprecated and steps have been made in 26.2 to remove them from more places. In a
+  future release, this means Scribble will likely need to fall back to using actual text components ("JSON text") to do
+  its book formatting through a server-side mod.
+- Fix cursor behaviour at the end of lines.
+
 ## 2.0.2
 
 - Show error dialogs when saving and loading books fails.
