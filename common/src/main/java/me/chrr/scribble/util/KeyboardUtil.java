@@ -8,20 +8,20 @@ public class KeyboardUtil {
     }
 
     //? if >=26.3 {
-    public static final int KEY_PAGE_UP = org.lwjgl.sdl.SDLKeycode.SDLK_PAGEUP;
-    public static final int KEY_PAGE_DOWN = org.lwjgl.sdl.SDLKeycode.SDLK_PAGEDOWN;
-    public static final int KEY_MINUS = org.lwjgl.sdl.SDLKeycode.SDLK_MINUS;
-    public static final int KEY_ENTER = org.lwjgl.sdl.SDLKeycode.SDLK_RETURN;
-    public static final int KEY_KP_ENTER = org.lwjgl.sdl.SDLKeycode.SDLK_KP_ENTER;
-    public static final int KEY_BACKSPACE = org.lwjgl.sdl.SDLKeycode.SDLK_BACKSPACE;
-    public static final int KEY_DELETE = org.lwjgl.sdl.SDLKeycode.SDLK_DELETE;
-    public static final int KEY_ESCAPE = org.lwjgl.sdl.SDLKeycode.SDLK_ESCAPE;
-    public static final int KEY_LEFT = org.lwjgl.sdl.SDLKeycode.SDLK_LEFT;
-    public static final int KEY_RIGHT = org.lwjgl.sdl.SDLKeycode.SDLK_RIGHT;
-    public static final int KEY_B = org.lwjgl.sdl.SDLKeycode.SDLK_B;
-    public static final int KEY_I = org.lwjgl.sdl.SDLKeycode.SDLK_I;
-    public static final int KEY_K = org.lwjgl.sdl.SDLKeycode.SDLK_K;
-    public static final int KEY_U = org.lwjgl.sdl.SDLKeycode.SDLK_U;
+    public static final int KEY_PAGE_UP = org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_PAGEUP;
+    public static final int KEY_PAGE_DOWN = org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_PAGEDOWN;
+    public static final int KEY_MINUS = org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_MINUS;
+    public static final int KEY_ENTER = org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_RETURN;
+    public static final int KEY_KP_ENTER = org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_KP_ENTER;
+    public static final int KEY_BACKSPACE = org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_BACKSPACE;
+    public static final int KEY_DELETE = org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_DELETE;
+    public static final int KEY_ESCAPE = org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_ESCAPE;
+    public static final int KEY_LEFT = org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_LEFT;
+    public static final int KEY_RIGHT = org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_RIGHT;
+    public static final int KEY_B = org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_B;
+    public static final int KEY_I = org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_I;
+    public static final int KEY_K = org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_K;
+    public static final int KEY_U = org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_U;
     //? } else {
     /*public static final int KEY_PAGE_UP = org.lwjgl.glfw.GLFW.GLFW_KEY_PAGE_UP;
     public static final int KEY_PAGE_DOWN = org.lwjgl.glfw.GLFW.GLFW_KEY_PAGE_DOWN;
@@ -45,10 +45,10 @@ public class KeyboardUtil {
      */
     public static boolean isKey(int keyCode, String keyName) {
         //? >=26.3 {
-        if (keyCode == org.lwjgl.sdl.SDLKeycode.SDLK_UNKNOWN) {
+        if (keyCode == org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_UNKNOWN) {
             return false;
         } else {
-            return keyName.equalsIgnoreCase(org.lwjgl.sdl.SDLKeyboard.SDL_GetKeyName(keyCode));
+            return keyName.equalsIgnoreCase(org.lwjgl.sdl.SDLKeyboard.SDL_GetScancodeName(keyCode));
         }
         //? } else {
         /*if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_UNKNOWN) {
