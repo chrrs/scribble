@@ -6,6 +6,7 @@ import me.chrr.scribble.history.command.Command;
 import me.chrr.scribble.history.command.EditCommand;
 import me.chrr.scribble.text.StyleFlag;
 import me.chrr.scribble.text.StyledText;
+import me.chrr.scribble.util.KeyboardUtil;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.MultiLineEditBox;
@@ -21,7 +22,6 @@ import net.minecraft.util.CommonColors;
 import net.minecraft.util.Util;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -200,11 +200,11 @@ public class RichEditBox extends MultiLineEditBox implements TextArea<StyledText
         // Respond to common hotkeys for toggling modifiers, such as Ctrl-B for bold.
         if (event.hasControlDown() && !event.hasShiftDown() && !event.hasAltDown()) {
             StyleFlag flag = switch (event.key()) {
-                case GLFW.GLFW_KEY_B -> StyleFlag.Bold;
-                case GLFW.GLFW_KEY_I -> StyleFlag.Italic;
-                case GLFW.GLFW_KEY_U -> StyleFlag.Underline;
-                case GLFW.GLFW_KEY_MINUS -> StyleFlag.Strikethrough;
-                case GLFW.GLFW_KEY_K -> StyleFlag.Obfuscated;
+                case KeyboardUtil.KEY_B -> StyleFlag.Bold;
+                case KeyboardUtil.KEY_I -> StyleFlag.Italic;
+                case KeyboardUtil.KEY_U -> StyleFlag.Underline;
+                case KeyboardUtil.KEY_MINUS -> StyleFlag.Strikethrough;
+                case KeyboardUtil.KEY_K -> StyleFlag.Obfuscated;
                 default -> null;
             };
 
@@ -216,8 +216,8 @@ public class RichEditBox extends MultiLineEditBox implements TextArea<StyledText
 
         // Wrap the operation with an edit command if it edits the text.
         if (event.isCut() || event.isPaste() ||
-                List.of(GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER,
-                        GLFW.GLFW_KEY_BACKSPACE, GLFW.GLFW_KEY_DELETE).contains(event.key())) {
+                List.of(KeyboardUtil.KEY_ENTER, KeyboardUtil.KEY_KP_ENTER,
+                        KeyboardUtil.KEY_BACKSPACE, KeyboardUtil.KEY_DELETE).contains(event.key())) {
             EditCommand command = new EditCommand(this,
                     (textField) -> textField.keyPressed(event));
             command.executeEdit(this.getRichTextField());

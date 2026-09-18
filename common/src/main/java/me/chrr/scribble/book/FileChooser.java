@@ -2,12 +2,8 @@ package me.chrr.scribble.book;
 
 import me.chrr.scribble.Scribble;
 import net.minecraft.client.Minecraft;
-import net.minecraft.locale.Language;
 import org.jspecify.annotations.NullMarked;
-import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.Platform;
-import org.lwjgl.util.tinyfd.TinyFileDialogs;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,28 +22,62 @@ public class FileChooser {
      * @param save         if the dialog should be a save dialog instead of an open dialog.
      * @param pathConsumer the callback to call when a path is successfully chosen.
      */
+    @SuppressWarnings("resource")
     public static void chooseFile(boolean save, Consumer<Path> pathConsumer) {
         new Thread(() -> {
             try (MemoryStack stack = MemoryStack.stackPush()) {
-                PointerBuffer filter = null;
                 String defaultPath = createAndGetBookDirectory().toAbsolutePath() + File.separator;
 
-                // Depending on the arguments, we open either a save or open file dialog.
+                //? >=26.3 {
+                long window = Minecraft.getInstance().getWindow().handle();
+                org.lwjgl.sdl.SDL_DialogFileCallbackI fileCallback = (_, filelist, _) -> {
+                    if (filelist == 0L) {
+                        Scribble.LOGGER.error("failed to choose path: {}", org.lwjgl.sdl.SDLError.SDL_GetError());
+                        return;
+                    }
+
+                    long str = org.lwjgl.system.MemoryUtil.memGetAddress(filelist);
+                    if (str == 0L) {
+                        // No file was selected.
+                        return;
+                    }
+
+                    try {
+                        Path p = Path.of(org.lwjgl.system.MemoryUtil.memUTF8(str));
+                        Minecraft.getInstance().execute(() -> pathConsumer.accept(p));
+                    } catch (InvalidPathException e) {
+                        Scribble.LOGGER.error("failed to choose path", e);
+                    }
+                };
+                //? } else {
+                /*org.lwjgl.PointerBuffer filter = null;
                 String path;
+                 *///? }
+
+                // Depending on the arguments, we open either a save or open file dialog.
                 if (save) {
-                    // We want to save JSON files.
-                    filter = stack.mallocPointer(1);
+                    //? >=26.3 {
+                    org.lwjgl.sdl.SDL_DialogFileFilter.Buffer filters = org.lwjgl.sdl.SDL_DialogFileFilter.create(1);
+                    filters.get(0).name(stack.UTF8("Scribble Book (.json)")).pattern(stack.UTF8("json"));
+
+                    org.lwjgl.sdl.SDLDialog.SDL_ShowSaveFileDialog(fileCallback, 0L, window, filters, defaultPath);
+                    //? } else {
+                    /*filter = stack.mallocPointer(1);
                     filter.put(stack.UTF8("*.json"));
                     filter.flip();
 
-                    path = TinyFileDialogs.tinyfd_saveFileDialog(
-                            Language.getInstance().getOrDefault("text.scribble.action.save_book_to_file"), defaultPath,
+                    path = org.lwjgl.util.tinyfd.TinyFileDialogs.tinyfd_saveFileDialog(
+                            net.minecraft.locale.Language.getInstance().getOrDefault("text.scribble.action.save_book_to_file"), defaultPath,
                             filter, "Scribble Book (.json)");
+                    *///?}
                 } else {
-                    // FIXME: For macOS, we don't set a file filter on open.
-                    //        - https://github.com/chrrs/scribble/issues/11
-                    //        - https://github.com/LWJGL/lwjgl3/issues/921
-                    if (Platform.get() != Platform.MACOSX) {
+                    //? >=26.3 {
+                    org.lwjgl.sdl.SDL_DialogFileFilter.Buffer filters = org.lwjgl.sdl.SDL_DialogFileFilter.create(1);
+                    filters.get(0).name(stack.UTF8("Scribble Book (.book, .json)")).pattern(stack.UTF8("json;book"));
+
+                    org.lwjgl.sdl.SDLDialog.SDL_ShowOpenFileDialog(fileCallback, 0L, window, filters, defaultPath, false);
+                    //? } else {
+                    /*if (org.lwjgl.system.Platform.get() != org.lwjgl.system.Platform.MACOSX) {
                         // We only want to select Scribble book and JSON files.
                         filter = stack.mallocPointer(2);
                         filter.put(stack.UTF8("*.book"));
@@ -55,12 +85,14 @@ public class FileChooser {
                         filter.flip();
                     }
 
-                    path = TinyFileDialogs.tinyfd_openFileDialog(
-                            Language.getInstance().getOrDefault("text.scribble.action.load_book_from_file"), defaultPath,
+                    path = org.lwjgl.util.tinyfd.TinyFileDialogs.tinyfd_openFileDialog(
+                            net.minecraft.locale.Language.getInstance().getOrDefault("text.scribble.action.load_book_from_file"), defaultPath,
                             filter, "Scribble Book (.book, .json)", false);
+                    *///?}
                 }
 
-                // If the returned path is null, the user closed the file dialog.
+                //? <26.3 {
+                /*// If the returned path is null, the user closed the file dialog.
                 if (path == null) {
                     return;
                 }
@@ -71,6 +103,7 @@ public class FileChooser {
                 } catch (InvalidPathException e) {
                     Scribble.LOGGER.error("failed to choose path", e);
                 }
+                *///?}
             }
         }, "File chooser").start();
     }

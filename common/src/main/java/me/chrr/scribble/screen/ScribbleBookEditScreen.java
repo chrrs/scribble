@@ -276,6 +276,9 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<StyledText> imple
     }
 
     private void saveToFile(Path path) {
+        if (!path.endsWith(".json"))
+            path = path.resolveSibling(path.getFileName() + ".json");
+
         try {
             BookFile bookFile = new BookFile(this.player.getName().getString(), this.getPagesAsStrings(true));
             bookFile.writeJson(path);

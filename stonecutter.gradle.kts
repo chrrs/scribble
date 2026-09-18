@@ -1,9 +1,9 @@
 plugins {
     id("dev.kikugie.stonecutter")
-    id("me.chrr.tapestry.gradle") version "1.1.1" apply false
+    id("me.chrr.tapestry.gradle") version "1.1.2" apply false
 }
 
-stonecutter active "26.2" /* [SC] DO NOT EDIT */
+stonecutter active "26.3" /* [SC] DO NOT EDIT */
 
 for (node in stonecutter.tree.nodes) {
     if (node.metadata != stonecutter.current || node.branch.id.isEmpty()) continue

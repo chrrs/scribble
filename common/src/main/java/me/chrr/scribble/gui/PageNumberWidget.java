@@ -1,6 +1,7 @@
 package me.chrr.scribble.gui;
 
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
+import me.chrr.scribble.util.KeyboardUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -20,7 +21,6 @@ import net.minecraft.util.ARGB;
 import net.minecraft.util.CommonColors;
 import net.minecraft.util.Util;
 import org.jspecify.annotations.NullMarked;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
 
@@ -122,7 +122,7 @@ public class PageNumberWidget extends AbstractWidget {
         if (!isFocused())
             return super.keyPressed(event);
 
-        if (!this.input.isEmpty() && event.key() == GLFW.GLFW_KEY_BACKSPACE) {
+        if (!this.input.isEmpty() && event.key() == KeyboardUtil.KEY_BACKSPACE) {
             if (event.hasControlDown()) {
                 this.input = "";
             } else {
@@ -130,7 +130,7 @@ public class PageNumberWidget extends AbstractWidget {
             }
 
             return true;
-        } else if (event.key() == GLFW.GLFW_KEY_ENTER || event.key() == GLFW.GLFW_KEY_KP_ENTER) {
+        } else if (event.key() == KeyboardUtil.KEY_ENTER || event.key() == KeyboardUtil.KEY_KP_ENTER) {
             if (!this.input.isEmpty()) {
                 Minecraft.getInstance().getSoundManager()
                         .play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F));
@@ -139,10 +139,10 @@ public class PageNumberWidget extends AbstractWidget {
 
             this.setFocused(false);
             return true;
-        } else if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
+        } else if (event.key() == KeyboardUtil.KEY_ESCAPE) {
             this.setFocused(false);
             return true;
-        } else if (event.key() == GLFW.GLFW_KEY_LEFT || event.key() == GLFW.GLFW_KEY_RIGHT) {
+        } else if (event.key() == KeyboardUtil.KEY_LEFT || event.key() == KeyboardUtil.KEY_RIGHT) {
             // Mark arrows as handled to prevent focus changes.
             return true;
         }

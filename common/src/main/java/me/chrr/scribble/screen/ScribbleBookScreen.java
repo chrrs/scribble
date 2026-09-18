@@ -4,6 +4,7 @@ import me.chrr.scribble.Scribble;
 import me.chrr.scribble.gui.PageNumberWidget;
 import me.chrr.scribble.gui.TextArea;
 import me.chrr.scribble.gui.button.IconButtonWidget;
+import me.chrr.scribble.util.KeyboardUtil;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -17,7 +18,6 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -165,10 +165,10 @@ public abstract class ScribbleBookScreen<T> extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        if (event.key() == GLFW.GLFW_KEY_PAGE_UP) {
+        if (event.key() == KeyboardUtil.KEY_PAGE_UP) {
             Objects.requireNonNull(this.backButton).onPress(event);
             return true;
-        } else if (event.key() == GLFW.GLFW_KEY_PAGE_DOWN) {
+        } else if (event.key() == KeyboardUtil.KEY_PAGE_DOWN) {
             Objects.requireNonNull(this.forwardButton).onPress(event);
             return true;
         }
