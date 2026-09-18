@@ -41,5 +41,4 @@ accessible field net/minecraft/client/gui/components/MultiLineEditBox$Builder sh
 accessible field net/minecraft/ChatFormatting code C
 
 # FIXME: For some reason, this is not accessible but only sometimes??
-accessible class net/minecraft/client/gui/screens/MenuScreens$ScreenConstructor
-accessible method net/minecraft/client/gui/screens/MenuScreens register (Lnet/minecraft/world/inventory/MenuType;Lnet/minecraft/client/gui/screens/MenuScreens$ScreenConstructor;)V
+transitive-accessible class net/minecraft/client/gui/screens/MenuScreens$ScreenConstructor
