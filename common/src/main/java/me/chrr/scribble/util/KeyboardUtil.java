@@ -52,10 +52,10 @@ public class KeyboardUtil {
             return keyName.equalsIgnoreCase(org.lwjgl.sdl.SDLKeyboard.SDL_GetKeyName(keyEvent.keycode()));
         }
         //? } else {
-        /*if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_UNKNOWN) {
+        /*if (keyEvent.key() == org.lwjgl.glfw.GLFW.GLFW_KEY_UNKNOWN) {
             return false;
         } else {
-            return keyName.equalsIgnoreCase(org.lwjgl.glfw.GLFW.glfwGetKeyName(keyCode, 0));
+            return keyName.equalsIgnoreCase(org.lwjgl.glfw.GLFW.glfwGetKeyName(keyEvent.key(), 0));
         }
         *///? }
     }
