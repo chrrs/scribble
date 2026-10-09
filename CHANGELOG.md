@@ -1,3 +1,9 @@
+## 2.1.0
+
+- Convert CRLF line-endings to LF when pasting text.
+- Fix commands / click events not working in written books.
+- Fix keyboard shortcuts using scancodes instead of keycodes.
+
 ## 2.1.0-beta1
 
 - Switch away from formatting codes internally. Scribble still uses formatting codes to write the books, however Mojang
