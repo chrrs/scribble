@@ -331,7 +331,7 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<StyledText> imple
     public boolean keyPressed(KeyEvent keyEvent) {
         if (keyEvent.hasControlDown() && !keyEvent.hasAltDown()) {
             // On Ctrl-Z, undo.
-            if ((KeyboardUtil.isKey(keyEvent.key(), "Z") && !keyEvent.hasShiftDown()
+            if ((KeyboardUtil.isKey(keyEvent, "Z") && !keyEvent.hasShiftDown()
                     && undoButton != null && undoButton.active)) {
                 this.commandManager.tryUndo();
                 this.invalidateActionButtons();
@@ -339,8 +339,8 @@ public class ScribbleBookEditScreen extends ScribbleBookScreen<StyledText> imple
             }
 
             // On Ctrl-Shift-Z or Ctrl-Y, redo.
-            if (((KeyboardUtil.isKey(keyEvent.key(), "Z") && keyEvent.hasShiftDown())
-                    || (KeyboardUtil.isKey(keyEvent.key(), "Y") && !keyEvent.hasShiftDown()))
+            if (((KeyboardUtil.isKey(keyEvent, "Z") && keyEvent.hasShiftDown())
+                    || (KeyboardUtil.isKey(keyEvent, "Y") && !keyEvent.hasShiftDown()))
                     && redoButton != null && redoButton.active) {
                 this.commandManager.tryRedo();
                 this.invalidateActionButtons();

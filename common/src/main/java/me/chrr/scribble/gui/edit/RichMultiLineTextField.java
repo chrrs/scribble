@@ -188,13 +188,13 @@ public class RichMultiLineTextField extends MultilineTextField {
         // Override copy/cut/paste to remove formatting codes if the config option is set or SHIFT is held down.
         boolean keepFormatting = Scribble.CONFIG.copyFormattingCodes.get() ^ event.hasShiftDown();
         boolean ctrlNoAlt = event.hasControlDown() && !event.hasAltDown();
-        if (ctrlNoAlt && (KeyboardUtil.isKey(event.key(), "C") || KeyboardUtil.isKey(event.key(), "X"))) {
+        if (ctrlNoAlt && (KeyboardUtil.isKey(event, "C") || KeyboardUtil.isKey(event, "X"))) {
             String text = this.getSelectedText();
             if (!keepFormatting) text = ChatFormatting.stripFormatting(text);
             Minecraft.getInstance().keyboardHandler.setClipboard(text);
-            if (KeyboardUtil.isKey(event.key(), "X")) this.insertText("");
+            if (KeyboardUtil.isKey(event, "X")) this.insertText("");
             return true;
-        } else if (ctrlNoAlt && KeyboardUtil.isKey(event.key(), "V")) {
+        } else if (ctrlNoAlt && KeyboardUtil.isKey(event, "V")) {
             String text = Minecraft.getInstance().keyboardHandler.getClipboard();
             text = text.replaceAll("\\r\\n", "\n");
             if (!keepFormatting) text = ChatFormatting.stripFormatting(text);

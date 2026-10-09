@@ -1,5 +1,6 @@
 package me.chrr.scribble.util;
 
+import net.minecraft.client.input.KeyEvent;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
@@ -43,12 +44,12 @@ public class KeyboardUtil {
      * Test if a key corresponds to the given key name, respecting keyboard layout.
      * See <a href="https://bugs.mojang.com/browse/MC-121278">MC-121278</a>.
      */
-    public static boolean isKey(int keyCode, String keyName) {
+    public static boolean isKey(KeyEvent keyEvent, String keyName) {
         //? >=26.3 {
-        if (keyCode == org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_UNKNOWN) {
+        if (keyEvent.key() == org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_UNKNOWN) {
             return false;
         } else {
-            return keyName.equalsIgnoreCase(org.lwjgl.sdl.SDLKeyboard.SDL_GetScancodeName(keyCode));
+            return keyName.equalsIgnoreCase(org.lwjgl.sdl.SDLKeyboard.SDL_GetKeyName(keyEvent.keycode()));
         }
         //? } else {
         /*if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_UNKNOWN) {
