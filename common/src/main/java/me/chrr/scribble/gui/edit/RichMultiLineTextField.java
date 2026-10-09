@@ -196,6 +196,7 @@ public class RichMultiLineTextField extends MultilineTextField {
             return true;
         } else if (ctrlNoAlt && KeyboardUtil.isKey(event.key(), "V")) {
             String text = Minecraft.getInstance().keyboardHandler.getClipboard();
+            text = text.replaceAll("\\r\\n", "\n");
             if (!keepFormatting) text = ChatFormatting.stripFormatting(text);
             this.insertText(text);
             return true;
