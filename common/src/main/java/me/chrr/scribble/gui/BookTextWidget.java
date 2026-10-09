@@ -67,7 +67,10 @@ public class BookTextWidget implements TextArea<Component> {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean dbl) {
-        if (event.button() == 0) {
+        //? if <26.3 {
+        /*if (event.button() == 0) {
+         *///?} else
+        if (event.button() == 1) {
             ActiveTextCollector.ClickableStyleFinder clickableStyleFinder
                     = new ActiveTextCollector.ClickableStyleFinder(this.font, (int) event.x(), (int) event.y());
             this.visitText(clickableStyleFinder);
