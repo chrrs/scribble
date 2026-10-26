@@ -69,7 +69,7 @@ public class ScribbleBookViewScreen extends ScribbleBookScreen<Component> {
         FileChooser.chooseFile(true, (path) -> {
             try {
                 List<String> pages = this.book.pages().stream()
-                        .map(StyledText::fromComponent)
+                        .map(StyledText::fromFormattedText)
                         .map(StyledText::getAsFormattedStringLossy)
                         .toList();
 

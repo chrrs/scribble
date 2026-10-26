@@ -109,15 +109,15 @@ public class StyledText implements FormattedText {
     }
 
     /**
-     * Create a new styled text instance from a vanilla text component.
+     * Create a new styled text instance from a vanilla formatted text component.
      *
-     * @param component The text component to convert.
+     * @param formattedText The text component to convert.
      * @return An equivalent styled text instance.
      */
-    public static StyledText fromComponent(Component component) {
+    public static StyledText fromFormattedText(FormattedText formattedText) {
         List<Segment> segments = new ArrayList<>();
 
-        component.visit((style, text) -> {
+        formattedText.visit((style, text) -> {
             segments.add(new Segment(text, style));
             return Optional.empty();
         }, Style.EMPTY);
