@@ -102,6 +102,13 @@ public class PageNumberWidget extends AbstractWidget {
         return true;
     }
 
+    //?if >=26.3 {
+    @Override
+    public boolean capturesInput() {
+        return isFocused();
+    }
+    //?}
+
     @Override
     public void setFocused(boolean focused) {
         super.setFocused(focused);
@@ -110,6 +117,9 @@ public class PageNumberWidget extends AbstractWidget {
             this.lastSwitchFocusTime = Util.getMillis();
             this.input = "";
         }
+
+        //?if >=26.3
+        Minecraft.getInstance().onTextInputFocusChange(this, focused);
     }
 
     @Override
